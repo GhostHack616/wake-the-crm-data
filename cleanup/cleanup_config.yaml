@@ -116,6 +116,19 @@ emails:
 #                             -> attribution rétroactive possible, bénéfice du doute
 # Flag comptes (last_activity_flag) : future = dernière activité après le 22/07.
 
+# --- Étape 7 : LA FUSION -------------------------------------
+# 30 000 fiches -> 20 519 entreprises. Clé = name_norm (== domain_root
+# à 100 %, partitions identiques prouvées par 2 clés indépendantes).
+# Élection de la fiche maîtresse : marqueur EXCLU d'abord, puis cascade
+# de statuts, puis ARR rempli, puis la plus ancienne.
+# Consolidation : statut = le plus avancé DU GROUPE (pas de la maîtresse) ;
+# ARR + renewal pris ENSEMBLE sur la même fiche (customer d'abord, puis
+# churned, renewal la plus tardive) ; dernière activité = MAX du groupe ;
+# création = MIN du groupe ; pays = vote majoritaire ; conflits -> flags,
+# jamais tranchés en silence. Rien n'est supprimé (merged_into partout).
+fusion:
+  cascade_statuts: [customer, churned, opportunity, prospect, lead, lost]
+
 # --- Le filet : les invariants ------------------------------
 # Des vérités qui doivent rester vraies après CHAQUE exécution.
 # Vérifiées automatiquement en fin de pipeline : un seul rouge = alarme
@@ -157,11 +170,23 @@ invariants:
     # la propriété "zéro fusion transitive" repose sur le retrait des marqueurs.
     # Si quelqu'un touche la regex des marqueurs, cet équilibre casse et alarme.
     noms_distincts_marqueurs_inclus: 20753   # 20 753 − 234 marqueurs = 20 519 entités
+  # Armés à l'étape 7 (LA FUSION) :
+  fusion:
+    entites: 20519                   # exact, triple-prouvé
+    taille_groupe_max: 4
+    fiches_marquees_elues: 0         # absolu — le marqueur exclut d'office
+    arr_total_fiches: 69681000       # conservation, à l'euro près
+    conflits_pays: 5947
+    conflits_arr: 251
+    conflits_owner: 5067
+    conflits_lifecycle: 6858
+    arbitrages_churned_opportunity: 80
+    corroboration_racine_declaree: 226   # invariant n°28 : toute fusion déclenchée
+    corroboration_racine_deduite: 8      # par un marqueur a une 2e preuve indépendante
+    fusions_marqueur_seul: 0             # zéro fusion sur le seul marqueur
+
   # S'armeront automatiquement avec leurs étapes :
   a_armer:
-    - "étape 7 : entités finales entre 19 000 et 22 000"
-    - "étape 7 : aucune entité ne regroupe plus de 5 fiches"
-    - "étape 7 : écart de somme ARR = exactement les doublons écartés, listés"
     - "étape 8 : chaque event rattaché à exactement une entité"
     - "étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés)"
     - "étape 10 : le bot CON-077194 toujours flagué"

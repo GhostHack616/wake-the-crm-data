@@ -32,7 +32,8 @@ def load(table):
 
 def save(table, rows):
     os.makedirs(OUT_DIR, exist_ok=True)
-    with open(os.path.join(OUT_DIR, f"{table}_clean.csv"), "w", newline="") as f:
+    name = "companies.csv" if table == "companies" else f"{table}_clean.csv"
+    with open(os.path.join(OUT_DIR, name), "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)
@@ -596,6 +597,163 @@ def step6_date_sanity(tables, report):
 
 
 # ----------------------------------------------------------------
+# Étape 7 — LA FUSION : 30 000 fiches -> 20 519 entreprises
+# ----------------------------------------------------------------
+
+def step7_fusion(tables, report):
+    """Construit la table companies et pose entity_id / merged_into sur accounts.
+
+    Clé d'entité = name_norm (== domain_root à 100 %, partitions identiques
+    prouvées par deux clés indépendantes). Élection marqueur-exclu d'abord.
+    Consolidation par les règles actées (cf. config, étape 7).
+    Rien n'est supprimé : chaque doublon garde merged_into -> rollback.
+    """
+    from collections import Counter, defaultdict
+
+    cascade = CONFIG["fusion"]["cascade_statuts"]
+    rank = {s: i for i, s in enumerate(cascade)}
+    accounts = tables["accounts"]
+
+    groups = defaultdict(list)
+    for r in accounts:
+        groups[r["name_norm"]].append(r)
+
+    def elect(members):
+        return min(members, key=lambda r: (
+            1 if r["dup_marker"] else 0,             # marqueur exclu d'abord
+            rank[r["lifecycle_stage"]],              # statut le plus avancé
+            0 if r["arr_eur"] else 1,                # ARR rempli
+            r["created_date_parsed"] or "9999",      # la plus ancienne
+            r["account_id"]))                        # déterminisme
+
+    def pick_arr(members):
+        """La fiche qui porte le contrat : customer d'abord, puis churned ;
+        à statut égal, la renewal la plus tardive. ARR et renewal ensemble."""
+        for stage in ("customer", "churned"):
+            cands = [m for m in members if m["lifecycle_stage"] == stage and m["arr_eur"]]
+            if cands:
+                return max(cands, key=lambda m: (m["renewal_date_parsed"] or "", m["account_id"]))
+        return None
+
+    companies = []
+    stats = Counter()
+    for i, key in enumerate(sorted(groups), 1):
+        members = groups[key]
+        master = elect(members)
+        entity_id = f"ENT-{i:05d}"
+        stages = {m["lifecycle_stage"] for m in members}
+        consolidated = min(stages, key=lambda s: rank[s])   # le plus avancé du GROUPE
+
+        arr_fiche = pick_arr(members)
+        arr_values = {m["arr_eur"] for m in members if m["arr_eur"]}
+        countries = Counter(m["country_clean"] for m in members)
+        top_country, top_n = countries.most_common(1)[0]
+        if list(countries.values()).count(top_n) > 1:       # égalité -> maîtresse
+            top_country = master["country_clean"]
+        owners = {m["owner"].strip() for m in members if (m["owner"] or "").strip()}
+        domains = Counter(m["domain_clean"] for m in members if m["domain_clean"])
+        las = [m["last_activity_date_parsed"] for m in members if m["last_activity_date_parsed"]]
+        crs = [m["created_date_parsed"] for m in members if m["created_date_parsed"]]
+
+        flags = {
+            "country_conflict": len(countries) > 1,
+            "arr_conflict": len(arr_values) > 1,
+            "owner_conflict": len(owners) > 1,
+            "lifecycle_conflict": len(stages) > 1,
+            "review_churned_vs_opportunity": consolidated == "churned" and "opportunity" in stages,
+            "owner_a_router": not owners,
+        }
+        for f, v in flags.items():
+            if v:
+                stats[f] += 1
+        if master["dup_marker"]:
+            stats["marked_elected"] += 1
+
+        def first_non_empty(field):
+            v = (master.get(field) or "").strip()
+            if v:
+                return v
+            for m in members:
+                if (m.get(field) or "").strip():
+                    return m[field].strip()
+            return ""
+
+        companies.append({
+            "entity_id": entity_id,
+            "name": master["account_name"],
+            "name_norm": key,
+            "master_id": master["account_id"],
+            "n_records": str(len(members)),
+            "account_ids": "|".join(m["account_id"] for m in members),
+            "domain": domains.most_common(1)[0][0] if domains else "",
+            "domain_root": next((m["domain_root"] for m in members if m["domain_root"]), ""),
+            "country": top_country,
+            "industry": first_non_empty("industry"),
+            "employee_range": first_non_empty("employee_range"),
+            "lifecycle_consolidated": consolidated,
+            "a_ete_client": "1" if stages & {"customer", "churned"} else "0",
+            "deal_en_cours": "1" if "opportunity" in stages else "0",
+            "arr_eur": arr_fiche["arr_eur"] if arr_fiche else "",
+            "renewal_date": arr_fiche["renewal_date_parsed"] if arr_fiche else "",
+            "arr_source_account": arr_fiche["account_id"] if arr_fiche else "",
+            "owner": master["owner"] or "",
+            "created_date_min": min(crs) if crs else "",
+            "last_activity_max": max(las) if las else "",
+            **{f: ("1" if v else "0") for f, v in flags.items()},
+        })
+
+        for m in members:
+            m["entity_id"] = entity_id
+            m["is_master"] = "1" if m is master else "0"
+            m["merged_into"] = "" if m is master else master["account_id"]
+
+    tables["companies"] = companies
+
+    # comptabilité ARR à l'euro près
+    total = sum(int(r["arr_eur"]) for r in accounts if r["arr_eur"])
+    kept = sum(int(c["arr_eur"]) for c in companies if c["arr_eur"])
+    arr_sources = {c["arr_source_account"] for c in companies if c["arr_source_account"]}
+    discarded = sum(int(r["arr_eur"]) for r in accounts
+                    if r["arr_eur"] and r["account_id"] not in arr_sources)
+    sizes = Counter(len(v) for v in groups.values())
+
+    report.append("## Étape 7 — LA FUSION : 30 000 fiches → entreprises\n")
+    report.append(
+        "Clé = name_norm (partitions identiques prouvées par 2 clés indépendantes). "
+        "Élection marqueur-exclu → cascade de statuts → ARR rempli → ancienneté. "
+        "Statut consolidé = le plus avancé du GROUPE. ARR+renewal ensemble "
+        "(customer puis churned, renewal la plus tardive). Dernière activité = MAX, "
+        "création = MIN. Conflits → flags, jamais tranchés en silence. "
+        "Rien n'est supprimé : merged_into sur chaque doublon.\n"
+    )
+    report.append(f"- **Entités : {len(companies)}** (attendu : 20 519) — tailles : "
+                  + ", ".join(f"{n} fiches × {sizes[n]}" for n in sorted(sizes)))
+    report.append(f"- Fiches étiquetées élues maîtresses : **{stats['marked_elected']}** (attendu : 0)")
+    report.append(f"- Comptabilité ARR : total fiches **{total:,} €** = conservé **{kept:,} €** "
+                  f"+ écarté (doublons) **{discarded:,} €** — écart : "
+                  f"**{total - kept - discarded} €** (attendu : 0)")
+    report.append(f"- Conflits flagués : pays **{stats['country_conflict']}** (attendu 5 947) · "
+                  f"ARR **{stats['arr_conflict']}** (251) · owner **{stats['owner_conflict']}** (5 067) · "
+                  f"lifecycle **{stats['lifecycle_conflict']}** (6 858)")
+    report.append(f"- Arbitrages churned-vs-opportunity : **{stats['review_churned_vs_opportunity']}** (attendu : 80)")
+    report.append(f"- Entités sans commercial (à router) : **{stats['owner_a_router']}**")
+    report.append("")
+
+    ok = (len(companies) == 20519 and stats["marked_elected"] == 0
+          and total - kept - discarded == 0
+          and stats["country_conflict"] == 5947 and stats["arr_conflict"] == 251
+          and stats["owner_conflict"] == 5067 and stats["lifecycle_conflict"] == 6858
+          and stats["review_churned_vs_opportunity"] == 80)
+    print(f"[étape 7] entités={len(companies)} marquées_élues={stats['marked_elected']} "
+          f"ARR: {total}={kept}+{discarded} (écart {total-kept-discarded}) "
+          f"conflits: pays={stats['country_conflict']} arr={stats['arr_conflict']} "
+          f"owner={stats['owner_conflict']} lifecycle={stats['lifecycle_conflict']} "
+          f"arbitrages_churned_opp={stats['review_churned_vs_opportunity']} "
+          f"sans_owner={stats['owner_a_router']}"
+          + ("  ✔" if ok else "  ⚠ A VERIFIER"))
+
+
+# ----------------------------------------------------------------
 # Le filet — invariants vérifiés après CHAQUE exécution du pipeline
 # ----------------------------------------------------------------
 
@@ -725,6 +883,59 @@ def run_invariants(tables, report):
                          if (r.get("created_date_parsed") or "") > ref
                          or (r.get("last_activity_date_parsed") or "") > ref)))
 
+    # -- Fusion (étape 7) : les gros calibres
+    f = inv["fusion"]
+    companies = tables.get("companies", [])
+    checks.append(("F1", "entités (exact, triple-prouvé)", f["entites"], len(companies)))
+    checks.append(("F2", "taille max d'un groupe de doublons", f["taille_groupe_max"],
+                   max((int(c["n_records"]) for c in companies), default=0)))
+    checks.append(("F3", "fiches étiquetées élues maîtresses (absolu)",
+                   f["fiches_marquees_elues"],
+                   sum(1 for r in accounts if r.get("is_master") == "1" and r.get("dup_marker"))))
+    checks.append(("F4", "fiches rattachées à exactement une entité", len(accounts),
+                   sum(1 for r in accounts if r.get("entity_id"))))
+    arr_total = sum(int(r["arr_eur"]) for r in accounts if r.get("arr_eur"))
+    arr_kept = sum(int(c["arr_eur"]) for c in companies if c.get("arr_eur"))
+    arr_sources = {c["arr_source_account"] for c in companies if c.get("arr_source_account")}
+    arr_discarded = sum(int(r["arr_eur"]) for r in accounts
+                        if r.get("arr_eur") and r["account_id"] not in arr_sources)
+    checks.append(("F5", "conservation ARR totale (fiches)", f["arr_total_fiches"], arr_total))
+    checks.append(("F6", "comptabilité ARR : total − conservé − écarté", 0,
+                   arr_total - arr_kept - arr_discarded))
+    checks.append(("F7", "conflits de pays flagués", f["conflits_pays"],
+                   sum(1 for c in companies if c.get("country_conflict") == "1")))
+    checks.append(("F8", "conflits d'ARR flagués", f["conflits_arr"],
+                   sum(1 for c in companies if c.get("arr_conflict") == "1")))
+    checks.append(("F9", "conflits de commercial flagués", f["conflits_owner"],
+                   sum(1 for c in companies if c.get("owner_conflict") == "1")))
+    checks.append(("F10", "conflits de statut flagués", f["conflits_lifecycle"],
+                   sum(1 for c in companies if c.get("lifecycle_conflict") == "1")))
+    checks.append(("F11", "arbitrages churned-vs-opportunity", f["arbitrages_churned_opportunity"],
+                   sum(1 for c in companies if c.get("review_churned_vs_opportunity") == "1")))
+    # F12 (invariant n°28) — corroboration : toute fusion déclenchée par un
+    # marqueur doit avoir une 2e preuve indépendante (racine partagée)
+    by_entity = {}
+    for r in accounts:
+        by_entity.setdefault(r.get("entity_id"), []).append(r)
+    c_decl = c_inf = c_none = 0
+    for r in accounts:
+        if not r.get("dup_marker"):
+            continue
+        others = [m for m in by_entity[r["entity_id"]] if m is not r]
+        share = [m for m in others if r["domain_root"] and m["domain_root"] == r["domain_root"]]
+        if not share:
+            c_none += 1
+        elif r["domain_source"] == "declared" and any(m["domain_source"] == "declared" for m in share):
+            c_decl += 1
+        else:
+            c_inf += 1
+    checks.append(("F12", "corroboration des fusions par marqueur (racine déclarée)",
+                   f["corroboration_racine_declaree"], c_decl))
+    checks.append(("F13", "corroboration des fusions par marqueur (racine déduite)",
+                   f["corroboration_racine_deduite"], c_inf))
+    checks.append(("F14", "fusions reposant sur le SEUL marqueur",
+                   f["fusions_marqueur_seul"], c_none))
+
     def check_passes(expected, measured):
         if isinstance(expected, str) and expected.startswith(">="):
             return measured >= int(expected[2:])
@@ -772,6 +983,7 @@ def main():
     step4_names(tables, report)
     step5_emails(tables, report)
     step6_date_sanity(tables, report)
+    step7_fusion(tables, report)
 
     run_invariants(tables, report)
 

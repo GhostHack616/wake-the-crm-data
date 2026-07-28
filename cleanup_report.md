@@ -90,6 +90,17 @@ Une date fausse n'entre jamais dans un calcul : neutralisée (parsée vidée) + 
 - Contacts avec seulement visites/linkedin avant création (attribution rétroactive possible, bénéfice du doute) : **20** (attendu : 20)
 - Comptes avec dernière activité future : **3** (attendu : 3) → neutralisée + flag
 
+## Étape 7 — LA FUSION : 30 000 fiches → entreprises
+
+Clé = name_norm (partitions identiques prouvées par 2 clés indépendantes). Élection marqueur-exclu → cascade de statuts → ARR rempli → ancienneté. Statut consolidé = le plus avancé du GROUPE. ARR+renewal ensemble (customer puis churned, renewal la plus tardive). Dernière activité = MAX, création = MIN. Conflits → flags, jamais tranchés en silence. Rien n'est supprimé : merged_into sur chaque doublon.
+
+- **Entités : 20519** (attendu : 20 519) — tailles : 1 fiches × 11888, 2 fiches × 7809, 3 fiches × 794, 4 fiches × 28
+- Fiches étiquetées élues maîtresses : **0** (attendu : 0)
+- Comptabilité ARR : total fiches **69,681,000 €** = conservé **66,656,000 €** + écarté (doublons) **3,025,000 €** — écart : **0 €** (attendu : 0)
+- Conflits flagués : pays **5947** (attendu 5 947) · ARR **251** (251) · owner **5067** (5 067) · lifecycle **6858** (6 858)
+- Arbitrages churned-vs-opportunity : **80** (attendu : 80)
+- Entités sans commercial (à router) : **2729**
+
 ## 🛡️ Filet d'invariants — vérifié à chaque exécution
 
 | ID | Invariant | Attendu | Mesuré | Statut |
@@ -121,6 +132,20 @@ Une date fausse n'entre jamais dans un calcul : neutralisée (parsée vidée) + 
 | S14 | comptes à dernière activité future (neutralisés + flag) | 3 | 3 | 🟢 |
 | S16 | équilibre clé↔marqueurs : noms (marqueurs inclus) − marqueurs = entités | 20753 − 234 = 20519 | 20753 − 234 = 20519 | 🟢 |
 | S15 | dates parsées encore au futur après neutralisation | 0 | 0 | 🟢 |
+| F1 | entités (exact, triple-prouvé) | 20519 | 20519 | 🟢 |
+| F2 | taille max d'un groupe de doublons | 4 | 4 | 🟢 |
+| F3 | fiches étiquetées élues maîtresses (absolu) | 0 | 0 | 🟢 |
+| F4 | fiches rattachées à exactement une entité | 30000 | 30000 | 🟢 |
+| F5 | conservation ARR totale (fiches) | 69681000 | 69681000 | 🟢 |
+| F6 | comptabilité ARR : total − conservé − écarté | 0 | 0 | 🟢 |
+| F7 | conflits de pays flagués | 5947 | 5947 | 🟢 |
+| F8 | conflits d'ARR flagués | 251 | 251 | 🟢 |
+| F9 | conflits de commercial flagués | 5067 | 5067 | 🟢 |
+| F10 | conflits de statut flagués | 6858 | 6858 | 🟢 |
+| F11 | arbitrages churned-vs-opportunity | 80 | 80 | 🟢 |
+| F12 | corroboration des fusions par marqueur (racine déclarée) | 226 | 226 | 🟢 |
+| F13 | corroboration des fusions par marqueur (racine déduite) | 8 | 8 | 🟢 |
+| F14 | fusions reposant sur le SEUL marqueur | 0 | 0 | 🟢 |
 
-À armer avec leurs étapes : étape 7 : entités finales entre 19 000 et 22 000 · étape 7 : aucune entité ne regroupe plus de 5 fiches · étape 7 : écart de somme ARR = exactement les doublons écartés, listés · étape 8 : chaque event rattaché à exactement une entité · étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés) · étape 10 : le bot CON-077194 toujours flagué · étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
+À armer avec leurs étapes : étape 8 : chaque event rattaché à exactement une entité · étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés) · étape 10 : le bot CON-077194 toujours flagué · étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
 
