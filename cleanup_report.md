@@ -146,6 +146,34 @@ Clé = name_norm (partitions identiques prouvées par 2 clés indépendantes). �
 | F12 | corroboration des fusions par marqueur (racine déclarée) | 226 | 226 | 🟢 |
 | F13 | corroboration des fusions par marqueur (racine déduite) | 8 | 8 | 🟢 |
 | F14 | fusions reposant sur le SEUL marqueur | 0 | 0 | 🟢 |
+| F15 | ARR actif (customers uniquement) | 52032000 | 52032000 | 🟢 |
+| F16 | ARR ex-client (churned, pool win-back) | 14624000 | 14624000 | 🟢 |
+| F17 | ARR actif + ex-client = ARR conservé | 66656000 | 66656000 | 🟢 |
 
 À armer avec leurs étapes : étape 8 : chaque event rattaché à exactement une entité · étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés) · étape 10 : le bot CON-077194 toujours flagué · étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
+
+## 🧭 Traçabilité — chaque règle actée a-t-elle son contrôle automatique ?
+
+| Règle actée | Implémentée où | Invariant garant | Statut |
+|---|---|---|---|
+| Dates 3 formats, année 2 ch.=US / 4 ch.=FR, jamais devinées | étape 1 | K1, S15 | 🟢 garantie |
+| Pays normalisés ISO, graphie inconnue jamais devinée | étape 2 | C5 + contrôle non-mappées=0 | 🟢 garantie |
+| Racine de domaine = clé n°1 ; inférence UNANIME tracée | étape 3 | S1-S5 | 🟢 garantie |
+| Nom normalisé = clé n°2 ; marqueurs jamais maîtres | étapes 4+7 | S6, S7, K5, S16, F3 | 🟢 garantie |
+| Emails : réparation mécanique seule ; doublons de personnes flagués | étape 5 | S8-S10 | 🟢 garantie |
+| Date fausse neutralisée + tracée, jamais corrigée | étape 6 | S11-S15 | 🟢 garantie |
+| Fusion : 20 519 entités, conflits flagués jamais tranchés en silence | étape 7 | F1-F14 | 🟢 garantie |
+| ARR comptable = customers uniquement (piège n°11) | étape 7 (arr_actif) | F15-F17 | 🟢 garantie |
+| Rien n'est supprimé, rollback intégral | toutes | C1-C6, F4 + merged_into | 🟢 garantie |
+| Le routage lit les FAITS (a_ete_client/deal_en_cours), pas l'étiquette | routage (à venir) | — | 🔴 à armer avec son étape |
+| email_sent pèse 0, opens ≈ 0 dans le score | scoring (à venir) | — | 🔴 à armer avec son étape |
+| /careers et /blog à poids nul | scoring (à venir) | — | 🔴 à armer avec son étape |
+| Pages négatives (cancel/billing/export) à poids négatif | scoring (à venir) | — | 🔴 à armer avec son étape |
+| Opt-out : interdit d'écrire ≠ signal annulé (suppression list) | scoring/push (à venir) | — | 🔴 à armer avec son étape |
+| Aucun filtre dur avant scoring (test d'amputation) | scoring (à venir) | — | 🔴 à armer avec son étape |
+| Decay demi-vie courte + plancher 21 j | scoring (à venir) | — | 🔴 à armer avec son étape |
+| Le silence des clients EST un score (file risque churn) | routage (à venir) | — | 🔴 à armer avec son étape |
+| Bot détecté au chronomètre (cadence), jamais au volume | étape 10 (à venir) | — | 🔴 à armer avec son étape |
+| Récence = events uniquement, jamais last_activity_date | scoring (à venir) | — | 🔴 à armer avec son étape |
+| Buying committee = personnes distinctes (dédup email) | étape 8 (à venir) | — | 🔴 à armer avec son étape |
 

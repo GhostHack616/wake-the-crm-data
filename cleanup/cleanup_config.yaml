@@ -184,6 +184,10 @@ invariants:
     corroboration_racine_declaree: 226   # invariant n°28 : toute fusion déclenchée
     corroboration_racine_deduite: 8      # par un marqueur a une 2e preuve indépendante
     fusions_marqueur_seul: 0             # zéro fusion sur le seul marqueur
+    # Piège n°11 (ARR fantôme) : l'agrégat comptable sépare actif / ex-client.
+    # SUM(arr_eur) brut = 66,6 M€ mais 21,9 % est porté par des ex-clients.
+    arr_actif: 52032000                  # SUM(arr_eur) où lifecycle = customer
+    arr_ex_client: 14624000              # SUM(arr_eur) où lifecycle = churned (win-back)
 
   # S'armeront automatiquement avec leurs étapes :
   a_armer:
@@ -192,3 +196,29 @@ invariants:
     - "étape 10 : le bot CON-077194 toujours flagué"
     - "étape 11+ : ACC-027283 (pages résiliation) jamais en HOT"
     - "étape 11+ : aucun contact opted_out dans une liste d'envoi"
+
+# --- Traçabilité : règle actée -> invariant qui la surveille --
+# Née de l'erreur n°7 (règle ARR actée mais non implémentée, non surveillée).
+# Une ligne SANS invariant = un trou visible d'un coup d'œil, au lieu d'être
+# découvert par hasard. Rendue dans le rapport à chaque exécution.
+tracabilite:
+  - {regle: "Dates 3 formats, année 2 ch.=US / 4 ch.=FR, jamais devinées",       ou: "étape 1",             invariants: "K1, S15"}
+  - {regle: "Pays normalisés ISO, graphie inconnue jamais devinée",              ou: "étape 2",             invariants: "C5 + contrôle non-mappées=0"}
+  - {regle: "Racine de domaine = clé n°1 ; inférence UNANIME tracée",            ou: "étape 3",             invariants: "S1-S5"}
+  - {regle: "Nom normalisé = clé n°2 ; marqueurs jamais maîtres",                ou: "étapes 4+7",          invariants: "S6, S7, K5, S16, F3"}
+  - {regle: "Emails : réparation mécanique seule ; doublons de personnes flagués", ou: "étape 5",           invariants: "S8-S10"}
+  - {regle: "Date fausse neutralisée + tracée, jamais corrigée",                 ou: "étape 6",             invariants: "S11-S15"}
+  - {regle: "Fusion : 20 519 entités, conflits flagués jamais tranchés en silence", ou: "étape 7",          invariants: "F1-F14"}
+  - {regle: "ARR comptable = customers uniquement (piège n°11)",                 ou: "étape 7 (arr_actif)", invariants: "F15-F17"}
+  - {regle: "Rien n'est supprimé, rollback intégral",                            ou: "toutes",              invariants: "C1-C6, F4 + merged_into"}
+  - {regle: "Le routage lit les FAITS (a_ete_client/deal_en_cours), pas l'étiquette", ou: "routage (à venir)", invariants: ""}
+  - {regle: "email_sent pèse 0, opens ≈ 0 dans le score",                        ou: "scoring (à venir)",   invariants: ""}
+  - {regle: "/careers et /blog à poids nul",                                     ou: "scoring (à venir)",   invariants: ""}
+  - {regle: "Pages négatives (cancel/billing/export) à poids négatif",           ou: "scoring (à venir)",   invariants: ""}
+  - {regle: "Opt-out : interdit d'écrire ≠ signal annulé (suppression list)",    ou: "scoring/push (à venir)", invariants: ""}
+  - {regle: "Aucun filtre dur avant scoring (test d'amputation)",                ou: "scoring (à venir)",   invariants: ""}
+  - {regle: "Decay demi-vie courte + plancher 21 j",                             ou: "scoring (à venir)",   invariants: ""}
+  - {regle: "Le silence des clients EST un score (file risque churn)",           ou: "routage (à venir)",   invariants: ""}
+  - {regle: "Bot détecté au chronomètre (cadence), jamais au volume",            ou: "étape 10 (à venir)",  invariants: ""}
+  - {regle: "Récence = events uniquement, jamais last_activity_date",            ou: "scoring (à venir)",   invariants: ""}
+  - {regle: "Buying committee = personnes distinctes (dédup email)",             ou: "étape 8 (à venir)",   invariants: ""}

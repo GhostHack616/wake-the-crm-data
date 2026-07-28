@@ -694,6 +694,11 @@ def step7_fusion(tables, report):
             "a_ete_client": "1" if stages & {"customer", "churned"} else "0",
             "deal_en_cours": "1" if "opportunity" in stages else "0",
             "arr_eur": arr_fiche["arr_eur"] if arr_fiche else "",
+            # Piège n°11 (ARR fantôme) : l'agrégat comptable est séparé —
+            # arr_actif (clients) / arr_ex_client (churned, dimensionne le win-back).
+            # SUM(arr_eur) brut mélangerait 21,9 % d'ARR d'ex-clients.
+            "arr_actif": arr_fiche["arr_eur"] if arr_fiche and consolidated == "customer" else "",
+            "arr_ex_client": arr_fiche["arr_eur"] if arr_fiche and consolidated == "churned" else "",
             "renewal_date": arr_fiche["renewal_date_parsed"] if arr_fiche else "",
             "arr_source_account": arr_fiche["account_id"] if arr_fiche else "",
             "owner": master["owner"] or "",
@@ -935,6 +940,13 @@ def run_invariants(tables, report):
                    f["corroboration_racine_deduite"], c_inf))
     checks.append(("F14", "fusions reposant sur le SEUL marqueur",
                    f["fusions_marqueur_seul"], c_none))
+    # F15-F17 (invariant n°42) — piège n°11 : la séparation comptable de l'ARR
+    # est VERROUILLÉE, pas seulement documentée.
+    sum_actif = sum(int(c["arr_actif"]) for c in companies if c.get("arr_actif"))
+    sum_ex = sum(int(c["arr_ex_client"]) for c in companies if c.get("arr_ex_client"))
+    checks.append(("F15", "ARR actif (customers uniquement)", f["arr_actif"], sum_actif))
+    checks.append(("F16", "ARR ex-client (churned, pool win-back)", f["arr_ex_client"], sum_ex))
+    checks.append(("F17", "ARR actif + ex-client = ARR conservé", arr_kept, sum_actif + sum_ex))
 
     def check_passes(expected, measured):
         if isinstance(expected, str) and expected.startswith(">="):
@@ -966,6 +978,23 @@ def run_invariants(tables, report):
         sys.exit(1)
 
 
+def render_traceability(report):
+    """La table règle actée → invariant garant. Née de l'erreur 'règle ARR
+    actée mais jamais implémentée' : une ligne sans invariant = un trou
+    VISIBLE, au lieu d'être découvert par hasard. Régénérée à chaque run."""
+    rows = CONFIG["tracabilite"]
+    n_ok = sum(1 for r in rows if r["invariants"])
+    report.append("## 🧭 Traçabilité — chaque règle actée a-t-elle son contrôle automatique ?\n")
+    report.append("| Règle actée | Implémentée où | Invariant garant | Statut |")
+    report.append("|---|---|---|---|")
+    for r in rows:
+        statut = "🟢 garantie" if r["invariants"] else "🔴 à armer avec son étape"
+        report.append(f"| {r['regle']} | {r['ou']} | {r['invariants'] or '—'} | {statut} |")
+    report.append("")
+    print(f"[traça]   {n_ok}/{len(rows)} règles actées sous contrôle automatique, "
+          f"{len(rows) - n_ok} à armer avec leurs étapes (visibles dans le rapport)")
+
+
 def main():
     report = [
         "# Rapport d'audit du cleanup — Wake the CRM\n",
@@ -986,6 +1015,7 @@ def main():
     step7_fusion(tables, report)
 
     run_invariants(tables, report)
+    render_traceability(report)
 
     for table, rows in tables.items():
         if table != "events":          # events pas encore transformés (étapes 8-10)
