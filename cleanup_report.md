@@ -240,9 +240,9 @@ Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement NE
 | R8 | contacts re-parentés | 24230 | 24230 | 🟢 |
 | R9 | copies de personnes flaguées (duplicate_of) | 105 | 105 | 🟢 |
 | R10 | emails présents sur >= 2 entités (flag, jamais fusionnés) | 678 | 678 | 🟢 |
-| R11 | couples de personnes par la clé nom (fiches sans email) | 6 | 6 | 🟢 |
-| R12 | faux doublons NOM restants (l'angle mort de R9, refermé) | 0 | 0 | 🟢 |
-| R13 | titres hérités d'une copie (title_from_copy tracé) | 11 | 11 | 🟢 |
+| R12 | couples de personnes par la clé nom (fiches sans email) | 6 | 6 | 🟢 |
+| R13 | faux doublons NOM restants (l'angle mort de R11, refermé) | 0 | 0 | 🟢 |
+| R14 | titres hérités d'une copie (title_from_copy tracé) | 11 | 11 | 🟢 |
 | G1 | segment CLIENT_ACTIF | 3037 | 3037 | 🟢 |
 | G2 | segment CLIENT_RENEWAL_ECHUE | 209 | 209 | 🟢 |
 | G3 | segment CHURN_CONTRADICTOIRE | 36 | 36 | 🟢 |
@@ -285,7 +285,7 @@ Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement NE
 | Date fausse neutralisée + tracée, jamais corrigée | étape 6 | S11-S15 | 🟢 garantie |
 | Fusion : 20 519 entités, conflits flagués jamais tranchés en silence | étape 7 | F1-F14 | 🟢 garantie |
 | ARR comptable = customers uniquement (piège n°11) | étape 7 (arr_actif) | F15-F17 | 🟢 garantie |
-| Les vides de la fiche élue se complètent depuis les jumelles (ARR, owner) et les copies (titres) — provenance tracée | étapes 7+8 (correctif 28/07) | F18-F20, R11-R13 | 🟢 garantie |
+| Les vides de la fiche élue se complètent depuis les jumelles (ARR, owner) et les copies (titres) — provenance tracée | étapes 7+8 (correctif 28/07) | F18-F20, R12-R14 | 🟢 garantie |
 | Rien n'est supprimé, rollback intégral | toutes | C1-C6, F4 + merged_into | 🟢 garantie |
 | Le routage lit les FAITS (a_ete_client/deal_en_cours), pas l'étiquette | étapes 7+11 (faits + play) | G13-G14 | 🟢 garantie |
 | Segmentation : 10 états factuels sur flux net, partition complète ; MORT/DORMANT en dernier recours assumé | étape 11 | G1-G15 | 🟢 garantie |

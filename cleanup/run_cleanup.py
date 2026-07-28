@@ -1460,10 +1460,10 @@ def run_invariants(tables, report):
     checks.append(("R10", "emails présents sur >= 2 entités (flag, jamais fusionnés)",
                    r8["emails_multi_entites"],
                    len({r["email_clean"] for r in contacts if r.get("email_multi_entity") == "1"})))
-    # R11-R13 (correctif 28/07, audit croisé) — la clé (entité, email) est
+    # R12-R14 (correctif 28/07, audit croisé) — la clé (entité, email) est
     # aveugle aux fiches sans email : clé secondaire (entité, nom) + héritage
     # des titres depuis les copies, chacun sous son invariant.
-    checks.append(("R11", "couples de personnes par la clé nom (fiches sans email)",
+    checks.append(("R12", "couples de personnes par la clé nom (fiches sans email)",
                    r8["couples_dedup_nom"],
                    sum(1 for r in contacts if r.get("duplicate_of")
                        and not (r.get("email_clean") or "").strip())))
@@ -1477,9 +1477,9 @@ def run_invariants(tables, report):
     for g in _seen.values():
         if len(g) == 2 and sum(1 for r in g if (r.get("email_clean") or "").strip()) == 1:
             restants += 1
-    checks.append(("R12", "faux doublons NOM restants (l'angle mort de R9, refermé)",
+    checks.append(("R13", "faux doublons NOM restants (l'angle mort de R11, refermé)",
                    r8["faux_clusters_nom_restants"], restants))
-    checks.append(("R13", "titres hérités d'une copie (title_from_copy tracé)",
+    checks.append(("R14", "titres hérités d'une copie (title_from_copy tracé)",
                    r8["titres_herites"],
                    sum(1 for r in contacts if r.get("title_from_copy") == "1")))
     # -- Segmentation (étape 11) : partition complète + cohérences croisées
