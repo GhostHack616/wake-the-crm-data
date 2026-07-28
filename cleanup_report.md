@@ -1,6 +1,6 @@
 # Rapport d'audit du cleanup — Wake the CRM
 
-Généré par `cleanup/run_cleanup.py` le 2026-07-27 (référence temporelle du dataset : 2026-07-22).
+Généré par `cleanup/run_cleanup.py` le 2026-07-28 (référence temporelle du dataset : 2026-07-22).
 
 Principe : rien n'est supprimé — réparations en colonnes neuves, originaux intacts.
 
@@ -57,4 +57,26 @@ domain_clean = minuscules sans préfixe www. · domain_root = partie avant l'ext
 - Extensions hors liste attendue : aucune
 - Exemples nettoyage : `www.brionexpartners.io` → `brionexpartners.io` · `www.cendradata.eu` → `cendradata.eu`
 - Exemples inférence : PrimofinSoft & Co → racine `primofinsoft` · Cendravialogic Group → racine `cendravialogic`
+
+## 🛡️ Filet d'invariants — vérifié à chaque exécution
+
+| ID | Invariant | Attendu | Mesuré | Statut |
+|---|---|---|---|---|
+| C1 | fiches accounts | 30000 | 30000 | 🟢 |
+| C2 | contacts | 77199 | 77199 | 🟢 |
+| C3 | events | 94838 | 94838 | 🟢 |
+| C4 | domaines d'origine non vides (colonne intacte) | 27329 | 27329 | 🟢 |
+| C5 | graphies pays d'origine distinctes (colonne intacte) | 30 | 30 | 🟢 |
+| C6 | noms d'origine non vides (colonne intacte) | 30000 | 30000 | 🟢 |
+| K1 | erreurs de parsing de dates | 0 | 0 | 🟢 |
+| K2 | renewal_date remplies (= customers + churned contradictoires) | 3386 | 3386 | 🟢 |
+| K3 | form_fill présents | 16 | 16 | 🟢 |
+| K4 | meeting_booked présents | 9 | 9 | 🟢 |
+| S1 | domaines déclarés | 27329 | 27329 | 🟢 |
+| S2 | racines déduites des contacts | 2538 | 2538 | 🟢 |
+| S3 | fiches sans racine | 133 | 133 | 🟢 |
+| S4 | longueur minimale des racines (anti-collision) | >= 6 | 6 | 🟢 |
+| S5 | préfixes www. dans la colonne d'origine (recomptés) | 1825 | 1825 | 🟢 |
+
+À armer avec leurs étapes : étape 7 : entités finales entre 19 000 et 22 000 · étape 7 : aucune entité ne regroupe plus de 5 fiches · étape 7 : écart de somme ARR = exactement les doublons écartés, listés · étape 8 : chaque event rattaché à exactement une entité · étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés) · étape 10 : le bot CON-077194 toujours flagué · étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
 

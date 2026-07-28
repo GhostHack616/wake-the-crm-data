@@ -78,3 +78,39 @@ domains:
   # Traçée dans domain_source='inferred_from_contacts'.
   # Validée : racine(domaine déclaré) = racine(emails) sur 25 785/25 785 comptes.
   personal_email_domains: [gmail.com]
+
+# --- Le filet : les invariants ------------------------------
+# Des vérités qui doivent rester vraies après CHAQUE exécution.
+# Vérifiées automatiquement en fin de pipeline : un seul rouge = alarme
+# et le pipeline s'arrête en erreur. 4 familles : conservation,
+# cohérence, non-régression (s'arme aux étapes 7+), bornes de sanité.
+invariants:
+  conservation:
+    accounts_rows: 30000
+    contacts_rows: 77199
+    events_rows: 94838
+    # colonnes d'origine jamais écrasées (proxies mesurés à l'audit)
+    accounts_domain_non_vide: 27329
+    accounts_country_graphies_distinctes: 30
+    accounts_nom_non_vide: 30000
+  coherence:
+    dates_erreurs_parsing: 0
+    renewal_date_remplies: 3386        # = 3 346 customers + 40 churned contradictoires
+    events_form_fill: 16
+    events_meeting_booked: 9
+  sanite:
+    domaines_declares: 27329
+    racines_deduites: 2538
+    fiches_sans_racine: 133      # couvre aussi "0 déduction ambiguë" (un cas ambigu → 134)
+    www_retires: 1825
+    longueur_racine_min: 6
+  # S'armeront automatiquement avec leurs étapes :
+  a_armer:
+    - "étape 7 : entités finales entre 19 000 et 22 000"
+    - "étape 7 : aucune entité ne regroupe plus de 5 fiches"
+    - "étape 7 : écart de somme ARR = exactement les doublons écartés, listés"
+    - "étape 8 : chaque event rattaché à exactement une entité"
+    - "étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés)"
+    - "étape 10 : le bot CON-077194 toujours flagué"
+    - "étape 11+ : ACC-027283 (pages résiliation) jamais en HOT"
+    - "étape 11+ : aucun contact opted_out dans une liste d'envoi"

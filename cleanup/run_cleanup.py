@@ -12,6 +12,7 @@ Sorties : data_clean/*.csv + cleanup_report.md
 
 import csv
 import os
+import sys
 from datetime import datetime
 
 import yaml
@@ -309,6 +310,96 @@ def step3_domains(tables, report):
           + ("  ✔" if ok else "  ⚠ A VERIFIER"))
 
 
+# ----------------------------------------------------------------
+# Le filet — invariants vérifiés après CHAQUE exécution du pipeline
+# ----------------------------------------------------------------
+
+def run_invariants(tables, report):
+    """Vérifie les invariants (config: invariants). Un seul rouge = pipeline en erreur.
+
+    Un invariant = une vérité qui doit rester vraie quelle que soit l'étape
+    qui vient de tourner. 4 familles : conservation (rien ne se perd),
+    cohérence (les chiffres se verrouillent entre eux), bornes de sanité,
+    et non-régression (celles-là s'arment avec les étapes 7+, cf. config).
+    """
+    inv = CONFIG["invariants"]
+    accounts, contacts, events = tables["accounts"], tables["contacts"], tables["events"]
+    checks = []  # (id, libellé, attendu, mesuré)
+
+    # -- Conservation : rien ne se perd, rien n'est écrasé
+    c = inv["conservation"]
+    checks.append(("C1", "fiches accounts", c["accounts_rows"], len(accounts)))
+    checks.append(("C2", "contacts", c["contacts_rows"], len(contacts)))
+    checks.append(("C3", "events", c["events_rows"], len(events)))
+    checks.append(("C4", "domaines d'origine non vides (colonne intacte)",
+                   c["accounts_domain_non_vide"],
+                   sum(1 for r in accounts if (r.get("domain") or "").strip())))
+    checks.append(("C5", "graphies pays d'origine distinctes (colonne intacte)",
+                   c["accounts_country_graphies_distinctes"],
+                   len({(r.get("country") or "").strip() for r in accounts})))
+    checks.append(("C6", "noms d'origine non vides (colonne intacte)",
+                   c["accounts_nom_non_vide"],
+                   sum(1 for r in accounts if (r.get("account_name") or "").strip())))
+
+    # -- Cohérence : les chiffres se verrouillent entre eux
+    k = inv["coherence"]
+    date_cols = [("accounts", col) for col in CONFIG["dates"]["columns"]["accounts"]] + \
+                [("contacts", col) for col in CONFIG["dates"]["columns"]["contacts"]]
+    n_err = sum(1 for t, col in date_cols for r in tables[t]
+                if r.get(f"{col}_format") == "error")
+    checks.append(("K1", "erreurs de parsing de dates", k["dates_erreurs_parsing"], n_err))
+    checks.append(("K2", "renewal_date remplies (= customers + churned contradictoires)",
+                   k["renewal_date_remplies"],
+                   sum(1 for r in accounts if r.get("renewal_date_format") not in (None, "empty"))))
+    checks.append(("K3", "form_fill présents", k["events_form_fill"],
+                   sum(1 for e in events if e.get("event_type") == "form_fill")))
+    checks.append(("K4", "meeting_booked présents", k["events_meeting_booked"],
+                   sum(1 for e in events if e.get("event_type") == "meeting_booked")))
+
+    # -- Bornes de sanité (étapes 1-3)
+    s = inv["sanite"]
+    src = [r.get("domain_source") for r in accounts]
+    checks.append(("S1", "domaines déclarés", s["domaines_declares"], src.count("declared")))
+    checks.append(("S2", "racines déduites des contacts", s["racines_deduites"],
+                   src.count("inferred_from_contacts")))
+    checks.append(("S3", "fiches sans racine", s["fiches_sans_racine"], src.count("none")))
+    roots = [r["domain_root"] for r in accounts if r.get("domain_root")]
+    checks.append(("S4", "longueur minimale des racines (anti-collision)",
+                   f">= {s['longueur_racine_min']}", min(len(x) for x in roots)))
+    checks.append(("S5", "préfixes www. dans la colonne d'origine (recomptés)",
+                   s["www_retires"],
+                   sum(1 for r in accounts
+                       if (r.get("domain") or "").strip().lower().startswith("www."))))
+    # NB : "0 déduction ambiguë" est couvert par S3 — un cas ambigu ferait
+    # passer les fiches sans racine de 133 à 134 → alarme.
+
+    ok = True
+    lines = ["## 🛡️ Filet d'invariants — vérifié à chaque exécution\n",
+             "| ID | Invariant | Attendu | Mesuré | Statut |",
+             "|---|---|---|---|---|"]
+    for cid, label, expected, measured in checks:
+        if isinstance(expected, str) and expected.startswith(">="):
+            passed = measured >= int(expected[2:])
+        else:
+            passed = measured == expected
+        ok &= passed
+        lines.append(f"| {cid} | {label} | {expected} | {measured} | "
+                     f"{'🟢' if passed else '🔴 ALARME'} |")
+    lines.append("")
+    lines.append("À armer avec leurs étapes : " + " · ".join(inv["a_armer"]))
+    lines.append("")
+    report.extend(lines)
+
+    n_green = sum(1 for cid, label, e, m in checks
+                  if (m >= int(e[2:]) if isinstance(e, str) and e.startswith(">=") else m == e))
+    print(f"[filet]   {n_green}/{len(checks)} invariants verts"
+          + ("  ✔" if ok else "  🔴 ALARME — voir rapport"))
+    if not ok:
+        with open(REPORT_PATH, "w") as f:
+            f.write("\n".join(report) + "\n")
+        sys.exit(1)
+
+
 def main():
     report = [
         "# Rapport d'audit du cleanup — Wake the CRM\n",
@@ -317,14 +408,18 @@ def main():
         "Principe : rien n'est supprimé — réparations en colonnes neuves, originaux intacts.\n",
     ]
 
-    tables = {"accounts": load("accounts"), "contacts": load("contacts")}
+    tables = {"accounts": load("accounts"), "contacts": load("contacts"),
+              "events": load("events")}
 
     step1_dates(tables, report)
     step2_countries(tables, report)
     step3_domains(tables, report)
 
+    run_invariants(tables, report)
+
     for table, rows in tables.items():
-        save(table, rows)
+        if table != "events":          # events pas encore transformés (étapes 8-10)
+            save(table, rows)
 
     with open(REPORT_PATH, "w") as f:
         f.write("\n".join(report) + "\n")
