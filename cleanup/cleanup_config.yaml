@@ -153,6 +153,10 @@ invariants:
     contacts_visites_avant_creation: 20
     accounts_last_activity_future: 3
     dates_parsees_futures_restantes: 0   # après neutralisation, plus aucune date > NOW
+    # L'équilibre qui rend visible la dépendance clé↔marqueurs (ajout IA n°2) :
+    # la propriété "zéro fusion transitive" repose sur le retrait des marqueurs.
+    # Si quelqu'un touche la regex des marqueurs, cet équilibre casse et alarme.
+    noms_distincts_marqueurs_inclus: 20753   # 20 753 − 234 marqueurs = 20 519 entités
   # S'armeront automatiquement avec leurs étapes :
   a_armer:
     - "étape 7 : entités finales entre 19 000 et 22 000"

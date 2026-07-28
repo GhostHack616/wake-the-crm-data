@@ -692,6 +692,31 @@ def run_invariants(tables, report):
     checks.append(("S14", "comptes à dernière activité future (neutralisés + flag)",
                    s["accounts_last_activity_future"],
                    sum(1 for r in accounts if r.get("last_activity_flag") == "future")))
+    # S16 — l'équilibre clé↔marqueurs (dépendance rendue visible et testable) :
+    # noms distincts SANS retrait des marqueurs − marqueurs détectés = entités.
+    # Protège la propriété "zéro fusion transitive" contre une regex modifiée.
+    suffixes16 = sorted(CONFIG["names"]["legal_suffixes"], key=len, reverse=True)
+    sre16 = re.compile(r"\s+(" + "|".join(re.escape(x) for x in suffixes16) + r")\s*$", re.I)
+    def norm_marker_included(name):
+        t = (name or "").lower().strip()
+        while True:
+            t2 = sre16.sub("", t)
+            if t2 == t:
+                break
+            t = t2
+        return re.sub(r"[^a-z0-9]", "", t)
+    n_with_marker = len({norm_marker_included(r["account_name"]) for r in accounts})
+    n_markers16 = sum(1 for r in accounts if r.get("dup_marker"))
+    n_entities16 = len({r.get("name_norm") for r in accounts})
+    expected16 = s["noms_distincts_marqueurs_inclus"]
+    balance_ok = (n_with_marker == expected16
+                  and n_with_marker - n_markers16 == n_entities16)
+    checks.append(("S16", "équilibre clé↔marqueurs : noms (marqueurs inclus) − marqueurs = entités",
+                   f"{expected16} − 234 = 20519",
+                   f"{n_with_marker} − {n_markers16} = {n_with_marker - n_markers16}"
+                   if balance_ok else
+                   f"CASSÉ : {n_with_marker} − {n_markers16} ≠ {n_entities16}"))
+
     ref = CONFIG["reference_date"]
     checks.append(("S15", "dates parsées encore au futur après neutralisation",
                    s["dates_parsees_futures_restantes"],

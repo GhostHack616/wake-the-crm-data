@@ -119,6 +119,7 @@ Une date fausse n'entre jamais dans un calcul : neutralisée (parsée vidée) + 
 | S12 | contacts avec emails reçus avant création (date corrompue) | 414 | 414 | 🟢 |
 | S13 | contacts en attribution rétroactive possible | 20 | 20 | 🟢 |
 | S14 | comptes à dernière activité future (neutralisés + flag) | 3 | 3 | 🟢 |
+| S16 | équilibre clé↔marqueurs : noms (marqueurs inclus) − marqueurs = entités | 20753 − 234 = 20519 | 20753 − 234 = 20519 | 🟢 |
 | S15 | dates parsées encore au futur après neutralisation | 0 | 0 | 🟢 |
 
 À armer avec leurs étapes : étape 7 : entités finales entre 19 000 et 22 000 · étape 7 : aucune entité ne regroupe plus de 5 fiches · étape 7 : écart de somme ARR = exactement les doublons écartés, listés · étape 8 : chaque event rattaché à exactement une entité · étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés) · étape 10 : le bot CON-077194 toujours flagué · étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
