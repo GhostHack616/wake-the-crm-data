@@ -170,6 +170,78 @@ def step2_countries(tables, report):
           + ("  ✔" if not unmapped else f"  ⚠ {unmapped}"))
 
 
+# ----------------------------------------------------------------
+# Étape 3 — Les domaines : www./casse -> domain_clean, racine -> domain_root
+# ----------------------------------------------------------------
+
+def step3_domains(tables, report):
+    """Ajoute domain_clean, domain_root et has_domain sur accounts.
+
+    - domain_clean : minuscules, sans les préfixes listés en config (www.)
+    - domain_root  : partie avant l'extension (acme.com -> acme)
+                     = clé n°1 de détection des doublons (étape 7)
+    - has_domain   : "1"/"0" — les fiches sans domaine s'appuieront sur le NOM
+    Aucun domaine n'est inventé. Extension inconnue -> listée dans le rapport.
+    """
+    prefixes = CONFIG["domains"]["strip_prefixes"]
+    known_tlds = set(CONFIG["domains"]["known_tlds"])
+    rows = tables["accounts"]
+
+    n_www = n_empty = n_root_empty = 0
+    tld_counts = {}
+    unknown_tlds = {}
+    examples = []
+
+    for row in rows:
+        raw = (row.get("domain") or "").strip()
+        clean = raw.lower()
+        for p in prefixes:
+            if clean.startswith(p):
+                clean = clean[len(p):]
+                n_www += 1
+                if len(examples) < 2:
+                    examples.append(f"`{raw}` → `{clean}`")
+                break
+        row["domain_clean"] = clean
+        if not clean:
+            n_empty += 1
+            row["domain_root"] = ""
+            row["has_domain"] = "0"
+            continue
+        row["has_domain"] = "1"
+        parts = clean.split(".")
+        row["domain_root"] = parts[0]
+        if not parts[0]:
+            n_root_empty += 1
+        tld = parts[-1] if len(parts) > 1 else ""
+        tld_counts[tld] = tld_counts.get(tld, 0) + 1
+        if tld not in known_tlds:
+            unknown_tlds[tld] = unknown_tlds.get(tld, 0) + 1
+
+    report.append("## Étape 3 — Domaines : nettoyage + racine (clé de dédup n°1)\n")
+    report.append(
+        "domain_clean = minuscules sans préfixe www. · domain_root = partie avant "
+        "l'extension · has_domain = flag pour les fiches sans domaine "
+        "(la fusion s'appuiera sur le nom pour elles). Aucun domaine inventé.\n"
+    )
+    report.append(f"- Préfixes www. retirés : **{n_www}** (attendu audit : 1 825)")
+    report.append(f"- Fiches sans domaine : **{n_empty}** (attendu audit : 2 671) → has_domain=0")
+    report.append(f"- Racines vides alors qu'un domaine existe : **{n_root_empty}** (attendu : 0)")
+    report.append(f"- Extensions rencontrées : " +
+                  ", ".join(f".{t} ({n})" for t, n in sorted(tld_counts.items())))
+    report.append(f"- Extensions hors liste attendue : "
+                  + (str(unknown_tlds) if unknown_tlds else "aucune"))
+    if examples:
+        report.append(f"- Exemples : " + " · ".join(examples))
+    report.append("")
+
+    print(f"[étape 3] accounts: www retirés={n_www} sans_domaine={n_empty} "
+          f"racines_vides={n_root_empty} tlds={sorted(tld_counts)} "
+          f"inconnues={unknown_tlds or 'aucune'}"
+          + ("  ✔" if n_www == 1825 and n_empty == 2671 and n_root_empty == 0
+             and not unknown_tlds else "  ⚠ A VERIFIER"))
+
+
 def main():
     report = [
         "# Rapport d'audit du cleanup — Wake the CRM\n",
@@ -182,6 +254,7 @@ def main():
 
     step1_dates(tables, report)
     step2_countries(tables, report)
+    step3_domains(tables, report)
 
     for table, rows in tables.items():
         save(table, rows)

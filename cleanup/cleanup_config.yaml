@@ -62,3 +62,13 @@ countries:
     gb: GB
     uk: GB
     united kingdom: GB
+
+# --- Étape 3 : les domaines ----------------------------------
+# Nettoyage : minuscules + retrait des préfixes listés (www.).
+# Racine = partie avant l'extension (acme.com -> acme) : c'est la
+# clé n°1 de détection des doublons (étape 7).
+# Toute extension hors de la liste attendue sort dans le rapport
+# au lieu d'être traitée en silence.
+domains:
+  strip_prefixes: ["www."]
+  known_tlds: [com, fr, eu, co, io]

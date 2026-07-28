@@ -45,3 +45,14 @@ Table de correspondance en config (cleanup_config.yaml). Une graphie absente de 
 
 Graphies distinctes reconnues : 24 · fiches mappées : 30000/30000 · non mappées : 0
 
+## Étape 3 — Domaines : nettoyage + racine (clé de dédup n°1)
+
+domain_clean = minuscules sans préfixe www. · domain_root = partie avant l'extension · has_domain = flag pour les fiches sans domaine (la fusion s'appuiera sur le nom pour elles). Aucun domaine inventé.
+
+- Préfixes www. retirés : **1825** (attendu audit : 1 825)
+- Fiches sans domaine : **2671** (attendu audit : 2 671) → has_domain=0
+- Racines vides alors qu'un domaine existe : **0** (attendu : 0)
+- Extensions rencontrées : .co (3865), .com (7847), .eu (4006), .fr (7836), .io (3775)
+- Extensions hors liste attendue : aucune
+- Exemples : `www.brionexpartners.io` → `brionexpartners.io` · `www.cendradata.eu` → `cendradata.eu`
+
