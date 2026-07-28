@@ -319,6 +319,10 @@ invariants:
     faux_clusters_restants: 0            # 0 entité où 2 "personnes distinctes" partagent un email
     faux_clusters_nom_restants: 0        # l'angle mort de la clé email, refermé (R13)
 
+  # Armé à l'étape 12 (livrable enrichissement, acté 28/07) :
+  enrichissement:
+    contacts_a_enrichir: 5371            # 3 031 sans adresse + 2 340 perso (primaires, bot exclu)
+
   # Armés à l'étape 9 (dédup events) :
   dedup_events:
     lignes_flaguees: 1988
@@ -383,6 +387,7 @@ tracabilite:
   - {regle: "Fusion : 20 519 entités, conflits flagués jamais tranchés en silence", ou: "étape 7",          invariants: "F1-F14"}
   - {regle: "ARR comptable = customers uniquement (piège n°11)",                 ou: "étape 7 (arr_actif)", invariants: "F15-F17"}
   - {regle: "Les vides de la fiche élue se complètent depuis les jumelles (ARR, owner) et les copies (titres) — provenance tracée", ou: "étapes 7+8 (correctif 28/07)", invariants: "F18-F20, R12-R14"}
+  - {regle: "Trou de données ≠ refus : adresse manquante/perso → file d'enrichissement ; opt-out → jamais recontacté", ou: "étape 12 (livrable, acté 28/07)", invariants: "E1"}
   - {regle: "Rien n'est supprimé, rollback intégral",                            ou: "toutes",              invariants: "C1-C6, F4 + merged_into"}
   - {regle: "Le routage lit les FAITS (a_ete_client/deal_en_cours), pas l'étiquette", ou: "étapes 7+11 (faits + play)", invariants: "G13-G14"}
   - {regle: "Segmentation : 11 états factuels sur flux net, partition complète ; MORT/DORMANT en dernier recours assumé", ou: "étape 11", invariants: "G1-G15"}

@@ -1482,6 +1482,13 @@ def run_invariants(tables, report):
     checks.append(("R14", "titres hérités d'une copie (title_from_copy tracé)",
                    r8["titres_herites"],
                    sum(1 for r in contacts if r.get("title_from_copy") == "1")))
+    # E1 (acté 28/07) — la file d'enrichissement : trou de données ≠ refus
+    en = inv["enrichissement"]
+    checks.append(("E1", "contacts à enrichir (adresse pro absente/perso, primaires, bot exclu)",
+                   en["contacts_a_enrichir"],
+                   sum(1 for r in contacts
+                       if r.get("person_primary") == "1" and r.get("is_bot") != "1"
+                       and r.get("email_status") in ("missing", "personal"))))
     # -- Segmentation (étape 11) : partition complète + cohérences croisées
     g = inv["segmentation"]
     seg_counts = {}
@@ -1632,6 +1639,39 @@ def step12_final_report(tables, report):
     arr_actif = sum(int(c["arr_actif"]) for c in companies if c["arr_actif"])
     arr_ex = sum(int(c["arr_ex_client"]) for c in companies if c["arr_ex_client"])
 
+    # Livrable « contacts à enrichir » (acté 28/07) : adresse pro absente ou
+    # perso. Un trou de données se répare (enrichissement automatisé), un
+    # refus (opt-out) se respecte — les deux ne se mélangent jamais.
+    # Fiches principales uniquement, bot exclu. 912 de ces contacts ont un
+    # historique email : l'adresse a EXISTÉ, le CRM l'a perdue.
+    contacts = tables["contacts"]
+    ev_par_contact = defaultdict(lambda: {"n": 0, "mail": 0, "li": 0})
+    for e in tables["events"]:
+        cid = e.get("contact_id")
+        if not cid or e["is_duplicate_event"] == "1" or e["from_bot"] == "1":
+            continue
+        d = ev_par_contact[cid]
+        d["n"] += 1
+        if e["event_type"] in ("email_sent", "email_open", "email_click"):
+            d["mail"] += 1
+        if e["event_type"] == "linkedin_engagement":
+            d["li"] += 1
+    a_enrichir = [c for c in contacts
+                  if c.get("person_primary") == "1" and c.get("is_bot") != "1"
+                  and c.get("email_status") in ("missing", "personal")]
+    with open(os.path.join(OUT_DIR, "contacts_a_enrichir.csv"), "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["contact_id", "entity_id", "entreprise", "job_title", "persona_tier",
+                    "raison", "adresse_a_existe", "linkedin_vu", "nb_events_net"])
+        for c in a_enrichir:
+            d = ev_par_contact.get(c["contact_id"], {"n": 0, "mail": 0, "li": 0})
+            w.writerow([c["contact_id"], c.get("entity_id") or "",
+                        comp_by_id.get(c.get("entity_id"), {}).get("name", ""),
+                        c.get("job_title") or "", c.get("persona_tier") or "",
+                        "sans_adresse" if c["email_status"] == "missing" else "adresse_perso",
+                        "1" if d["mail"] else "0", "1" if d["li"] else "0", d["n"]])
+    n_enrichir = len(a_enrichir)
+
     resume = [
         "## 📋 Résumé exécutif — l'état du CRM après cleanup\n",
         "| Avant | Après |",
@@ -1643,8 +1683,8 @@ def step12_final_report(tables, report):
         "| ARR invérifiable (69,7 M€ bruts, 21,9 % fantôme) | **ARR actif "
         f"{arr_actif:,} €** ({segs['CLIENT_ACTIF'] + segs['CLIENT_RENEWAL_ECHUE']} clients) · "
         f"ex-client {arr_ex:,} € (win-back) · écarté doublons 3 025 000 €, décomposé ci-dessous |",
-        f"| 77 199 contacts, doublons de personnes invisibles | 77 146 rattachés, 99 doublons flagués, "
-        "53 comptes à créer, 4 tiers persona produit |",
+        f"| 77 199 contacts, doublons de personnes invisibles | 77 146 rattachés, 105 doublons flagués "
+        "(99 par email + 6 par nom), 53 comptes à créer, 4 tiers persona produit |",
         f"| 94 838 events en vrac | 90 838 rattachés aux entités, 1 988 doublons flagués, "
         "1 bot isolé (420 events), 4 000 anonymes tracés |",
         "",
@@ -1669,7 +1709,10 @@ def step12_final_report(tables, report):
         "",
         "**Livrables** : `companies.csv` (20 519 entreprises, segments, plays, flags) · "
         "`accounts_clean.csv` / `contacts_clean.csv` / `events_clean.csv` · "
-        "`accounts_to_create.csv` (53) · `cleanup_config.yaml` (toutes les règles) · "
+        "`accounts_to_create.csv` (53) · "
+        f"`contacts_a_enrichir.csv` ({n_enrichir} — adresse pro absente ou perso : un trou "
+        "de données se répare par enrichissement, un refus opt-out se respecte ; 912 ont un "
+        "historique email, l'adresse a existé) · `cleanup_config.yaml` (toutes les règles) · "
         "ce rapport (auto-généré à chaque exécution).",
         "",
         "---",

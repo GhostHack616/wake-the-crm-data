@@ -11,7 +11,7 @@ Principe : rien n'est supprimé — réparations en colonnes neuves, originaux i
 | 30 000 fiches comptes (1/3 de doublons) | **20519 entreprises réelles** (fusion prouvée par 2 clés indépendantes, rollback intégral) |
 | 3 formats de dates, 30 graphies de pays, 2 671 domaines vides | 0 erreur de parsing, 8 pays ISO, 133 fiches sans racine (95 % récupérées) |
 | ARR invérifiable (69,7 M€ bruts, 21,9 % fantôme) | **ARR actif 52,032,000 €** (3246 clients) · ex-client 14,624,000 € (win-back) · écarté doublons 3 025 000 €, décomposé ci-dessous |
-| 77 199 contacts, doublons de personnes invisibles | 77 146 rattachés, 99 doublons flagués, 53 comptes à créer, 4 tiers persona produit |
+| 77 199 contacts, doublons de personnes invisibles | 77 146 rattachés, 105 doublons flagués (99 par email + 6 par nom), 53 comptes à créer, 4 tiers persona produit |
 | 94 838 events en vrac | 90 838 rattachés aux entités, 1 988 doublons flagués, 1 bot isolé (420 events), 4 000 anonymes tracés |
 
 **Segments** : 22 prospects chauds · 5232 tièdes · 3037 clients actifs · 209 renewals échues · 36 churns contradictoires · 870 ex-clients réactifs · 769 lost réactifs · 5393 muets.
@@ -26,7 +26,7 @@ Principe : rien n'est supprimé — réparations en colonnes neuves, originaux i
 
 NB : la règle « contrat le plus tardif » ne maximise pas l'ARR affiché (616 000 € de moins qu'une règle « max ») — elle suit le contrat en cours.
 
-**Livrables** : `companies.csv` (20 519 entreprises, segments, plays, flags) · `accounts_clean.csv` / `contacts_clean.csv` / `events_clean.csv` · `accounts_to_create.csv` (53) · `cleanup_config.yaml` (toutes les règles) · ce rapport (auto-généré à chaque exécution).
+**Livrables** : `companies.csv` (20 519 entreprises, segments, plays, flags) · `accounts_clean.csv` / `contacts_clean.csv` / `events_clean.csv` · `accounts_to_create.csv` (53) · `contacts_a_enrichir.csv` (5371 — adresse pro absente ou perso : un trou de données se répare par enrichissement, un refus opt-out se respecte ; 912 ont un historique email, l'adresse a existé) · `cleanup_config.yaml` (toutes les règles) · ce rapport (auto-généré à chaque exécution).
 
 ---
 
@@ -243,6 +243,7 @@ Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement NE
 | R12 | couples de personnes par la clé nom (fiches sans email) | 6 | 6 | 🟢 |
 | R13 | faux doublons NOM restants (l'angle mort de R11, refermé) | 0 | 0 | 🟢 |
 | R14 | titres hérités d'une copie (title_from_copy tracé) | 11 | 11 | 🟢 |
+| E1 | contacts à enrichir (adresse pro absente/perso, primaires, bot exclu) | 5371 | 5371 | 🟢 |
 | G1 | segment CLIENT_ACTIF | 3037 | 3037 | 🟢 |
 | G2 | segment CLIENT_RENEWAL_ECHUE | 209 | 209 | 🟢 |
 | G3 | segment CHURN_CONTRADICTOIRE | 36 | 36 | 🟢 |
@@ -286,6 +287,7 @@ Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement NE
 | Fusion : 20 519 entités, conflits flagués jamais tranchés en silence | étape 7 | F1-F14 | 🟢 garantie |
 | ARR comptable = customers uniquement (piège n°11) | étape 7 (arr_actif) | F15-F17 | 🟢 garantie |
 | Les vides de la fiche élue se complètent depuis les jumelles (ARR, owner) et les copies (titres) — provenance tracée | étapes 7+8 (correctif 28/07) | F18-F20, R12-R14 | 🟢 garantie |
+| Trou de données ≠ refus : adresse manquante/perso → file d'enrichissement ; opt-out → jamais recontacté | étape 12 (livrable, acté 28/07) | E1 | 🟢 garantie |
 | Rien n'est supprimé, rollback intégral | toutes | C1-C6, F4 + merged_into | 🟢 garantie |
 | Le routage lit les FAITS (a_ete_client/deal_en_cours), pas l'étiquette | étapes 7+11 (faits + play) | G13-G14 | 🟢 garantie |
 | Segmentation : 11 états factuels sur flux net, partition complète ; MORT/DORMANT en dernier recours assumé | étape 11 | G1-G15 | 🟢 garantie |
