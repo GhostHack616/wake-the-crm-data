@@ -339,6 +339,17 @@ invariants:
     DORMANT: 1919
     evidence_declared_field: 1919   # tous les DORMANT reposent sur le champ déclaré
 
+  # Armés à l'étape 12 (rapport final) — la décomposition de l'ARR écarté,
+  # à l'euro près. NB : la règle "contrat le plus tardif" ne maximise PAS
+  # l'ARR affiché (616 000 € de moins qu'une règle "max") — elle suit le
+  # contrat en cours. Sous-total le plus challengeable : les 89 conflits.
+  arr_ecarte:
+    conflits_bi_customer: 1420000        # 89 groupes, 2 customers, montants différents
+    churned_sous_customer: 1081000       # 153 fiches — le customer prime
+    churned_doublons: 356000             # 46 fiches
+    customer_doublons_meme_montant: 168000  # 11 fiches
+    # total = 3 025 000 = exactement l'écarté de la fusion (F6)
+
   # S'armeront à la naissance du SCORING (aucune garantie paramétrique
   # sans surveillance — leçon ENT-16714) :
   a_armer:

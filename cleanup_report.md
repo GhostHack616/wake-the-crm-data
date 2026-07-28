@@ -4,6 +4,32 @@ Généré par `cleanup/run_cleanup.py` le 2026-07-28 (référence temporelle du 
 
 Principe : rien n'est supprimé — réparations en colonnes neuves, originaux intacts.
 
+## 📋 Résumé exécutif — l'état du CRM après cleanup
+
+| Avant | Après |
+|---|---|
+| 30 000 fiches comptes (1/3 de doublons) | **20519 entreprises réelles** (fusion prouvée par 2 clés indépendantes, rollback intégral) |
+| 3 formats de dates, 30 graphies de pays, 2 671 domaines vides | 0 erreur de parsing, 8 pays ISO, 133 fiches sans racine (95 % récupérées) |
+| ARR invérifiable (69,7 M€ bruts, 21,9 % fantôme) | **ARR actif 52,032,000 €** (3246 clients) · ex-client 14,624,000 € (win-back) · écarté doublons 3 025 000 €, décomposé ci-dessous |
+| 77 199 contacts, doublons de personnes invisibles | 77 146 rattachés, 99 doublons flagués, 53 comptes à créer, 4 tiers persona produit |
+| 94 838 events en vrac | 90 838 rattachés aux entités, 1 988 doublons flagués, 1 bot isolé (420 events), 4 000 anonymes tracés |
+
+**Segments** : 22 prospects chauds · 5232 tièdes · 3037 clients actifs · 209 renewals échues · 36 churns contradictoires · 870 ex-clients réactifs · 769 lost réactifs · 5393 muets.
+
+**Décomposition de l'ARR écarté (3 025 000 €, à l'euro près, sous invariant)** :
+| Raison | Fiches | Montant |
+|---|---|---|
+| Conflits bi-customer (2 montants, règle contrat le plus tardif) — 89 groupes | 89 | 1,420,000 € |
+| Churned écartés (le customer prime) | 153 | 1,081,000 € |
+| Churned doublons | 46 | 356,000 € |
+| Customer doublons, même montant | 11 | 168,000 € |
+
+NB : la règle « contrat le plus tardif » ne maximise pas l'ARR affiché (616 000 € de moins qu'une règle « max ») — elle suit le contrat en cours.
+
+**Livrables** : `companies.csv` (20 519 entreprises, segments, plays, flags) · `accounts_clean.csv` / `contacts_clean.csv` / `events_clean.csv` · `accounts_to_create.csv` (53) · `cleanup_config.yaml` (toutes les règles) · ce rapport (auto-généré à chaque exécution).
+
+---
+
 ## Étape 1 — Dates : 3 formats → ISO
 
 Règle : ISO tel quel · année à 2 chiffres = MM/DD/YY (américain) · année à 4 chiffres = DD/MM/YYYY (français). Aucune date devinée : illisible → vide + format `error`.
@@ -224,6 +250,11 @@ Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement NE
 | G13 | cohérence : CLIENT_ACTIF + RENEWAL_ECHUE = entités customer | 3246 | 3246 | 🟢 |
 | G14 | cohérence : segments churned = entités churned | 2094 | 2094 | 🟢 |
 | G15 | DORMANT sur champ déclaré = tous flagués segment_evidence | 1919 | 1919 | 🟢 |
+| A1 | ARR écarté — conflits_bi_customer | 1420000 | 1420000 | 🟢 |
+| A2 | ARR écarté — churned_sous_customer | 1081000 | 1081000 | 🟢 |
+| A3 | ARR écarté — churned_doublons | 356000 | 356000 | 🟢 |
+| A4 | ARR écarté — customer_doublons_meme_montant | 168000 | 168000 | 🟢 |
+| A5 | ARR écarté — la décomposition ferme sur le total | 3025000 | 3025000 | 🟢 |
 | D1 | events flagués doublons (jamais supprimés) | 1988 | 1988 | 🟢 |
 | D2 | conversions flaguées doublons | 0 | 0 | 🟢 |
 | D3 | events anonymes flagués doublons | 0 | 0 | 🟢 |
