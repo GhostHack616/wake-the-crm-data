@@ -109,9 +109,11 @@ invariants:
   # Fenêtre comité ANCRÉE au présent (14 DERNIERS jours) : les comités de
   # mai-juin, refroidis, ne qualifient plus — le seul comité vivant au 22/07
   # est ENT-16714 (4 pers dont un décideur, sur les pages de sortie : à sauver).
-  tier1_total: 26
+  tier1_total: 26                  # 25 conversions + 1 comité VIVANT (fenêtre ancrée, validé Romain 29/07)
   tier1_porte1_conversions: 25
-  tier1_porte2_comite: 1
+  tier1_porte2_comite: 1           # ENT-16714 : 4 pers./14 derniers jours dont un décideur, play risque.
+                                   # Les 10 « comités » historiques (mai-juin, scores 0,1-6,6) sont T3
+                                   # à raison — un comité d'il y a 2 mois n'est pas un comité.
   tier2: 34                        # 36 de la simulation − 2 « perdus » (score >= 8 mais
                                    # plus personne de joignable : sortis des files, règle actée)
   perdus_canal_mort: 9
