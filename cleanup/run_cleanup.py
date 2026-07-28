@@ -1707,6 +1707,27 @@ def step12_final_report(tables, report):
         "NB : la règle « contrat le plus tardif » ne maximise pas l'ARR affiché "
         "(616 000 € de moins qu'une règle « max ») — elle suit le contrat en cours.",
         "",
+        # Section GÉNÉRÉE à chaque run (leçon 28/07 : maintenue à la main,
+        # elle s'est périmée trois fois — désormais elle lit les fichiers)
+        "**Les modifications, fichier par fichier** (généré depuis les fichiers, "
+        "jamais maintenu à la main) :",
+        "| Fichier | Colonnes d'origine (intactes) | Colonnes ajoutées |",
+        "|---|---|---|",
+    ]
+    for t in ("accounts", "contacts", "events"):
+        with open(os.path.join(ROOT, f"{t}.csv"), newline="") as f:
+            orig = next(csv.reader(f))
+        clean_cols = list(tables[t][0].keys())
+        added = [k for k in clean_cols if k not in orig]
+        resume.append(f"| `{t}_clean.csv` | {len(orig)} | **{len(added)}** : "
+                      + ", ".join(f"`{k}`" for k in added) + " |")
+    resume.append(f"| `companies.csv` | — (table née de la fusion) | "
+                  f"**{len(list(companies[0].keys()))}** colonnes |")
+    resume += [
+        "",
+        "Principe : l'original n'est jamais modifié — chaque transformation vit "
+        "dans une colonne neuve, avec sa trace.",
+        "",
         "**Livrables** : `companies.csv` (20 519 entreprises, segments, plays, flags) · "
         "`accounts_clean.csv` / `contacts_clean.csv` / `events_clean.csv` · "
         "`accounts_to_create.csv` (53) · "

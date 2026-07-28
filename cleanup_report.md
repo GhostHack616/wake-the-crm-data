@@ -26,6 +26,16 @@ Principe : rien n'est supprimé — réparations en colonnes neuves, originaux i
 
 NB : la règle « contrat le plus tardif » ne maximise pas l'ARR affiché (616 000 € de moins qu'une règle « max ») — elle suit le contrat en cours.
 
+**Les modifications, fichier par fichier** (généré depuis les fichiers, jamais maintenu à la main) :
+| Fichier | Colonnes d'origine (intactes) | Colonnes ajoutées |
+|---|---|---|
+| `accounts_clean.csv` | 12 | **17** : `created_date_parsed`, `created_date_format`, `last_activity_date_parsed`, `last_activity_date_format`, `renewal_date_parsed`, `renewal_date_format`, `country_clean`, `domain_clean`, `domain_root`, `domain_source`, `has_domain`, `name_norm`, `dup_marker`, `last_activity_flag`, `entity_id`, `is_master`, `merged_into` |
+| `contacts_clean.csv` | 8 | **17** : `created_date_parsed`, `created_date_format`, `email_clean`, `email_status`, `email_domain_root`, `email_is_duplicate`, `email_duplicate_count`, `created_date_flag`, `persona_tier`, `entity_id`, `entity_source`, `is_orphan`, `person_primary`, `duplicate_of`, `title_from_copy`, `email_multi_entity`, `is_bot` |
+| `events_clean.csv` | 8 | **5** : `entity_id`, `is_anonymous`, `reparented`, `is_duplicate_event`, `from_bot` |
+| `companies.csv` | — (table née de la fusion) | **32** colonnes |
+
+Principe : l'original n'est jamais modifié — chaque transformation vit dans une colonne neuve, avec sa trace.
+
 **Livrables** : `companies.csv` (20 519 entreprises, segments, plays, flags) · `accounts_clean.csv` / `contacts_clean.csv` / `events_clean.csv` · `accounts_to_create.csv` (53) · `contacts_a_enrichir.csv` (5371 — adresse pro absente ou perso : un trou de données se répare par enrichissement, un refus opt-out se respecte ; 912 ont un historique email, l'adresse a existé) · `cleanup_config.yaml` (toutes les règles) · ce rapport (auto-généré à chaque exécution).
 
 ---
