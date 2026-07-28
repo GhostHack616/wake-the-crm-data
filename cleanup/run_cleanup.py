@@ -2,7 +2,7 @@
 """Pipeline de cleanup — Wake the CRM.
 
 Principe cardinal : RIEN n'est supprimé ni écrasé.
-Chaque réparation vit dans une colonne neuve (*_parsed, *_format, *_flag),
+Chaque réparation vit dans une colonne neuve (*_parsed, *_format, *_clean, *_flag),
 les colonnes d'origine restent intactes, et chaque règle écrit ses
 compteurs + exemples dans cleanup_report.md (audit poste par poste).
 
@@ -12,7 +12,6 @@ Sorties : data_clean/*.csv + cleanup_report.md
 
 import csv
 import os
-import sys
 from datetime import datetime
 
 import yaml
@@ -23,6 +22,19 @@ REPORT_PATH = os.path.join(ROOT, "cleanup_report.md")
 
 with open(os.path.join(ROOT, "cleanup", "cleanup_config.yaml")) as f:
     CONFIG = yaml.safe_load(f)
+
+
+def load(table):
+    with open(os.path.join(ROOT, f"{table}.csv"), newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def save(table, rows):
+    os.makedirs(OUT_DIR, exist_ok=True)
+    with open(os.path.join(OUT_DIR, f"{table}_clean.csv"), "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 # ----------------------------------------------------------------
@@ -59,8 +71,8 @@ def parse_date(raw):
     return "", "error"
 
 
-def step1_dates(report):
-    """Ajoute <col>_parsed (ISO) et <col>_format à accounts et contacts."""
+def step1_dates(tables, report):
+    """Ajoute <col>_parsed (ISO) et <col>_format sur accounts et contacts."""
     lo, hi = CONFIG["dates"]["plausible_years"]
     report.append("## Étape 1 — Dates : 3 formats → ISO\n")
     report.append(
@@ -70,12 +82,7 @@ def step1_dates(report):
     )
 
     for table, columns in CONFIG["dates"]["columns"].items():
-        src = os.path.join(ROOT, f"{table}.csv")
-        dst = os.path.join(OUT_DIR, f"{table}_clean.csv")
-        with open(src, newline="") as f:
-            rows = list(csv.DictReader(f))
-        fieldnames = list(rows[0].keys())
-
+        rows = tables[table]
         stats = {c: {"iso": 0, "mdy": 0, "dmy": 0, "empty": 0, "error": 0} for c in columns}
         examples = {c: [] for c in columns}
         out_of_range = {c: 0 for c in columns}
@@ -86,23 +93,12 @@ def step1_dates(report):
                 row[f"{c}_parsed"] = iso
                 row[f"{c}_format"] = fmt
                 stats[c][fmt] += 1
-                if iso:
-                    year = int(iso[:4])
-                    if not (lo <= year <= hi):
-                        out_of_range[c] += 1
+                if iso and not (lo <= int(iso[:4]) <= hi):
+                    out_of_range[c] += 1
                 if fmt in ("mdy", "dmy") and len(examples[c]) < 2:
                     examples[c].append(f"`{row[c]}` → `{iso}` ({fmt})")
 
-        for c in columns:
-            fieldnames += [f"{c}_parsed", f"{c}_format"]
-
-        os.makedirs(OUT_DIR, exist_ok=True)
-        with open(dst, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerows(rows)
-
-        report.append(f"### {table}.csv → data_clean/{table}_clean.csv ({len(rows)} lignes)\n")
+        report.append(f"### {table}.csv ({len(rows)} lignes)\n")
         report.append("| Colonne | ISO | MM/DD/YY | DD/MM/YYYY | Vides | Erreurs | Hors bornes |")
         report.append("|---|---|---|---|---|---|---|")
         for c in columns:
@@ -117,14 +113,61 @@ def step1_dates(report):
                 report.append(f"Exemples {c} : " + " · ".join(examples[c]))
         report.append("")
 
-        print(f"[étape 1] {table}: {len(rows)} lignes, colonnes ajoutées: "
-              + ", ".join(f"{c}_parsed/{c}_format" for c in columns))
+        print(f"[étape 1] {table}: {len(rows)} lignes")
         for c in columns:
             s = stats[c]
             total_err = s["error"] + out_of_range[c]
             print(f"          {c}: iso={s['iso']} mdy={s['mdy']} dmy={s['dmy']} "
                   f"vides={s['empty']} erreurs={s['error']} hors_bornes={out_of_range[c]}"
                   + ("  ✔" if total_err == 0 else "  ⚠ A VERIFIER"))
+
+
+# ----------------------------------------------------------------
+# Étape 2 — Les pays : 30 graphies -> 8 codes ISO, via la table en config
+# ----------------------------------------------------------------
+
+def step2_countries(tables, report):
+    """Ajoute country_clean (code ISO) sur accounts. Inconnu -> vide + compté."""
+    mapping = CONFIG["countries"]["mapping"]
+    canonical = CONFIG["countries"]["canonical"]
+    rows = tables["accounts"]
+
+    counts = {iso: 0 for iso in canonical}
+    unmapped = {}
+    variants_seen = set()
+
+    for row in rows:
+        raw = (row.get("country") or "").strip()
+        key = raw.lower()
+        iso = mapping.get(key, "")
+        row["country_clean"] = iso
+        if iso:
+            counts[iso] += 1
+            variants_seen.add(key)
+        else:
+            unmapped[raw] = unmapped.get(raw, 0) + 1
+
+    report.append("## Étape 2 — Pays : 30 graphies → 8 codes ISO 3166\n")
+    report.append(
+        "Table de correspondance en config (cleanup_config.yaml). "
+        "Une graphie absente de la table n'est jamais devinée : vide + listée ici.\n"
+    )
+    report.append("| Pays | Code | Fiches |")
+    report.append("|---|---|---|")
+    for iso, label in canonical.items():
+        report.append(f"| {label} | {iso} | {counts[iso]} |")
+    total_mapped = sum(counts.values())
+    report.append("")
+    report.append(f"Graphies distinctes reconnues : {len(variants_seen)} · "
+                  f"fiches mappées : {total_mapped}/{len(rows)} · "
+                  f"non mappées : {sum(unmapped.values())}"
+                  + (f" ({unmapped})" if unmapped else ""))
+    report.append("")
+
+    print(f"[étape 2] accounts: {total_mapped}/{len(rows)} fiches mappées sur "
+          f"{len(canonical)} pays, {len(variants_seen)} graphies reconnues, "
+          f"non mappées: {sum(unmapped.values())}"
+          + ("  ✔" if not unmapped else f"  ⚠ {unmapped}"))
 
 
 def main():
@@ -134,7 +177,15 @@ def main():
         f"(référence temporelle du dataset : {CONFIG['reference_date']}).\n",
         "Principe : rien n'est supprimé — réparations en colonnes neuves, originaux intacts.\n",
     ]
-    step1_dates(report)
+
+    tables = {"accounts": load("accounts"), "contacts": load("contacts")}
+
+    step1_dates(tables, report)
+    step2_countries(tables, report)
+
+    for table, rows in tables.items():
+        save(table, rows)
+
     with open(REPORT_PATH, "w") as f:
         f.write("\n".join(report) + "\n")
     print(f"\nRapport écrit : {REPORT_PATH}")

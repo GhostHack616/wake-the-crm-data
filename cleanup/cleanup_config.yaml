@@ -20,3 +20,45 @@ dates:
     contacts: [created_date]
   # bornes de vraisemblance (le CRM a 8 ans ; les renewals vont jusqu'à mi-2027)
   plausible_years: [2018, 2028]
+
+# --- Étape 2 : les pays --------------------------------------
+# 30 graphies observées pour 8 pays réels. Normalisation vers le code
+# ISO 3166-1 (standard international à 2 lettres). La table ci-dessous
+# est LA règle : une graphie absente de la table n'est JAMAIS devinée,
+# elle sort en "non mappée" dans le rapport d'audit.
+countries:
+  canonical:
+    FR: France
+    BE: Belgique
+    NL: Pays-Bas
+    DE: Allemagne
+    IT: Italie
+    ES: Espagne
+    CH: Suisse
+    GB: Royaume-Uni
+  # clé = graphie brute en minuscules (après trim)
+  mapping:
+    fr: FR
+    france: FR
+    be: BE
+    belgique: BE
+    belgium: BE
+    nl: NL
+    netherlands: NL
+    nederland: NL
+    pays-bas: NL
+    de: DE
+    allemagne: DE
+    germany: DE
+    it: IT
+    italie: IT
+    italy: IT
+    es: ES
+    espagne: ES
+    spain: ES
+    ch: CH
+    suisse: CH
+    switzerland: CH
+    gb: GB
+    uk: GB
+    united kingdom: GB
