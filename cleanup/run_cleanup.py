@@ -860,9 +860,52 @@ def step8_reattach(tables, report):
         if len(members) > 1:
             n_dup_couples += 1
             n_copies += len(members) - 1
+
+    # Correctif 28/07 (audit croisé) — clé SECONDAIRE (entité, prénom+nom) :
+    # une fiche sans email est invisible à la clé (entité, email). Périmètre
+    # conservateur : paires non liées dont EXACTEMENT une fiche a un email —
+    # la primaire est la fiche avec email. Le groupe à entité vide (2 fiches
+    # sans email ni compte) est hors périmètre : une entité vide n'est pas
+    # une entité.
+    by_name = defaultdict(list)
+    for c in contacts:
+        fn = (c.get("first_name") or "").strip().lower()
+        ln = (c.get("last_name") or "").strip().lower()
+        if c["entity_id"] and (fn or ln) and not c.get("duplicate_of"):
+            by_name[(c["entity_id"], fn, ln)].append(c)
+    n_name_couples = 0
+    for members in by_name.values():
+        if len(members) != 2:
+            continue
+        avec = [c for c in members if (c.get("email_clean") or "").strip()]
+        if len(avec) != 1:
+            continue
+        prim = avec[0]
+        copie = members[0] if members[1] is prim else members[1]
+        copie["person_primary"] = "0"
+        copie["duplicate_of"] = prim["contact_id"]
+        n_name_couples += 1
+
+    # Correctif 28/07 (audit croisé) — une fiche principale sans titre hérite
+    # du titre de sa copie (même règle que les vides de la fusion : ARR, owner),
+    # persona recalculé, provenance tracée title_from_copy.
+    by_id = {c["contact_id"]: c for c in contacts}
+    n_titres_herites = 0
+    for c in sorted(contacts, key=lambda x: x["contact_id"]):
+        dup = c.get("duplicate_of")
+        if not dup:
+            continue
+        prim = by_id[dup]
+        if not (prim.get("job_title") or "").strip() and (c.get("job_title") or "").strip():
+            prim["job_title"] = c["job_title"].strip()
+            prim["persona_tier"] = persona_tier(prim["job_title"], personas)
+            prim["title_from_copy"] = "1"
+            n_titres_herites += 1
+
     for c in contacts:
         c.setdefault("person_primary", "1" if not c["is_orphan"] == "1" else "")
         c.setdefault("duplicate_of", "")
+        c.setdefault("title_from_copy", "0")
         c["email_multi_entity"] = ("1" if c.get("email_clean")
                                    and len(entities_of_email.get(c["email_clean"], set())) >= 2
                                    else "0")
@@ -914,8 +957,11 @@ def step8_reattach(tables, report):
                   f"= {n_ev_attached + n_ev_anon}")
     report.append(f"- Re-parentés (fiche non-maîtresse → entité) : **{n_ev_reparented}** events "
                   f"(32,1 % des rattachables) · **{n_con_reparented}** contacts")
-    report.append(f"- Dédup personnes : **{n_dup_couples}** couples (entité, email) → "
-                  f"{n_copies} copies flaguées `duplicate_of` (attendu : 97/97)")
+    report.append(f"- Dédup personnes : **{n_dup_couples}** couples (entité, email) + "
+                  f"**{n_name_couples}** couples (entité, nom — fiches sans email) = "
+                  f"{n_copies + n_name_couples} copies flaguées `duplicate_of` (attendu : 99 + 6 = 105)")
+    report.append(f"- Titres hérités d'une copie (persona recalculé) : **{n_titres_herites}** "
+                  f"(attendu : 11, dont 1 CHRO)")
     report.append("")
 
     exp = CONFIG["invariants"]["reattachement"]
@@ -927,11 +973,14 @@ def step8_reattach(tables, report):
           and n_ev_reparented == exp["events_reparentes"]
           and n_con_reparented == exp["contacts_reparentes"]
           and n_dup_couples == exp["couples_dedup_personnes"]
-          and n_copies == exp["copies_flaguees"])
+          and n_copies + n_name_couples == exp["copies_flaguees"]
+          and n_name_couples == exp["couples_dedup_nom"]
+          and n_titres_herites == exp["titres_herites"])
     print(f"[étape 8] contacts: compte={n_by_account} email={n_by_email} inconnus={n_unknown} "
           f"(events des inconnus={unknown_with_events}) | events: rattachés={n_ev_attached} "
           f"anonymes={n_ev_anon} reparentés={n_ev_reparented} | contacts reparentés={n_con_reparented} "
-          f"| dédup: {n_dup_couples} couples, {n_copies} copies"
+          f"| dédup: {n_dup_couples} couples email + {n_name_couples} couples nom, "
+          f"{n_copies + n_name_couples} copies | titres hérités: {n_titres_herites}"
           + ("  ✔" if ok else "  ⚠ A VERIFIER"))
 
 
@@ -1411,6 +1460,28 @@ def run_invariants(tables, report):
     checks.append(("R10", "emails présents sur >= 2 entités (flag, jamais fusionnés)",
                    r8["emails_multi_entites"],
                    len({r["email_clean"] for r in contacts if r.get("email_multi_entity") == "1"})))
+    # R11-R13 (correctif 28/07, audit croisé) — la clé (entité, email) est
+    # aveugle aux fiches sans email : clé secondaire (entité, nom) + héritage
+    # des titres depuis les copies, chacun sous son invariant.
+    checks.append(("R11", "couples de personnes par la clé nom (fiches sans email)",
+                   r8["couples_dedup_nom"],
+                   sum(1 for r in contacts if r.get("duplicate_of")
+                       and not (r.get("email_clean") or "").strip())))
+    restants = 0
+    _seen = {}
+    for r in contacts:
+        fn = (r.get("first_name") or "").strip().lower()
+        ln = (r.get("last_name") or "").strip().lower()
+        if r.get("entity_id") and (fn or ln) and not r.get("duplicate_of"):
+            _seen.setdefault((r["entity_id"], fn, ln), []).append(r)
+    for g in _seen.values():
+        if len(g) == 2 and sum(1 for r in g if (r.get("email_clean") or "").strip()) == 1:
+            restants += 1
+    checks.append(("R12", "faux doublons NOM restants (l'angle mort de R9, refermé)",
+                   r8["faux_clusters_nom_restants"], restants))
+    checks.append(("R13", "titres hérités d'une copie (title_from_copy tracé)",
+                   r8["titres_herites"],
+                   sum(1 for r in contacts if r.get("title_from_copy") == "1")))
     # -- Segmentation (étape 11) : partition complète + cohérences croisées
     g = inv["segmentation"]
     seg_counts = {}

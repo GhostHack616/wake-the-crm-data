@@ -286,11 +286,14 @@ invariants:
 
   # Armés avec les personas (partition complète 77 199, double sens) :
   personas:
-    buyers: 16561
-    champions: 19701
-    utilisateurs: 25573
-    bruit: 10799
-    sans_titre: 4565
+    # Comptes post-héritage des titres (correctif 28/07) : 11 fiches principales
+    # sans titre ont hérité du titre de leur copie — buyer +1 (le CHRO CON-070627),
+    # champion +4, utilisateur +3, bruit +3, sans_titre −11.
+    buyers: 16562
+    champions: 19705
+    utilisateurs: 25576
+    bruit: 10802
+    sans_titre: 4554
     libelles_fantomes: 0        # chaque titre du mapping existe dans la base
     titres_non_classes: 0       # chaque titre de la base a exactement un tier
 
@@ -309,9 +312,12 @@ invariants:
     # = la même personne débranchée — ex. manon.simon@fabripharma.com).
     # Écart détecté par l'alarme du filet, expliqué, puis verrouillé.
     couples_dedup_personnes: 99          # (entité, email) portés par >= 2 fiches
-    copies_flaguees: 99                  # duplicate_of posé
+    couples_dedup_nom: 6                 # correctif 28/07 : clé secondaire (entité, nom) — paires dont UNE fiche sans email
+    copies_flaguees: 105                 # duplicate_of posé (99 email + 6 nom)
+    titres_herites: 11                   # correctif 28/07 : fiche principale sans titre <- titre de sa copie (dont 1 CHRO)
     emails_multi_entites: 678
     faux_clusters_restants: 0            # 0 entité où 2 "personnes distinctes" partagent un email
+    faux_clusters_nom_restants: 0        # l'angle mort de la clé email, refermé (R12)
 
   # Armés à l'étape 9 (dédup events) :
   dedup_events:
@@ -376,6 +382,7 @@ tracabilite:
   - {regle: "Date fausse neutralisée + tracée, jamais corrigée",                 ou: "étape 6",             invariants: "S11-S15"}
   - {regle: "Fusion : 20 519 entités, conflits flagués jamais tranchés en silence", ou: "étape 7",          invariants: "F1-F14"}
   - {regle: "ARR comptable = customers uniquement (piège n°11)",                 ou: "étape 7 (arr_actif)", invariants: "F15-F17"}
+  - {regle: "Les vides de la fiche élue se complètent depuis les jumelles (ARR, owner) et les copies (titres) — provenance tracée", ou: "étapes 7+8 (correctif 28/07)", invariants: "F18-F20, R11-R13"}
   - {regle: "Rien n'est supprimé, rollback intégral",                            ou: "toutes",              invariants: "C1-C6, F4 + merged_into"}
   - {regle: "Le routage lit les FAITS (a_ete_client/deal_en_cours), pas l'étiquette", ou: "étapes 7+11 (faits + play)", invariants: "G13-G14"}
   - {regle: "Segmentation : 10 états factuels sur flux net, partition complète ; MORT/DORMANT en dernier recours assumé", ou: "étape 11", invariants: "G1-G15"}
