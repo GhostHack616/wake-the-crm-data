@@ -129,6 +129,38 @@ emails:
 fusion:
   cascade_statuts: [customer, churned, opportunity, prospect, lead, lost]
 
+# --- Personas : titre -> tier (PARAMÈTRE DE SCORING) ---------
+# Figé après 4 rounds de contre-vérification croisée.
+# Buyers organisés par MODULE PRODUIT : chaque titre inclus a une raison
+# produit (il choisit/budgète un module), chaque exclu a une raison.
+# PORTÉE BORNÉE : le tier sert à compter le comité d'achat et à pondérer
+# les signaux FAIBLES (clic, visite, open). PLANCHER : un event de
+# conversion (form_fill, meeting_booked) vaut son poids plein quel que
+# soit le porteur — le décideur déclare l'intention (13/16 form_fills),
+# l'opérationnel organise la logistique (9/9 RDV sans aucun buyer).
+personas:
+  buyers:
+    ats: [Head of Talent Acquisition]
+    performance: [CHRO, Chief People Officer, Head of People, VP People]
+    paie_sirh: [HR Director, Directeur RH, Directrice RH, VP Human Resources,
+                Head of HR Operations]
+    transverse: [CEO, COO]
+  champions: [HR Manager, HRBP, HR Business Partner, People Ops Manager,
+              Talent Acquisition Manager, "Compensation & Benefits Manager",
+              Responsable Recrutement]
+  utilisateurs: [Chargee de recrutement, Charge de recrutement, Recruiter,
+                 HR Officer, Talent Acquisition Specialist,
+                 People Ops Coordinator, HR Assistant]
+  bruit: [Executive Assistant, HR Intern, Office Manager]
+
+# --- Étape 8 : le ré-attachement -----------------------------
+# Contacts et events rejoignent leurs entités. Orphelins : rattachés par
+# le domaine de leur email quand il désigne UNE entité (même geste que
+# l'étape 3, tracé entity_source=inferred_from_email) ; les vrais
+# inconnus deviennent la liste "comptes à créer". Dédup des PERSONNES
+# au sein d'une entité (même email = même personne, primaire + copies
+# flaguées, rien de supprimé).
+
 # --- Le filet : les invariants ------------------------------
 # Des vérités qui doivent rester vraies après CHAQUE exécution.
 # Vérifiées automatiquement en fin de pipeline : un seul rouge = alarme
@@ -189,9 +221,37 @@ invariants:
     arr_actif: 52032000                  # SUM(arr_eur) où lifecycle = customer
     arr_ex_client: 14624000              # SUM(arr_eur) où lifecycle = churned (win-back)
 
+  # Armés avec les personas (partition complète 77 199, double sens) :
+  personas:
+    buyers: 16561
+    champions: 19701
+    utilisateurs: 25573
+    bruit: 10799
+    sans_titre: 4565
+    libelles_fantomes: 0        # chaque titre du mapping existe dans la base
+    titres_non_classes: 0       # chaque titre de la base a exactement un tier
+
+  # Armés à l'étape 8 (ré-attachement) :
+  reattachement:
+    contacts_avec_entite: 77146          # 76 599 par compte + 547 par email
+    orphelins_rattaches_email: 547
+    vrais_inconnus: 53                   # -> liste "comptes à créer"
+    inconnus_avec_events: 0
+    events_avec_entite: 90838
+    events_anonymes: 4000                # 90 838 + 4 000 = 94 838
+    events_reparentes: 29184             # 32,1 % des rattachables
+    contacts_reparentes: 24230
+    # 97 mesurés AVANT le rattachement des orphelins ; +2 RÉVÉLÉS par lui
+    # (un orphelin dont l'email existe déjà sur un contact de la même entité
+    # = la même personne débranchée — ex. manon.simon@fabripharma.com).
+    # Écart détecté par l'alarme du filet, expliqué, puis verrouillé.
+    couples_dedup_personnes: 99          # (entité, email) portés par >= 2 fiches
+    copies_flaguees: 99                  # duplicate_of posé
+    emails_multi_entites: 678
+    faux_clusters_restants: 0            # 0 entité où 2 "personnes distinctes" partagent un email
+
   # S'armeront automatiquement avec leurs étapes :
   a_armer:
-    - "étape 8 : chaque event rattaché à exactement une entité"
     - "étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés)"
     - "étape 10 : le bot CON-077194 toujours flagué"
     - "étape 11+ : ACC-027283 (pages résiliation) jamais en HOT"
@@ -221,4 +281,7 @@ tracabilite:
   - {regle: "Le silence des clients EST un score (file risque churn)",           ou: "routage (à venir)",   invariants: ""}
   - {regle: "Bot détecté au chronomètre (cadence), jamais au volume",            ou: "étape 10 (à venir)",  invariants: ""}
   - {regle: "Récence = events uniquement, jamais last_activity_date",            ou: "scoring (à venir)",   invariants: ""}
-  - {regle: "Buying committee = personnes distinctes (dédup email)",             ou: "étape 8 (à venir)",   invariants: ""}
+  - {regle: "Buying committee = personnes distinctes (dédup email)",             ou: "étape 8",             invariants: "R9-R11"}
+  - {regle: "Chaque event/contact rattaché à exactement une entité (anonymes/inconnus tracés)", ou: "étape 8", invariants: "R1-R8"}
+  - {regle: "Mapping persona produit, partition complète double sens",           ou: "config personas",     invariants: "P1-P7"}
+  - {regle: "Plancher conversions : form_fill/meeting_booked à poids plein quel que soit le porteur", ou: "scoring (à venir)", invariants: ""}

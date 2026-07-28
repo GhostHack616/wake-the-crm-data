@@ -101,6 +101,16 @@ Clé = name_norm (partitions identiques prouvées par 2 clés indépendantes). �
 - Arbitrages churned-vs-opportunity : **80** (attendu : 80)
 - Entités sans commercial (à router) : **2729**
 
+## Étape 8 — Ré-attachement : contacts et events rejoignent leurs entités
+
+entity_id partout · orphelins rattachés par le domaine de leur email quand il désigne UNE entité (tracé inferred_from_email, même geste que l'étape 3) · vrais inconnus → liste 'comptes à créer' · dédup des personnes (même email dans la même entité = une personne : primaire + copies tracées) · rien de supprimé.
+
+- Contacts rattachés : **76599** par leur compte + **547** par leur email (attendu : 547) = 77146
+- Vrais inconnus : **53** (attendu : 53) → `accounts_to_create.csv` — dont events portés : 0 (attendu : 0)
+- Events : **90838** rattachés + **4000** anonymes conservés = 94838
+- Re-parentés (fiche non-maîtresse → entité) : **29184** events (32,1 % des rattachables) · **24230** contacts
+- Dédup personnes : **99** couples (entité, email) → 99 copies flaguées `duplicate_of` (attendu : 97/97)
+
 ## 🛡️ Filet d'invariants — vérifié à chaque exécution
 
 | ID | Invariant | Attendu | Mesuré | Statut |
@@ -149,8 +159,26 @@ Clé = name_norm (partitions identiques prouvées par 2 clés indépendantes). �
 | F15 | ARR actif (customers uniquement) | 52032000 | 52032000 | 🟢 |
 | F16 | ARR ex-client (churned, pool win-back) | 14624000 | 14624000 | 🟢 |
 | F17 | ARR actif + ex-client = ARR conservé | 66656000 | 66656000 | 🟢 |
+| P1 | buyers (périmètre produit) | 16561 | 16561 | 🟢 |
+| P2 | champions | 19701 | 19701 | 🟢 |
+| P3 | utilisateurs | 25573 | 25573 | 🟢 |
+| P4 | bruit (×0 sur signaux faibles, jamais sur conversions) | 10799 | 10799 | 🟢 |
+| P5 | sans titre | 4565 | 4565 | 🟢 |
+| P6 | libellés fantômes dans le mapping (double sens, aller) | 0 | 0 | 🟢 |
+| P7 | titres du recensement non classés (double sens, retour) | 0 | 0 | 🟢 |
+| R1 | contacts avec entité | 77146 | 77146 | 🟢 |
+| R2 | orphelins rattachés par email (tracés) | 547 | 547 | 🟢 |
+| R3 | vrais inconnus (liste comptes à créer) | 53 | 53 | 🟢 |
+| R4 | events portés par un vrai inconnu | 0 | 0 | 🟢 |
+| R5 | events avec entité | 90838 | 90838 | 🟢 |
+| R6 | events anonymes conservés | 4000 | 4000 | 🟢 |
+| R7 | events re-parentés (32,1 % des rattachables) | 29184 | 29184 | 🟢 |
+| R8 | contacts re-parentés | 24230 | 24230 | 🟢 |
+| R9 | copies de personnes flaguées (duplicate_of) | 99 | 99 | 🟢 |
+| R10 | emails présents sur >= 2 entités (flag, jamais fusionnés) | 678 | 678 | 🟢 |
+| R11 | faux clusters restants (2 primaires, même email, même entité) | 0 | 0 | 🟢 |
 
-À armer avec leurs étapes : étape 8 : chaque event rattaché à exactement une entité · étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés) · étape 10 : le bot CON-077194 toujours flagué · étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
+À armer avec leurs étapes : étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés) · étape 10 : le bot CON-077194 toujours flagué · étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
 
 ## 🧭 Traçabilité — chaque règle actée a-t-elle son contrôle automatique ?
 
@@ -175,5 +203,8 @@ Clé = name_norm (partitions identiques prouvées par 2 clés indépendantes). �
 | Le silence des clients EST un score (file risque churn) | routage (à venir) | — | 🔴 à armer avec son étape |
 | Bot détecté au chronomètre (cadence), jamais au volume | étape 10 (à venir) | — | 🔴 à armer avec son étape |
 | Récence = events uniquement, jamais last_activity_date | scoring (à venir) | — | 🔴 à armer avec son étape |
-| Buying committee = personnes distinctes (dédup email) | étape 8 (à venir) | — | 🔴 à armer avec son étape |
+| Buying committee = personnes distinctes (dédup email) | étape 8 | R9-R11 | 🟢 garantie |
+| Chaque event/contact rattaché à exactement une entité (anonymes/inconnus tracés) | étape 8 | R1-R8 | 🟢 garantie |
+| Mapping persona produit, partition complète double sens | config personas | P1-P7 | 🟢 garantie |
+| Plancher conversions : form_fill/meeting_booked à poids plein quel que soit le porteur | scoring (à venir) | — | 🔴 à armer avec son étape |
 

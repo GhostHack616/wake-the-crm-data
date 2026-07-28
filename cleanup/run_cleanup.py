@@ -759,6 +759,162 @@ def step7_fusion(tables, report):
 
 
 # ----------------------------------------------------------------
+# Étape 8 — Le ré-attachement : contacts et events rejoignent leurs entités
+# ----------------------------------------------------------------
+
+def persona_tier(title, personas):
+    if title in personas["_buyers_flat"]:
+        return "buyer"
+    if title in personas["champions"]:
+        return "champion"
+    if title in personas["utilisateurs"]:
+        return "utilisateur"
+    if title in personas["bruit"]:
+        return "bruit"
+    return "sans_titre" if not title else "NON_CLASSE"
+
+
+def step8_reattach(tables, report):
+    """entity_id sur contacts et events, orphelins rattachés par email,
+    dédup des personnes au sein d'une entité, tier persona stampé.
+
+    - entity_source : 'account' | 'inferred_from_email' | '' (vrai inconnu)
+    - is_orphan     : "1" uniquement pour les vrais inconnus (liste comptes à créer)
+    - person_primary / duplicate_of : même email dans la même entité = même
+      personne — une fiche principale, les copies tracées. Rien de supprimé.
+    - email_multi_entity : même email présent sur >= 2 entités (jamais fusionné)
+    - events : entity_id + is_anonymous + reparented (compte non-maître)
+    """
+    from collections import defaultdict
+
+    personas = dict(CONFIG["personas"])
+    personas["_buyers_flat"] = {t for ts in CONFIG["personas"]["buyers"].values() for t in ts}
+    accounts = tables["accounts"]
+    contacts = tables["contacts"]
+    events = tables["events"]
+
+    entity_of_account = {a["account_id"]: a["entity_id"] for a in accounts}
+    master_accounts = {a["account_id"] for a in accounts if a["is_master"] == "1"}
+    entity_by_root = {c["name_norm"]: c["entity_id"] for c in tables["companies"]}
+
+    n_by_account = n_by_email = n_unknown = 0
+    to_create = []
+    for c in contacts:
+        title = (c.get("job_title") or "").strip()
+        c["persona_tier"] = persona_tier(title, personas)
+        aid = (c.get("account_id") or "").strip()
+        if aid:
+            c["entity_id"] = entity_of_account[aid]
+            c["entity_source"] = "account"
+            c["is_orphan"] = "0"
+            n_by_account += 1
+        elif c.get("email_domain_root") and c["email_domain_root"] in entity_by_root:
+            c["entity_id"] = entity_by_root[c["email_domain_root"]]
+            c["entity_source"] = "inferred_from_email"
+            c["is_orphan"] = "0"
+            n_by_email += 1
+        else:
+            c["entity_id"] = ""
+            c["entity_source"] = ""
+            c["is_orphan"] = "1"
+            n_unknown += 1
+            to_create.append(c)
+
+    # dédup des personnes : même email dans la même entité = même personne
+    couples = defaultdict(list)
+    for c in contacts:
+        if c["entity_id"] and c.get("email_clean"):
+            couples[(c["entity_id"], c["email_clean"])].append(c)
+    entities_of_email = defaultdict(set)
+    for c in contacts:
+        if c["entity_id"] and c.get("email_clean"):
+            entities_of_email[c["email_clean"]].add(c["entity_id"])
+
+    n_dup_couples = n_copies = 0
+    for members in couples.values():
+        members.sort(key=lambda c: c["contact_id"])
+        for i, c in enumerate(members):
+            c["person_primary"] = "1" if i == 0 else "0"
+            c["duplicate_of"] = "" if i == 0 else members[0]["contact_id"]
+        if len(members) > 1:
+            n_dup_couples += 1
+            n_copies += len(members) - 1
+    for c in contacts:
+        c.setdefault("person_primary", "1" if not c["is_orphan"] == "1" else "")
+        c.setdefault("duplicate_of", "")
+        c["email_multi_entity"] = ("1" if c.get("email_clean")
+                                   and len(entities_of_email.get(c["email_clean"], set())) >= 2
+                                   else "0")
+
+    n_ev_attached = n_ev_anon = n_ev_reparented = 0
+    for e in events:
+        aid = (e.get("account_id") or "").strip()
+        if aid:
+            e["entity_id"] = entity_of_account[aid]
+            e["is_anonymous"] = "0"
+            e["reparented"] = "0" if aid in master_accounts else "1"
+            n_ev_attached += 1
+            n_ev_reparented += e["reparented"] == "1"
+        else:
+            e["entity_id"] = ""
+            e["is_anonymous"] = "1"
+            e["reparented"] = "0"
+            n_ev_anon += 1
+
+    n_con_reparented = sum(1 for c in contacts
+                           if (c.get("account_id") or "").strip()
+                           and c["account_id"] not in master_accounts)
+    to_create_ids = {t["contact_id"] for t in to_create}
+    unknown_with_events = sum(1 for e in events
+                              if e.get("contact_id") in to_create_ids)
+
+    # la liste "comptes à créer" : livrable à part entière
+    os.makedirs(OUT_DIR, exist_ok=True)
+    with open(os.path.join(OUT_DIR, "accounts_to_create.csv"), "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["contact_id", "email", "email_domain_root", "job_title", "persona_tier"])
+        for c in to_create:
+            w.writerow([c["contact_id"], c.get("email_clean") or c.get("email") or "",
+                        c.get("email_domain_root") or "", c.get("job_title") or "",
+                        c["persona_tier"]])
+
+    report.append("## Étape 8 — Ré-attachement : contacts et events rejoignent leurs entités\n")
+    report.append(
+        "entity_id partout · orphelins rattachés par le domaine de leur email quand il "
+        "désigne UNE entité (tracé inferred_from_email, même geste que l'étape 3) · "
+        "vrais inconnus → liste 'comptes à créer' · dédup des personnes (même email dans "
+        "la même entité = une personne : primaire + copies tracées) · rien de supprimé.\n"
+    )
+    report.append(f"- Contacts rattachés : **{n_by_account}** par leur compte + **{n_by_email}** "
+                  f"par leur email (attendu : 547) = {n_by_account + n_by_email}")
+    report.append(f"- Vrais inconnus : **{n_unknown}** (attendu : 53) → `accounts_to_create.csv` "
+                  f"— dont events portés : {unknown_with_events} (attendu : 0)")
+    report.append(f"- Events : **{n_ev_attached}** rattachés + **{n_ev_anon}** anonymes conservés "
+                  f"= {n_ev_attached + n_ev_anon}")
+    report.append(f"- Re-parentés (fiche non-maîtresse → entité) : **{n_ev_reparented}** events "
+                  f"(32,1 % des rattachables) · **{n_con_reparented}** contacts")
+    report.append(f"- Dédup personnes : **{n_dup_couples}** couples (entité, email) → "
+                  f"{n_copies} copies flaguées `duplicate_of` (attendu : 97/97)")
+    report.append("")
+
+    exp = CONFIG["invariants"]["reattachement"]
+    ok = (n_by_email == exp["orphelins_rattaches_email"]
+          and n_unknown == exp["vrais_inconnus"]
+          and unknown_with_events == exp["inconnus_avec_events"]
+          and n_ev_attached == exp["events_avec_entite"]
+          and n_ev_anon == exp["events_anonymes"]
+          and n_ev_reparented == exp["events_reparentes"]
+          and n_con_reparented == exp["contacts_reparentes"]
+          and n_dup_couples == exp["couples_dedup_personnes"]
+          and n_copies == exp["copies_flaguees"])
+    print(f"[étape 8] contacts: compte={n_by_account} email={n_by_email} inconnus={n_unknown} "
+          f"(events des inconnus={unknown_with_events}) | events: rattachés={n_ev_attached} "
+          f"anonymes={n_ev_anon} reparentés={n_ev_reparented} | contacts reparentés={n_con_reparented} "
+          f"| dédup: {n_dup_couples} couples, {n_copies} copies"
+          + ("  ✔" if ok else "  ⚠ A VERIFIER"))
+
+
+# ----------------------------------------------------------------
 # Le filet — invariants vérifiés après CHAQUE exécution du pipeline
 # ----------------------------------------------------------------
 
@@ -948,6 +1104,70 @@ def run_invariants(tables, report):
     checks.append(("F16", "ARR ex-client (churned, pool win-back)", f["arr_ex_client"], sum_ex))
     checks.append(("F17", "ARR actif + ex-client = ARR conservé", arr_kept, sum_actif + sum_ex))
 
+    # -- Personas (paramètre de scoring) : partition complète, double sens
+    p = inv["personas"]
+    tiers = {}
+    for r in contacts:
+        tiers[r.get("persona_tier", "")] = tiers.get(r.get("persona_tier", ""), 0) + 1
+    checks.append(("P1", "buyers (périmètre produit)", p["buyers"], tiers.get("buyer", 0)))
+    checks.append(("P2", "champions", p["champions"], tiers.get("champion", 0)))
+    checks.append(("P3", "utilisateurs", p["utilisateurs"], tiers.get("utilisateur", 0)))
+    checks.append(("P4", "bruit (×0 sur signaux faibles, jamais sur conversions)",
+                   p["bruit"], tiers.get("bruit", 0)))
+    checks.append(("P5", "sans titre", p["sans_titre"], tiers.get("sans_titre", 0)))
+    census_titles = {(r.get("job_title") or "").strip() for r in contacts} - {""}
+    mapping_titles = ({t for ts in CONFIG["personas"]["buyers"].values() for t in ts}
+                      | set(CONFIG["personas"]["champions"])
+                      | set(CONFIG["personas"]["utilisateurs"])
+                      | set(CONFIG["personas"]["bruit"]))
+    checks.append(("P6", "libellés fantômes dans le mapping (double sens, aller)",
+                   p["libelles_fantomes"], len(mapping_titles - census_titles)))
+    checks.append(("P7", "titres du recensement non classés (double sens, retour)",
+                   p["titres_non_classes"],
+                   len(census_titles - mapping_titles) + tiers.get("NON_CLASSE", 0)))
+
+    # -- Ré-attachement (étape 8)
+    r8 = inv["reattachement"]
+    checks.append(("R1", "contacts avec entité", r8["contacts_avec_entite"],
+                   sum(1 for r in contacts if r.get("entity_id"))))
+    checks.append(("R2", "orphelins rattachés par email (tracés)",
+                   r8["orphelins_rattaches_email"],
+                   sum(1 for r in contacts if r.get("entity_source") == "inferred_from_email")))
+    checks.append(("R3", "vrais inconnus (liste comptes à créer)", r8["vrais_inconnus"],
+                   sum(1 for r in contacts if r.get("is_orphan") == "1")))
+    unknown_ids = {r["contact_id"] for r in contacts if r.get("is_orphan") == "1"}
+    checks.append(("R4", "events portés par un vrai inconnu", r8["inconnus_avec_events"],
+                   sum(1 for e in events if e.get("contact_id") in unknown_ids)))
+    checks.append(("R5", "events avec entité", r8["events_avec_entite"],
+                   sum(1 for e in events if e.get("entity_id"))))
+    checks.append(("R6", "events anonymes conservés", r8["events_anonymes"],
+                   sum(1 for e in events if e.get("is_anonymous") == "1")))
+    checks.append(("R7", "events re-parentés (32,1 % des rattachables)",
+                   r8["events_reparentes"],
+                   sum(1 for e in events if e.get("reparented") == "1")))
+    masters8 = {a["account_id"] for a in accounts if a["is_master"] == "1"}
+    checks.append(("R8", "contacts re-parentés", r8["contacts_reparentes"],
+                   sum(1 for r in contacts if (r.get("account_id") or "").strip()
+                       and r["account_id"] not in masters8)))
+    checks.append(("R9", "copies de personnes flaguées (duplicate_of)",
+                   r8["copies_flaguees"],
+                   sum(1 for r in contacts if r.get("duplicate_of"))))
+    checks.append(("R10", "emails présents sur >= 2 entités (flag, jamais fusionnés)",
+                   r8["emails_multi_entites"],
+                   len({r["email_clean"] for r in contacts if r.get("email_multi_entity") == "1"})))
+    # anti-faux-cluster : dans une entité, deux "personnes distinctes" ne
+    # partagent jamais un email
+    primary_pairs = {}
+    n_faux = 0
+    for r in contacts:
+        if r.get("person_primary") == "1" and r.get("entity_id") and r.get("email_clean"):
+            k = (r["entity_id"], r["email_clean"])
+            if k in primary_pairs:
+                n_faux += 1
+            primary_pairs[k] = True
+    checks.append(("R11", "faux clusters restants (2 primaires, même email, même entité)",
+                   r8["faux_clusters_restants"], n_faux))
+
     def check_passes(expected, measured):
         if isinstance(expected, str) and expected.startswith(">="):
             return measured >= int(expected[2:])
@@ -1013,13 +1233,13 @@ def main():
     step5_emails(tables, report)
     step6_date_sanity(tables, report)
     step7_fusion(tables, report)
+    step8_reattach(tables, report)
 
     run_invariants(tables, report)
     render_traceability(report)
 
     for table, rows in tables.items():
-        if table != "events":          # events pas encore transformés (étapes 8-10)
-            save(table, rows)
+        save(table, rows)
 
     with open(REPORT_PATH, "w") as f:
         f.write("\n".join(report) + "\n")
