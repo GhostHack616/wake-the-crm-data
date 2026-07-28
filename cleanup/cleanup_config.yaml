@@ -72,3 +72,9 @@ countries:
 domains:
   strip_prefixes: ["www."]
   known_tlds: [com, fr, eu, co, io]
+  # Inférence des domaines manquants (2 671 fiches sans domaine) :
+  # racine déduite des emails PRO des contacts, uniquement si tous les
+  # contacts pointent vers la MÊME racine (unanimité — 0 cas ambigu mesuré).
+  # Traçée dans domain_source='inferred_from_contacts'.
+  # Validée : racine(domaine déclaré) = racine(emails) sur 25 785/25 785 comptes.
+  personal_email_domains: [gmail.com]

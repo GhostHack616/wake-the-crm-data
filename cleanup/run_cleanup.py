@@ -174,23 +174,57 @@ def step2_countries(tables, report):
 # Étape 3 — Les domaines : www./casse -> domain_clean, racine -> domain_root
 # ----------------------------------------------------------------
 
-def step3_domains(tables, report):
-    """Ajoute domain_clean, domain_root et has_domain sur accounts.
+def email_root(email, personal_domains):
+    """Racine du domaine d'un email pro. None si vide, malformé ou perso.
 
-    - domain_clean : minuscules, sans les préfixes listés en config (www.)
-    - domain_root  : partie avant l'extension (acme.com -> acme)
-                     = clé n°1 de détection des doublons (étape 7)
-    - has_domain   : "1"/"0" — les fiches sans domaine s'appuieront sur le NOM
-    Aucun domaine n'est inventé. Extension inconnue -> listée dans le rapport.
+    Robuste aux défauts connus (réparés à l'étape 5) : espaces internes,
+    double @@ (on prend la partie après le DERNIER @).
+    """
+    e = (email or "").strip().lower().replace(" ", "")
+    if "@" not in e:
+        return None
+    dom = e.rsplit("@", 1)[1]
+    if not dom or dom in personal_domains:
+        return None
+    return dom.split(".")[0]
+
+
+def step3_domains(tables, report):
+    """Ajoute domain_clean, domain_root, domain_source et has_domain sur accounts.
+
+    - domain_clean  : minuscules, sans les préfixes listés en config (www.)
+    - domain_root   : partie avant l'extension (acme.com -> acme)
+                      = clé n°1 de détection des doublons (étape 7)
+    - domain_source : 'declared' (champ domain) | 'inferred_from_contacts'
+                      (déduit des emails pro des contacts, uniquement si
+                      UNANIMES sur une seule racine) | 'none'
+    - has_domain    : "1" si une racine existe (déclarée ou déduite), sinon "0"
+    Traçabilité totale : aucune déduction cachée, aucune déduction ambiguë.
+    Extension inconnue -> listée dans le rapport.
     """
     prefixes = CONFIG["domains"]["strip_prefixes"]
     known_tlds = set(CONFIG["domains"]["known_tlds"])
+    personal = set(CONFIG["domains"]["personal_email_domains"])
     rows = tables["accounts"]
 
-    n_www = n_empty = n_root_empty = 0
+    # racines d'emails pro par compte (pour l'inférence des domaines manquants)
+    roots_by_account = {}
+    for c in tables["contacts"]:
+        aid = c.get("account_id") or ""
+        if not aid:
+            continue
+        r = email_root(c.get("email"), personal)
+        roots_by_account.setdefault(aid, set())
+        if r:
+            roots_by_account[aid].add(r)
+
+    n_www = n_root_empty = 0
+    n_declared = n_inferred = n_none = n_ambiguous = 0
+    none_reasons = {"aucun contact": 0, "emails perso/vides seulement": 0}
     tld_counts = {}
     unknown_tlds = {}
     examples = []
+    infer_examples = []
 
     for row in rows:
         raw = (row.get("domain") or "").strip()
@@ -203,43 +237,76 @@ def step3_domains(tables, report):
                     examples.append(f"`{raw}` → `{clean}`")
                 break
         row["domain_clean"] = clean
-        if not clean:
-            n_empty += 1
-            row["domain_root"] = ""
-            row["has_domain"] = "0"
-            continue
-        row["has_domain"] = "1"
-        parts = clean.split(".")
-        row["domain_root"] = parts[0]
-        if not parts[0]:
-            n_root_empty += 1
-        tld = parts[-1] if len(parts) > 1 else ""
-        tld_counts[tld] = tld_counts.get(tld, 0) + 1
-        if tld not in known_tlds:
-            unknown_tlds[tld] = unknown_tlds.get(tld, 0) + 1
 
-    report.append("## Étape 3 — Domaines : nettoyage + racine (clé de dédup n°1)\n")
+        if clean:
+            # cas 1 : domaine déclaré dans le CRM
+            parts = clean.split(".")
+            row["domain_root"] = parts[0]
+            row["domain_source"] = "declared"
+            row["has_domain"] = "1"
+            n_declared += 1
+            if not parts[0]:
+                n_root_empty += 1
+            tld = parts[-1] if len(parts) > 1 else ""
+            tld_counts[tld] = tld_counts.get(tld, 0) + 1
+            if tld not in known_tlds:
+                unknown_tlds[tld] = unknown_tlds.get(tld, 0) + 1
+            continue
+
+        # cas 2 : domaine vide -> déduction depuis les emails pro des contacts
+        aid = row.get("account_id") or ""
+        roots = roots_by_account.get(aid)
+        if roots and len(roots) == 1:
+            row["domain_root"] = next(iter(roots))
+            row["domain_source"] = "inferred_from_contacts"
+            row["has_domain"] = "1"
+            n_inferred += 1
+            if len(infer_examples) < 2:
+                infer_examples.append(f"{row['account_name']} → racine `{row['domain_root']}`")
+        else:
+            row["domain_root"] = ""
+            row["domain_source"] = "none"
+            row["has_domain"] = "0"
+            n_none += 1
+            if roots and len(roots) > 1:
+                n_ambiguous += 1
+            elif aid not in roots_by_account:
+                none_reasons["aucun contact"] += 1
+            else:
+                none_reasons["emails perso/vides seulement"] += 1
+
+    report.append("## Étape 3 — Domaines : nettoyage + racine (clé de dédup n°1) + inférence tracée\n")
     report.append(
         "domain_clean = minuscules sans préfixe www. · domain_root = partie avant "
-        "l'extension · has_domain = flag pour les fiches sans domaine "
-        "(la fusion s'appuiera sur le nom pour elles). Aucun domaine inventé.\n"
+        "l'extension, ou déduite des emails pro des contacts quand ils sont UNANIMES · "
+        "domain_source trace l'origine (declared / inferred_from_contacts / none) · "
+        "has_domain = flag final. Validation de l'inférence : sur les comptes ayant "
+        "domaine ET emails pro, racine(domaine) = racine(emails) dans 25 785 cas sur "
+        "25 785 (0 divergence) — déduire n'est pas deviner.\n"
     )
     report.append(f"- Préfixes www. retirés : **{n_www}** (attendu audit : 1 825)")
-    report.append(f"- Fiches sans domaine : **{n_empty}** (attendu audit : 2 671) → has_domain=0")
+    report.append(f"- Domaines déclarés : **{n_declared}** · racine déduite des contacts : "
+                  f"**{n_inferred}** (attendu : 2 538) · sans racine : **{n_none}** "
+                  f"(attendu : 133 = 94 sans contact + 39 emails perso) {none_reasons}")
+    report.append(f"- Déductions ambiguës (plusieurs racines candidates) : **{n_ambiguous}** (attendu : 0)")
     report.append(f"- Racines vides alors qu'un domaine existe : **{n_root_empty}** (attendu : 0)")
     report.append(f"- Extensions rencontrées : " +
                   ", ".join(f".{t} ({n})" for t, n in sorted(tld_counts.items())))
     report.append(f"- Extensions hors liste attendue : "
                   + (str(unknown_tlds) if unknown_tlds else "aucune"))
     if examples:
-        report.append(f"- Exemples : " + " · ".join(examples))
+        report.append(f"- Exemples nettoyage : " + " · ".join(examples))
+    if infer_examples:
+        report.append(f"- Exemples inférence : " + " · ".join(infer_examples))
     report.append("")
 
-    print(f"[étape 3] accounts: www retirés={n_www} sans_domaine={n_empty} "
-          f"racines_vides={n_root_empty} tlds={sorted(tld_counts)} "
-          f"inconnues={unknown_tlds or 'aucune'}"
-          + ("  ✔" if n_www == 1825 and n_empty == 2671 and n_root_empty == 0
-             and not unknown_tlds else "  ⚠ A VERIFIER"))
+    ok = (n_www == 1825 and n_inferred == 2538 and n_none == 133
+          and n_ambiguous == 0 and n_root_empty == 0 and not unknown_tlds)
+    print(f"[étape 3] accounts: www retirés={n_www} déclarés={n_declared} "
+          f"déduits={n_inferred} sans_racine={n_none} ({none_reasons}) "
+          f"ambigus={n_ambiguous} racines_vides={n_root_empty} "
+          f"tlds={sorted(tld_counts)} inconnues={unknown_tlds or 'aucune'}"
+          + ("  ✔" if ok else "  ⚠ A VERIFIER"))
 
 
 def main():

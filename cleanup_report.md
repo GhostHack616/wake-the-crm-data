@@ -45,14 +45,16 @@ Table de correspondance en config (cleanup_config.yaml). Une graphie absente de 
 
 Graphies distinctes reconnues : 24 · fiches mappées : 30000/30000 · non mappées : 0
 
-## Étape 3 — Domaines : nettoyage + racine (clé de dédup n°1)
+## Étape 3 — Domaines : nettoyage + racine (clé de dédup n°1) + inférence tracée
 
-domain_clean = minuscules sans préfixe www. · domain_root = partie avant l'extension · has_domain = flag pour les fiches sans domaine (la fusion s'appuiera sur le nom pour elles). Aucun domaine inventé.
+domain_clean = minuscules sans préfixe www. · domain_root = partie avant l'extension, ou déduite des emails pro des contacts quand ils sont UNANIMES · domain_source trace l'origine (declared / inferred_from_contacts / none) · has_domain = flag final. Validation de l'inférence : sur les comptes ayant domaine ET emails pro, racine(domaine) = racine(emails) dans 25 785 cas sur 25 785 (0 divergence) — déduire n'est pas deviner.
 
 - Préfixes www. retirés : **1825** (attendu audit : 1 825)
-- Fiches sans domaine : **2671** (attendu audit : 2 671) → has_domain=0
+- Domaines déclarés : **27329** · racine déduite des contacts : **2538** (attendu : 2 538) · sans racine : **133** (attendu : 133 = 94 sans contact + 39 emails perso) {'aucun contact': 94, 'emails perso/vides seulement': 39}
+- Déductions ambiguës (plusieurs racines candidates) : **0** (attendu : 0)
 - Racines vides alors qu'un domaine existe : **0** (attendu : 0)
 - Extensions rencontrées : .co (3865), .com (7847), .eu (4006), .fr (7836), .io (3775)
 - Extensions hors liste attendue : aucune
-- Exemples : `www.brionexpartners.io` → `brionexpartners.io` · `www.cendradata.eu` → `cendradata.eu`
+- Exemples nettoyage : `www.brionexpartners.io` → `brionexpartners.io` · `www.cendradata.eu` → `cendradata.eu`
+- Exemples inférence : PrimofinSoft & Co → racine `primofinsoft` · Cendravialogic Group → racine `cendravialogic`
 
