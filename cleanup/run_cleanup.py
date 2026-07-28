@@ -160,7 +160,7 @@ def step2_countries(tables, report):
         report.append(f"| {label} | {iso} | {counts[iso]} |")
     total_mapped = sum(counts.values())
     report.append("")
-    report.append(f"Graphies distinctes reconnues : {len(variants_seen)} · "
+    report.append(f"Graphies reconnues : {len(variants_seen)} canoniques (30 brutes avant minuscules/trim, invariant C5) · "
                   f"fiches mappées : {total_mapped}/{len(rows)} · "
                   f"non mappées : {sum(unmapped.values())}"
                   + (f" ({unmapped})" if unmapped else ""))
@@ -1117,7 +1117,7 @@ def step10_bot(tables, report):
 
 
 # ----------------------------------------------------------------
-# Étape 11 — La segmentation : 10 états factuels, partition complète
+# Étape 11 — La segmentation : 11 états factuels, partition complète
 # ----------------------------------------------------------------
 
 def step11_segment(tables, report):
@@ -1188,7 +1188,7 @@ def step11_segment(tables, report):
         counts[seg] += 1
 
     exp = CONFIG["invariants"]["segmentation"]
-    report.append("## Étape 11 — Segmentation : 10 états factuels → 7 plays\n")
+    report.append("## Étape 11 — Segmentation : 11 états factuels → 9 plays\n")
     report.append(
         "Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement "
         "NET). MORT/DORMANT : champ déclaré en dernier recours, hors scoring, flagué. "

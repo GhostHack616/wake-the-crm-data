@@ -69,7 +69,7 @@ Table de correspondance en config (cleanup_config.yaml). Une graphie absente de 
 | Suisse | CH | 1552 |
 | Royaume-Uni | GB | 1227 |
 
-Graphies distinctes reconnues : 24 · fiches mappées : 30000/30000 · non mappées : 0
+Graphies reconnues : 24 canoniques (30 brutes avant minuscules/trim, invariant C5) · fiches mappées : 30000/30000 · non mappées : 0
 
 ## Étape 3 — Domaines : nettoyage + racine (clé de dédup n°1) + inférence tracée
 
@@ -154,7 +154,7 @@ Définition verrouillée : délai open → dernier envoi antérieur (même campa
 - Events flagués from_bot : **420** (attendu : 420)
 - Témoins humains flagués à tort : **0** (attendu : 0) — CON-077195 : médiane 84258 s = 23.4 h
 
-## Étape 11 — Segmentation : 10 états factuels → 7 plays
+## Étape 11 — Segmentation : 11 états factuels → 9 plays
 
 Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement NET). MORT/DORMANT : champ déclaré en dernier recours, hors scoring, flagué. Décision architecturale : la hot list finale est UNIQUE, tous segments, avec le play — 3 des 25 entités les plus chaudes vivent hors des segments prospects.
 
@@ -288,7 +288,7 @@ Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement NE
 | Les vides de la fiche élue se complètent depuis les jumelles (ARR, owner) et les copies (titres) — provenance tracée | étapes 7+8 (correctif 28/07) | F18-F20, R12-R14 | 🟢 garantie |
 | Rien n'est supprimé, rollback intégral | toutes | C1-C6, F4 + merged_into | 🟢 garantie |
 | Le routage lit les FAITS (a_ete_client/deal_en_cours), pas l'étiquette | étapes 7+11 (faits + play) | G13-G14 | 🟢 garantie |
-| Segmentation : 10 états factuels sur flux net, partition complète ; MORT/DORMANT en dernier recours assumé | étape 11 | G1-G15 | 🟢 garantie |
+| Segmentation : 11 états factuels sur flux net, partition complète ; MORT/DORMANT en dernier recours assumé | étape 11 | G1-G15 | 🟢 garantie |
 | Hot list UNIQUE tous segments + colonne play (les files = des vues) | scoring (à venir) | — | 🔴 à armer avec son étape |
 | email_sent pèse 0, opens ≈ 0 dans le score | scoring (à venir) | — | 🔴 à armer avec son étape |
 | /careers et /blog à poids nul | scoring (à venir) | — | 🔴 à armer avec son étape |
