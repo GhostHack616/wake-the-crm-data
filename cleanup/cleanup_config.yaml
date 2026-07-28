@@ -1,0 +1,22 @@
+# =============================================================
+# Configuration du cleanup — Wake the CRM
+# Exigence du brief : "config, pas code" — chaque règle vit ici.
+# Le script run_cleanup.py lit ce fichier et ne contient que la mécanique.
+# =============================================================
+
+# NOW du dataset = timestamp du dernier event. Jamais la date système.
+reference_date: "2026-07-22"
+
+# --- Étape 1 : les dates -------------------------------------
+# 3 formats coexistent dans les colonnes de dates :
+#   - ISO                : 2022-12-13
+#   - année à 2 chiffres : MM/DD/YY   (format américain)
+#   - année à 4 chiffres : DD/MM/YYYY (format français)
+# Règle prouvée sur ~90 000 dates, 0 contre-exemple :
+#   le nombre de chiffres de l'année discrimine les deux formats slash.
+dates:
+  columns:
+    accounts: [created_date, last_activity_date, renewal_date]
+    contacts: [created_date]
+  # bornes de vraisemblance (le CRM a 8 ans ; les renewals vont jusqu'à mi-2027)
+  plausible_years: [2018, 2028]
