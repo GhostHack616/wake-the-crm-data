@@ -126,6 +126,24 @@ Définition verrouillée : délai open → dernier envoi antérieur (même campa
 - Events flagués from_bot : **420** (attendu : 420)
 - Témoins humains flagués à tort : **0** (attendu : 0) — CON-077195 : médiane 84258 s = 23.4 h
 
+## Étape 11 — Segmentation : 10 états factuels → 7 plays
+
+Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement NET). MORT/DORMANT : champ déclaré en dernier recours, hors scoring, flagué. Décision architecturale : la hot list finale est UNIQUE, tous segments, avec le play — 3 des 25 entités les plus chaudes vivent hors des segments prospects.
+
+| Segment | Entités | Play |
+|---|---|---|
+| CLIENT_ACTIF | 3037 | retention |
+| CLIENT_RENEWAL_ECHUE | 209 | risque |
+| CHURN_CONTRADICTOIRE | 36 | audit |
+| EX_CLIENT_REACTIF | 870 | win_back |
+| EX_CLIENT | 1188 | win_back_froid |
+| PROSPECT_CHAUD | 22 | new_business |
+| PROSPECT_TIEDE | 5232 | new_business |
+| LOST_REACTIF | 769 | reactivation |
+| TOUCHE_EMAIL_SEULEMENT | 3763 | nurture |
+| MORT | 3474 | aucun |
+| DORMANT | 1919 | aucun |
+
 ## 🛡️ Filet d'invariants — vérifié à chaque exécution
 
 | ID | Invariant | Attendu | Mesuré | Statut |
@@ -191,6 +209,21 @@ Définition verrouillée : délai open → dernier envoi antérieur (même campa
 | R8 | contacts re-parentés | 24230 | 24230 | 🟢 |
 | R9 | copies de personnes flaguées (duplicate_of) | 99 | 99 | 🟢 |
 | R10 | emails présents sur >= 2 entités (flag, jamais fusionnés) | 678 | 678 | 🟢 |
+| G1 | segment CLIENT_ACTIF | 3037 | 3037 | 🟢 |
+| G2 | segment CLIENT_RENEWAL_ECHUE | 209 | 209 | 🟢 |
+| G3 | segment CHURN_CONTRADICTOIRE | 36 | 36 | 🟢 |
+| G4 | segment EX_CLIENT_REACTIF | 870 | 870 | 🟢 |
+| G5 | segment EX_CLIENT | 1188 | 1188 | 🟢 |
+| G6 | segment PROSPECT_CHAUD | 22 | 22 | 🟢 |
+| G7 | segment PROSPECT_TIEDE | 5232 | 5232 | 🟢 |
+| G8 | segment LOST_REACTIF | 769 | 769 | 🟢 |
+| G9 | segment TOUCHE_EMAIL_SEULEMENT | 3763 | 3763 | 🟢 |
+| G10 | segment MORT | 3474 | 3474 | 🟢 |
+| G11 | segment DORMANT | 1919 | 1919 | 🟢 |
+| G12 | partition complète (somme des segments) | 20519 | 20519 | 🟢 |
+| G13 | cohérence : CLIENT_ACTIF + RENEWAL_ECHUE = entités customer | 3246 | 3246 | 🟢 |
+| G14 | cohérence : segments churned = entités churned | 2094 | 2094 | 🟢 |
+| G15 | DORMANT sur champ déclaré = tous flagués segment_evidence | 1919 | 1919 | 🟢 |
 | D1 | events flagués doublons (jamais supprimés) | 1988 | 1988 | 🟢 |
 | D2 | conversions flaguées doublons | 0 | 0 | 🟢 |
 | D3 | events anonymes flagués doublons | 0 | 0 | 🟢 |
@@ -199,7 +232,7 @@ Définition verrouillée : délai open → dernier envoi antérieur (même campa
 | B3 | témoins humains flagués bot (non-régression) | 0 | 0 | 🟢 |
 | R11 | faux clusters restants (2 primaires, même email, même entité) | 0 | 0 | 🟢 |
 
-À armer avec leurs étapes : étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
+À armer avec leurs étapes : résultat : ENT-16714 (pages résiliation) jamais dans la hot list — garantie devenue paramétrique · garde de config : poids des pages cancel/billing/export STRICTEMENT négatifs (dérive statistiquement invisible : 14 events/94 838, tous sur ENT-16714) · garde de config : /careers et /blog = 0 · email_sent = 0 · plancher conversions actif · couverture données→config : chaque type d'event (7) et chaque page (18) a un poids DÉCLARÉ — valeur nouvelle = alarme, jamais un défaut silencieux · flux : le scoring lit 0 from_bot et 0 is_duplicate_event ; le détecteur lit 94 838 — deux compteurs, deux alarmes · hot list : UNIQUE, tous segments confondus, colonne play — les files sont des vues · push : aucun contact opted_out dans une liste d'envoi
 
 ## 🧭 Traçabilité — chaque règle actée a-t-elle son contrôle automatique ?
 
@@ -214,7 +247,9 @@ Définition verrouillée : délai open → dernier envoi antérieur (même campa
 | Fusion : 20 519 entités, conflits flagués jamais tranchés en silence | étape 7 | F1-F14 | 🟢 garantie |
 | ARR comptable = customers uniquement (piège n°11) | étape 7 (arr_actif) | F15-F17 | 🟢 garantie |
 | Rien n'est supprimé, rollback intégral | toutes | C1-C6, F4 + merged_into | 🟢 garantie |
-| Le routage lit les FAITS (a_ete_client/deal_en_cours), pas l'étiquette | routage (à venir) | — | 🔴 à armer avec son étape |
+| Le routage lit les FAITS (a_ete_client/deal_en_cours), pas l'étiquette | étapes 7+11 (faits + play) | G13-G14 | 🟢 garantie |
+| Segmentation : 10 états factuels sur flux net, partition complète ; MORT/DORMANT en dernier recours assumé | étape 11 | G1-G15 | 🟢 garantie |
+| Hot list UNIQUE tous segments + colonne play (les files = des vues) | scoring (à venir) | — | 🔴 à armer avec son étape |
 | email_sent pèse 0, opens ≈ 0 dans le score | scoring (à venir) | — | 🔴 à armer avec son étape |
 | /careers et /blog à poids nul | scoring (à venir) | — | 🔴 à armer avec son étape |
 | Pages négatives (cancel/billing/export) à poids négatif | scoring (à venir) | — | 🔴 à armer avec son étape |

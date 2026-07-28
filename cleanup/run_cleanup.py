@@ -1047,6 +1047,97 @@ def step10_bot(tables, report):
 
 
 # ----------------------------------------------------------------
+# Étape 11 — La segmentation : 10 états factuels, partition complète
+# ----------------------------------------------------------------
+
+def step11_segment(tables, report):
+    """Colonnes segment, play et segment_evidence sur companies.
+
+    Règles factuelles en ordre strict (première qui matche gagne).
+    Engagement sur le flux NET (doublons + bot exclus), jamais les opens.
+    MORT/DORMANT : last_activity_max en DERNIER RECOURS (champ déclaré,
+    disqualifié du scoring), assumé et flagué segment_evidence.
+    """
+    from collections import defaultdict
+    from datetime import datetime, timedelta
+
+    cfg = CONFIG["segmentation"]
+    STRONG = set(cfg["engagement_fort"])
+    INTENT_PAGES = set(cfg["pages_intent"])
+    NOW = CONFIG["reference_date"]
+    year_ago = (datetime.strptime(NOW, "%Y-%m-%d")
+                - timedelta(days=cfg["seuil_mort_jours"])).date().isoformat()
+
+    has_events = defaultdict(int)
+    strong = defaultdict(int)
+    intent = defaultdict(int)
+    for e in tables["events"]:
+        ent = e.get("entity_id")
+        if not ent:
+            continue
+        has_events[ent] += 1
+        if e["is_duplicate_event"] == "0" and e["from_bot"] == "0":
+            t = e["event_type"]
+            if t in STRONG:
+                strong[ent] += 1
+            if t in ("form_fill", "meeting_booked") or \
+               (t == "website_visit" and e.get("page_url") in INTENT_PAGES):
+                intent[ent] += 1
+
+    counts = defaultdict(int)
+    for c in tables["companies"]:
+        ent, lc = c["entity_id"], c["lifecycle_consolidated"]
+        ren, la = c["renewal_date"], c["last_activity_max"]
+        s, f, ev = intent[ent] > 0, strong[ent] > 0, has_events[ent] > 0
+        evidence = "events"
+        if lc == "customer":
+            seg = "CLIENT_ACTIF" if ren >= NOW else "CLIENT_RENEWAL_ECHUE"
+        elif lc == "churned":
+            if ren and ren > NOW:
+                seg = "CHURN_CONTRADICTOIRE"
+            elif f:
+                seg = "EX_CLIENT_REACTIF"
+            else:
+                seg = "EX_CLIENT"
+        elif s:
+            seg = "PROSPECT_CHAUD"           # intent attribué — lost inclus
+        elif lc in ("lead", "prospect", "opportunity") and f:
+            seg = "PROSPECT_TIEDE"
+        elif lc == "lost" and f:
+            seg = "LOST_REACTIF"
+        elif ev:
+            seg = "TOUCHE_EMAIL_SEULEMENT"
+        elif not la or la < year_ago:
+            seg = "MORT"
+        else:
+            seg = "DORMANT"
+            evidence = "declared_field"      # le champ disqualifié décide — assumé
+        c["segment"] = seg
+        c["play"] = cfg["play"][seg]
+        c["segment_evidence"] = evidence
+        counts[seg] += 1
+
+    exp = CONFIG["invariants"]["segmentation"]
+    report.append("## Étape 11 — Segmentation : 10 états factuels → 7 plays\n")
+    report.append(
+        "Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement "
+        "NET). MORT/DORMANT : champ déclaré en dernier recours, hors scoring, flagué. "
+        "Décision architecturale : la hot list finale est UNIQUE, tous segments, avec "
+        "le play — 3 des 25 entités les plus chaudes vivent hors des segments prospects.\n"
+    )
+    report.append("| Segment | Entités | Play |")
+    report.append("|---|---|---|")
+    for seg in cfg["play"]:
+        report.append(f"| {seg} | {counts[seg]} | {cfg['play'][seg]} |")
+    report.append("")
+
+    ok = all(counts[k] == v for k, v in exp.items() if k != "evidence_declared_field") \
+        and sum(counts.values()) == len(tables["companies"])
+    print(f"[étape 11] " + " ".join(f"{k}={counts[k]}" for k in cfg["play"])
+          + f" total={sum(counts.values())}" + ("  ✔" if ok else "  ⚠ A VERIFIER"))
+
+
+# ----------------------------------------------------------------
 # Le filet — invariants vérifiés après CHAQUE exécution du pipeline
 # ----------------------------------------------------------------
 
@@ -1287,6 +1378,27 @@ def run_invariants(tables, report):
     checks.append(("R10", "emails présents sur >= 2 entités (flag, jamais fusionnés)",
                    r8["emails_multi_entites"],
                    len({r["email_clean"] for r in contacts if r.get("email_multi_entity") == "1"})))
+    # -- Segmentation (étape 11) : partition complète + cohérences croisées
+    g = inv["segmentation"]
+    seg_counts = {}
+    for c in companies:
+        seg_counts[c.get("segment", "")] = seg_counts.get(c.get("segment", ""), 0) + 1
+    for i, (seg, expected_n) in enumerate(
+            ((k, v) for k, v in g.items() if k != "evidence_declared_field"), 1):
+        checks.append((f"G{i}", f"segment {seg}", expected_n, seg_counts.get(seg, 0)))
+    checks.append(("G12", "partition complète (somme des segments)", len(companies),
+                   sum(seg_counts.values())))
+    checks.append(("G13", "cohérence : CLIENT_ACTIF + RENEWAL_ECHUE = entités customer",
+                   sum(1 for c in companies if c["lifecycle_consolidated"] == "customer"),
+                   seg_counts.get("CLIENT_ACTIF", 0) + seg_counts.get("CLIENT_RENEWAL_ECHUE", 0)))
+    checks.append(("G14", "cohérence : segments churned = entités churned",
+                   sum(1 for c in companies if c["lifecycle_consolidated"] == "churned"),
+                   seg_counts.get("CHURN_CONTRADICTOIRE", 0) + seg_counts.get("EX_CLIENT_REACTIF", 0)
+                   + seg_counts.get("EX_CLIENT", 0)))
+    checks.append(("G15", "DORMANT sur champ déclaré = tous flagués segment_evidence",
+                   g["evidence_declared_field"],
+                   sum(1 for c in companies if c.get("segment_evidence") == "declared_field")))
+
     # -- Dédup events (étape 9) + Bot (étape 10)
     d9 = inv["dedup_events"]
     checks.append(("D1", "events flagués doublons (jamais supprimés)",
@@ -1389,6 +1501,7 @@ def main():
     step8_reattach(tables, report)
     step9_dedup_events(tables, report)
     step10_bot(tables, report)
+    step11_segment(tables, report)
 
     run_invariants(tables, report)
     render_traceability(report)
