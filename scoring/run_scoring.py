@@ -351,6 +351,16 @@ def main():
     with open(os.path.join(IN_DIR, "dashboard_data.json"), "w") as f:
         json.dump(dash, f, ensure_ascii=False)
 
+    # Export VERSIONNÉ pour le dashboard (dossier commité, contrairement à
+    # data_clean/) : une seule source de vérité, les données du dash ne
+    # peuvent plus être périmées. Pure copie — aucun calcul ici.
+    import shutil
+    dash_dir = os.path.join(ROOT, "dashboard_data")
+    os.makedirs(dash_dir, exist_ok=True)
+    for fn in ("companies.csv", "accounts_clean.csv", "contacts_clean.csv",
+               "hot_list.csv", "dashboard_data.json", "scores_persons.csv"):
+        shutil.copy(os.path.join(IN_DIR, fn), os.path.join(dash_dir, fn))
+
     print(f"[moteur V1.1] {len(lignes)} entreprises scorées — "
           f"T1={dash['compteurs']['tier1']} T2={dash['compteurs']['tier2']} "
           f"perdus={dash['compteurs']['perdus']}")
