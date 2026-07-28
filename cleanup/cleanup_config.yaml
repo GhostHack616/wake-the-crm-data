@@ -161,6 +161,32 @@ personas:
 # au sein d'une entité (même email = même personne, primaire + copies
 # flaguées, rien de supprimé).
 
+# --- Étape 9 : dédup des events ------------------------------
+# Clé STRICTE : (contact, type, campagne, PAGE, jour) — la page dans la clé
+# protège le pattern des comptes chauds (/pricing puis /demo le même jour).
+# Ne s'applique JAMAIS aux 4 000 events anonymes (visiteurs différents :
+# l'appliquer supprimerait 2 872 lignes à tort — mesuré).
+# Première occurrence conservée, les suivantes flaguées. Rien de supprimé.
+
+# --- Étape 10 : détection du bot -----------------------------
+# DÉTECTION SUR LE FLUX BRUT (doublons inclus) : la dédup efface justement
+# le motif mécanique (3 opens + 3 clics par envoi -> 1 + 1). Le détecteur
+# doit être indépendant de l'ordre des étapes.
+# DÉFINITION de la cadence (verrouillée — 3 appariements donnent 3 chiffres,
+# une métrique sans définition n'est pas un chiffre) : délai open -> DERNIER
+# envoi antérieur de la même campagne. Bot : médiane <= 60 s.
+# Sous cette définition : CON-077194 = 4 s (l'horloge : +2/+4/+6 s, 60 fois) ;
+# CON-077195 (témoin humain) = 84 258 s = 23,4 h. Marge : x1 400.
+bot_detection:
+  min_emails_recus: 5
+  mediane_max_s: 60
+  temoins_humains: [CON-077195]   # jamais flagués — non-régression à chaque run
+
+# Note pour le scoring (justification opens ≈ 0, mesurée) : 1 660 clics
+# n'ont AUCUNE ouverture enregistrée (même contact + même campagne), dont
+# 348 de décideurs, sur 1 619 contacts distincts. Exiger l'ouverture avant
+# de compter le clic perdrait ces 1 660 signaux. Le clic est autonome.
+
 # --- Le filet : les invariants ------------------------------
 # Des vérités qui doivent rester vraies après CHAQUE exécution.
 # Vérifiées automatiquement en fin de pipeline : un seul rouge = alarme
@@ -250,10 +276,21 @@ invariants:
     emails_multi_entites: 678
     faux_clusters_restants: 0            # 0 entité où 2 "personnes distinctes" partagent un email
 
+  # Armés à l'étape 9 (dédup events) :
+  dedup_events:
+    lignes_flaguees: 1988
+    groupes: 1860
+    conversions_flaguees: 0
+    anonymes_flagues: 0
+
+  # Armés à l'étape 10 (bot) :
+  bot:
+    bots_detectes: 1                 # CON-077194, et lui seul
+    events_from_bot: 420
+    temoins_humains_flagues: 0       # CON-077195 ne déclenche jamais la règle
+
   # S'armeront automatiquement avec leurs étapes :
   a_armer:
-    - "étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés)"
-    - "étape 10 : le bot CON-077194 toujours flagué"
     - "étape 11+ : ACC-027283 (pages résiliation) jamais en HOT"
     - "étape 11+ : aucun contact opted_out dans une liste d'envoi"
 
@@ -279,7 +316,8 @@ tracabilite:
   - {regle: "Aucun filtre dur avant scoring (test d'amputation)",                ou: "scoring (à venir)",   invariants: ""}
   - {regle: "Decay demi-vie courte + plancher 21 j",                             ou: "scoring (à venir)",   invariants: ""}
   - {regle: "Le silence des clients EST un score (file risque churn)",           ou: "routage (à venir)",   invariants: ""}
-  - {regle: "Bot détecté au chronomètre (cadence), jamais au volume",            ou: "étape 10 (à venir)",  invariants: ""}
+  - {regle: "Bot détecté au chronomètre (cadence), jamais au volume — sur le flux BRUT", ou: "étape 10",     invariants: "B1-B3"}
+  - {regle: "Dédup events : clé stricte page incluse, anonymes intouchés",       ou: "étape 9",             invariants: "D1-D3"}
   - {regle: "Récence = events uniquement, jamais last_activity_date",            ou: "scoring (à venir)",   invariants: ""}
   - {regle: "Buying committee = personnes distinctes (dédup email)",             ou: "étape 8",             invariants: "R9-R11"}
   - {regle: "Chaque event/contact rattaché à exactement une entité (anonymes/inconnus tracés)", ou: "étape 8", invariants: "R1-R8"}

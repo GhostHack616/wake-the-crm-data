@@ -111,6 +111,21 @@ entity_id partout · orphelins rattachés par le domaine de leur email quand il 
 - Re-parentés (fiche non-maîtresse → entité) : **29184** events (32,1 % des rattachables) · **24230** contacts
 - Dédup personnes : **99** couples (entité, email) → 99 copies flaguées `duplicate_of` (attendu : 97/97)
 
+## Étape 9 — Dédup des events (flags, jamais de suppression)
+
+Clé stricte (contact, type, campagne, PAGE, jour) — la page protège le pattern /pricing puis /demo. Anonymes intouchés (l'appliquer supprimerait 2 872 lignes à tort — mesuré). Première occurrence conservée.
+
+- Lignes flaguées : **1988** (attendu : 1 988) dans **1860** groupes (attendu : 1 860)
+- Conversions touchées : **0** (attendu : 0) · anonymes flagués : **0** (attendu : 0)
+
+## Étape 10 — Le bot : détection au chronomètre, sur le flux brut
+
+Définition verrouillée : délai open → dernier envoi antérieur (même campagne), bot = médiane ≤ 60 s sur ≥ 5 emails. Sur le flux BRUT — la dédup efface le motif mécanique (3+3 par envoi → 1+1). Flag, jamais suppression : le bot est une information sur le compte, pas un déchet.
+
+- Bots détectés : **1** — CON-077194 (médiane 4 s) (attendu : 1, CON-077194 à 4 s)
+- Events flagués from_bot : **420** (attendu : 420)
+- Témoins humains flagués à tort : **0** (attendu : 0) — CON-077195 : médiane 84258 s = 23.4 h
+
 ## 🛡️ Filet d'invariants — vérifié à chaque exécution
 
 | ID | Invariant | Attendu | Mesuré | Statut |
@@ -176,9 +191,15 @@ entity_id partout · orphelins rattachés par le domaine de leur email quand il 
 | R8 | contacts re-parentés | 24230 | 24230 | 🟢 |
 | R9 | copies de personnes flaguées (duplicate_of) | 99 | 99 | 🟢 |
 | R10 | emails présents sur >= 2 entités (flag, jamais fusionnés) | 678 | 678 | 🟢 |
+| D1 | events flagués doublons (jamais supprimés) | 1988 | 1988 | 🟢 |
+| D2 | conversions flaguées doublons | 0 | 0 | 🟢 |
+| D3 | events anonymes flagués doublons | 0 | 0 | 🟢 |
+| B1 | bots détectés (CON-077194, et lui seul) | 1 | 1 | 🟢 |
+| B2 | events from_bot | 420 | 420 | 🟢 |
+| B3 | témoins humains flagués bot (non-régression) | 0 | 0 | 🟢 |
 | R11 | faux clusters restants (2 primaires, même email, même entité) | 0 | 0 | 🟢 |
 
-À armer avec leurs étapes : étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés) · étape 10 : le bot CON-077194 toujours flagué · étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
+À armer avec leurs étapes : étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
 
 ## 🧭 Traçabilité — chaque règle actée a-t-elle son contrôle automatique ?
 
@@ -201,7 +222,8 @@ entity_id partout · orphelins rattachés par le domaine de leur email quand il 
 | Aucun filtre dur avant scoring (test d'amputation) | scoring (à venir) | — | 🔴 à armer avec son étape |
 | Decay demi-vie courte + plancher 21 j | scoring (à venir) | — | 🔴 à armer avec son étape |
 | Le silence des clients EST un score (file risque churn) | routage (à venir) | — | 🔴 à armer avec son étape |
-| Bot détecté au chronomètre (cadence), jamais au volume | étape 10 (à venir) | — | 🔴 à armer avec son étape |
+| Bot détecté au chronomètre (cadence), jamais au volume — sur le flux BRUT | étape 10 | B1-B3 | 🟢 garantie |
+| Dédup events : clé stricte page incluse, anonymes intouchés | étape 9 | D1-D3 | 🟢 garantie |
 | Récence = events uniquement, jamais last_activity_date | scoring (à venir) | — | 🔴 à armer avec son étape |
 | Buying committee = personnes distinctes (dédup email) | étape 8 | R9-R11 | 🟢 garantie |
 | Chaque event/contact rattaché à exactement une entité (anonymes/inconnus tracés) | étape 8 | R1-R8 | 🟢 garantie |

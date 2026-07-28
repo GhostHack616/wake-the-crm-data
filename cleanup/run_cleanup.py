@@ -915,6 +915,138 @@ def step8_reattach(tables, report):
 
 
 # ----------------------------------------------------------------
+# Étape 9 — Dédup des events : flag des répétitions strictes, anonymes intouchés
+# ----------------------------------------------------------------
+
+def step9_dedup_events(tables, report):
+    """Flague is_duplicate_event sur les répétitions STRICTES
+    (contact, type, campagne, page, jour) — première occurrence conservée.
+    Les events anonymes ne sont jamais touchés (visiteurs différents).
+    """
+    from collections import defaultdict
+    events = tables["events"]
+
+    groups = defaultdict(list)
+    for e in events:
+        e["is_duplicate_event"] = "0"
+        if e.get("contact_id"):
+            groups[(e["contact_id"], e["event_type"], e.get("campaign") or "",
+                    e.get("page_url") or "", e["timestamp"][:10])].append(e)
+
+    n_flagged = n_groups = n_conv = 0
+    for members in groups.values():
+        if len(members) > 1:
+            n_groups += 1
+            members.sort(key=lambda e: e["timestamp"])
+            for e in members[1:]:
+                e["is_duplicate_event"] = "1"
+                n_flagged += 1
+                if e["event_type"] in ("form_fill", "meeting_booked"):
+                    n_conv += 1
+    n_anon_flagged = sum(1 for e in events
+                         if not e.get("contact_id") and e["is_duplicate_event"] == "1")
+
+    report.append("## Étape 9 — Dédup des events (flags, jamais de suppression)\n")
+    report.append(
+        "Clé stricte (contact, type, campagne, PAGE, jour) — la page protège le "
+        "pattern /pricing puis /demo. Anonymes intouchés (l'appliquer supprimerait "
+        "2 872 lignes à tort — mesuré). Première occurrence conservée.\n"
+    )
+    report.append(f"- Lignes flaguées : **{n_flagged}** (attendu : 1 988) dans **{n_groups}** groupes (attendu : 1 860)")
+    report.append(f"- Conversions touchées : **{n_conv}** (attendu : 0) · anonymes flagués : **{n_anon_flagged}** (attendu : 0)")
+    report.append("")
+
+    exp = CONFIG["invariants"]["dedup_events"]
+    ok = (n_flagged == exp["lignes_flaguees"] and n_groups == exp["groupes"]
+          and n_conv == exp["conversions_flaguees"] and n_anon_flagged == exp["anonymes_flagues"])
+    print(f"[étape 9] flagués={n_flagged} groupes={n_groups} conversions={n_conv} "
+          f"anonymes={n_anon_flagged}" + ("  ✔" if ok else "  ⚠ A VERIFIER"))
+
+
+# ----------------------------------------------------------------
+# Étape 10 — Le bot : détection au chronomètre, sur le FLUX BRUT
+# ----------------------------------------------------------------
+
+def step10_bot(tables, report):
+    """Flague is_bot (contact) et from_bot (events) par la CADENCE.
+
+    Détection sur le flux BRUT (doublons inclus) : la dédup efface le motif
+    mécanique. Définition verrouillée : délai open -> dernier envoi antérieur
+    de la même campagne ; bot = médiane <= seuil config sur >= N emails.
+    """
+    from collections import defaultdict
+    from datetime import datetime
+    from statistics import median
+
+    cfg = CONFIG["bot_detection"]
+    events = tables["events"]
+    contacts = tables["contacts"]
+    parse = lambda e: datetime.strptime(e["timestamp"], "%Y-%m-%dT%H:%M:%S")
+
+    sends = defaultdict(list)     # (contact, campagne) -> timestamps triés
+    opens = defaultdict(list)     # contact -> [(campagne, ts)]
+    n_sends = defaultdict(int)
+    for e in events:
+        cid = e.get("contact_id")
+        if not cid:
+            continue
+        if e["event_type"] == "email_sent":
+            sends[(cid, e.get("campaign") or "")].append(parse(e))
+            n_sends[cid] += 1
+        elif e["event_type"] == "email_open":
+            opens[cid].append((e.get("campaign") or "", parse(e)))
+    for v in sends.values():
+        v.sort()
+
+    bots = set()
+    medians = {}
+    for cid, os_ in opens.items():
+        if n_sends[cid] < cfg["min_emails_recus"]:
+            continue
+        delays = []
+        for camp, t in os_:
+            prior = [s for s in sends.get((cid, camp), []) if s <= t]
+            if prior:
+                delays.append((t - prior[-1]).total_seconds())
+        if delays:
+            medians[cid] = median(delays)
+            if medians[cid] <= cfg["mediane_max_s"]:
+                bots.add(cid)
+
+    for c in contacts:
+        c["is_bot"] = "1" if c["contact_id"] in bots else "0"
+    n_from_bot = 0
+    for e in events:
+        e["from_bot"] = "1" if e.get("contact_id") in bots else "0"
+        n_from_bot += e["from_bot"] == "1"
+    temoins_flagues = [t for t in cfg["temoins_humains"] if t in bots]
+
+    report.append("## Étape 10 — Le bot : détection au chronomètre, sur le flux brut\n")
+    report.append(
+        "Définition verrouillée : délai open → dernier envoi antérieur (même campagne), "
+        "bot = médiane ≤ 60 s sur ≥ 5 emails. Sur le flux BRUT — la dédup efface le "
+        "motif mécanique (3+3 par envoi → 1+1). Flag, jamais suppression : le bot est "
+        "une information sur le compte, pas un déchet.\n"
+    )
+    det = ", ".join(f"{cid} (médiane {medians[cid]:.0f} s)" for cid in sorted(bots))
+    report.append(f"- Bots détectés : **{len(bots)}** — {det or 'aucun'} (attendu : 1, CON-077194 à 4 s)")
+    report.append(f"- Events flagués from_bot : **{n_from_bot}** (attendu : 420)")
+    report.append(f"- Témoins humains flagués à tort : **{len(temoins_flagues)}** (attendu : 0) — "
+                  + " · ".join(f"{t} : médiane {medians.get(t, 0):.0f} s = {medians.get(t, 0)/3600:.1f} h"
+                               for t in cfg["temoins_humains"]))
+    report.append("")
+
+    exp = CONFIG["invariants"]["bot"]
+    ok = (len(bots) == exp["bots_detectes"] and bots == {"CON-077194"}
+          and n_from_bot == exp["events_from_bot"]
+          and len(temoins_flagues) == exp["temoins_humains_flagues"])
+    print(f"[étape 10] bots={sorted(bots)} from_bot={n_from_bot} "
+          f"témoins_flagués={temoins_flagues or 0} "
+          f"(CON-077195: {medians.get('CON-077195', 0)/3600:.1f} h)"
+          + ("  ✔" if ok else "  ⚠ A VERIFIER"))
+
+
+# ----------------------------------------------------------------
 # Le filet — invariants vérifiés après CHAQUE exécution du pipeline
 # ----------------------------------------------------------------
 
@@ -1155,6 +1287,27 @@ def run_invariants(tables, report):
     checks.append(("R10", "emails présents sur >= 2 entités (flag, jamais fusionnés)",
                    r8["emails_multi_entites"],
                    len({r["email_clean"] for r in contacts if r.get("email_multi_entity") == "1"})))
+    # -- Dédup events (étape 9) + Bot (étape 10)
+    d9 = inv["dedup_events"]
+    checks.append(("D1", "events flagués doublons (jamais supprimés)",
+                   d9["lignes_flaguees"],
+                   sum(1 for e in events if e.get("is_duplicate_event") == "1")))
+    checks.append(("D2", "conversions flaguées doublons", d9["conversions_flaguees"],
+                   sum(1 for e in events if e.get("is_duplicate_event") == "1"
+                       and e["event_type"] in ("form_fill", "meeting_booked"))))
+    checks.append(("D3", "events anonymes flagués doublons", d9["anonymes_flagues"],
+                   sum(1 for e in events if not e.get("contact_id")
+                       and e.get("is_duplicate_event") == "1")))
+    b10 = inv["bot"]
+    checks.append(("B1", "bots détectés (CON-077194, et lui seul)", b10["bots_detectes"],
+                   sum(1 for r in contacts if r.get("is_bot") == "1")))
+    checks.append(("B2", "events from_bot", b10["events_from_bot"],
+                   sum(1 for e in events if e.get("from_bot") == "1")))
+    checks.append(("B3", "témoins humains flagués bot (non-régression)",
+                   b10["temoins_humains_flagues"],
+                   sum(1 for r in contacts if r.get("is_bot") == "1"
+                       and r["contact_id"] in CONFIG["bot_detection"]["temoins_humains"])))
+
     # anti-faux-cluster : dans une entité, deux "personnes distinctes" ne
     # partagent jamais un email
     primary_pairs = {}
@@ -1234,6 +1387,8 @@ def main():
     step6_date_sanity(tables, report)
     step7_fusion(tables, report)
     step8_reattach(tables, report)
+    step9_dedup_events(tables, report)
+    step10_bot(tables, report)
 
     run_invariants(tables, report)
     render_traceability(report)
