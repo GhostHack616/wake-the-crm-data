@@ -79,6 +79,17 @@ domains:
   # Validée : racine(domaine déclaré) = racine(emails) sur 25 785/25 785 comptes.
   personal_email_domains: [gmail.com]
 
+# --- Étape 4 : les noms --------------------------------------
+# name_norm = minuscules -> retrait des marqueurs de doublon
+# ('(old)', '- import', ' 2' final) -> retrait itératif des mentions
+# juridiques/décoratives en fin de nom -> retrait espaces/ponctuation.
+# C'est la clé n°2 de la fusion (couvre les 133 fiches sans racine).
+# Validation : name_norm doit être IDENTIQUE à domain_root sur 100 %
+# des fiches à domaine déclaré (l'audit a mesuré 27 329/27 329).
+names:
+  legal_suffixes: [sas, sa, sarl, gmbh, bv, ltd, spa, ab, oy, as, sl,
+                   group, france, "& co", and co]
+
 # --- Le filet : les invariants ------------------------------
 # Des vérités qui doivent rester vraies après CHAQUE exécution.
 # Vérifiées automatiquement en fin de pipeline : un seul rouge = alarme
@@ -98,12 +109,16 @@ invariants:
     renewal_date_remplies: 3386        # = 3 346 customers + 40 churned contradictoires
     events_form_fill: 16
     events_meeting_booked: 9
+    concordance_nom_racine_declares: 27329   # name_norm == domain_root, 100 % exigé
   sanite:
     domaines_declares: 27329
     racines_deduites: 2538
     fiches_sans_racine: 133      # couvre aussi "0 déduction ambiguë" (un cas ambigu → 134)
     www_retires: 1825
     longueur_racine_min: 6
+    noms_marques: 234                # (old) 80 + '- import' 80 + ' 2' 74
+    noms_distincts_min: 19000        # borne basse future table entreprises
+    noms_distincts_max: 22000        # borne haute
   # S'armeront automatiquement avec leurs étapes :
   a_armer:
     - "étape 7 : entités finales entre 19 000 et 22 000"

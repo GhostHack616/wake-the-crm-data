@@ -58,6 +58,16 @@ domain_clean = minuscules sans préfixe www. · domain_root = partie avant l'ext
 - Exemples nettoyage : `www.brionexpartners.io` → `brionexpartners.io` · `www.cendradata.eu` → `cendradata.eu`
 - Exemples inférence : PrimofinSoft & Co → racine `primofinsoft` · Cendravialogic Group → racine `cendravialogic`
 
+## Étape 4 — Noms : normalisation (clé de dédup n°2) + marqueurs
+
+name_norm = minuscules, sans marqueurs de doublon ni mentions juridiques (liste en config), sans ponctuation. dup_marker mémorise l'étiquette trouvée — une fiche marquée ne sera jamais fiche maîtresse.
+
+- Marqueurs détectés : **234** (attendu audit : 234) — (old) 80, - import 80, ' 2' 74
+- Noms vides après normalisation : **0** (attendu : 0)
+- **Concordance nom↔racine (domaines déclarés) : 27329/27329** (attendu : 27 329/27 329 — c'est LE test de validation du geste)
+- Concordance nom↔racine (racines déduites des emails) : 2538/2538 (contrôle indépendant bonus)
+- Noms normalisés distincts : **20519** (borne de sanité : 19 000 - 22 000 = future taille de la table entreprises)
+
 ## 🛡️ Filet d'invariants — vérifié à chaque exécution
 
 | ID | Invariant | Attendu | Mesuré | Statut |
@@ -72,11 +82,14 @@ domain_clean = minuscules sans préfixe www. · domain_root = partie avant l'ext
 | K2 | renewal_date remplies (= customers + churned contradictoires) | 3386 | 3386 | 🟢 |
 | K3 | form_fill présents | 16 | 16 | 🟢 |
 | K4 | meeting_booked présents | 9 | 9 | 🟢 |
+| K5 | concordance nom normalisé ↔ racine de domaine (déclarés) | 27329 | 27329 | 🟢 |
 | S1 | domaines déclarés | 27329 | 27329 | 🟢 |
 | S2 | racines déduites des contacts | 2538 | 2538 | 🟢 |
 | S3 | fiches sans racine | 133 | 133 | 🟢 |
 | S4 | longueur minimale des racines (anti-collision) | >= 6 | 6 | 🟢 |
 | S5 | préfixes www. dans la colonne d'origine (recomptés) | 1825 | 1825 | 🟢 |
+| S6 | fiches marquées (old)/- import/' 2' | 234 | 234 | 🟢 |
+| S7 | noms normalisés distincts (future table entreprises) | 19000-22000 | 20519 | 🟢 |
 
 À armer avec leurs étapes : étape 7 : entités finales entre 19 000 et 22 000 · étape 7 : aucune entité ne regroupe plus de 5 fiches · étape 7 : écart de somme ARR = exactement les doublons écartés, listés · étape 8 : chaque event rattaché à exactement une entité · étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés) · étape 10 : le bot CON-077194 toujours flagué · étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
 

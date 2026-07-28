@@ -311,6 +311,104 @@ def step3_domains(tables, report):
 
 
 # ----------------------------------------------------------------
+# Étape 4 — Les noms : normalisation (clé de dédup n°2) + marqueurs de doublon
+# ----------------------------------------------------------------
+
+import re
+
+
+def step4_names(tables, report):
+    """Ajoute name_norm et dup_marker sur accounts.
+
+    - name_norm   : minuscules -> retrait des marqueurs de doublon
+                    -> retrait itératif des mentions juridiques finales
+                    -> retrait de tout ce qui n'est pas lettre/chiffre.
+                    = clé n°2 de la fusion (couvre les fiches sans racine).
+    - dup_marker  : 'old' | 'import' | '2' | '' — une fiche marquée ne sera
+                    JAMAIS choisie comme fiche maîtresse à la fusion.
+    Auto-validation massive : name_norm doit être identique à domain_root
+    sur 100 % des fiches à domaine déclaré (audit : 27 329/27 329).
+    """
+    suffixes = sorted(CONFIG["names"]["legal_suffixes"], key=len, reverse=True)
+    suffix_re = re.compile(
+        r"\s+(" + "|".join(re.escape(s) for s in suffixes) + r")\s*$", re.I)
+    rows = tables["accounts"]
+
+    markers = {"old": 0, "import": 0, "2": 0}
+    n_empty = 0
+    concord_decl = total_decl = 0
+    concord_inf = total_inf = 0
+    mismatch_examples = []
+
+    for row in rows:
+        s = (row.get("account_name") or "").strip().lower()
+        marker = ""
+        if re.search(r"\(old\)\s*$", s):
+            marker = "old"
+            s = re.sub(r"\s*\(old\)\s*$", "", s)
+        elif re.search(r"-\s*import\s*$", s):
+            marker = "import"
+            s = re.sub(r"\s*-\s*import\s*$", "", s)
+        elif re.search(r"\s2\s*$", s):
+            marker = "2"
+            s = re.sub(r"\s+2\s*$", "", s)
+        if marker:
+            markers[marker] += 1
+        while True:
+            s2 = suffix_re.sub("", s)
+            if s2 == s:
+                break
+            s = s2
+        norm = re.sub(r"[^a-z0-9]", "", s)
+        row["name_norm"] = norm
+        row["dup_marker"] = marker
+        if not norm:
+            n_empty += 1
+
+        src = row.get("domain_source")
+        if src == "declared":
+            total_decl += 1
+            if norm == row["domain_root"]:
+                concord_decl += 1
+            elif len(mismatch_examples) < 5:
+                mismatch_examples.append(
+                    f"{row['account_id']} `{row['account_name']}` → `{norm}` ≠ `{row['domain_root']}`")
+        elif src == "inferred_from_contacts":
+            total_inf += 1
+            if norm == row["domain_root"]:
+                concord_inf += 1
+
+    n_distinct = len({r["name_norm"] for r in rows})
+    n_markers = sum(markers.values())
+
+    report.append("## Étape 4 — Noms : normalisation (clé de dédup n°2) + marqueurs\n")
+    report.append(
+        "name_norm = minuscules, sans marqueurs de doublon ni mentions juridiques "
+        "(liste en config), sans ponctuation. dup_marker mémorise l'étiquette "
+        "trouvée — une fiche marquée ne sera jamais fiche maîtresse.\n"
+    )
+    report.append(f"- Marqueurs détectés : **{n_markers}** (attendu audit : 234) — "
+                  f"(old) {markers['old']}, - import {markers['import']}, ' 2' {markers['2']}")
+    report.append(f"- Noms vides après normalisation : **{n_empty}** (attendu : 0)")
+    report.append(f"- **Concordance nom↔racine (domaines déclarés) : {concord_decl}/{total_decl}** "
+                  f"(attendu : 27 329/27 329 — c'est LE test de validation du geste)")
+    report.append(f"- Concordance nom↔racine (racines déduites des emails) : "
+                  f"{concord_inf}/{total_inf} (contrôle indépendant bonus)")
+    report.append(f"- Noms normalisés distincts : **{n_distinct}** "
+                  f"(borne de sanité : 19 000 - 22 000 = future taille de la table entreprises)")
+    if mismatch_examples:
+        report.append("- ⚠ Discordances : " + " · ".join(mismatch_examples))
+    report.append("")
+
+    ok = (n_markers == 234 and n_empty == 0 and concord_decl == total_decl == 27329
+          and 19000 <= n_distinct <= 22000)
+    print(f"[étape 4] accounts: marqueurs={n_markers} ({markers}) vides={n_empty} "
+          f"concordance_déclarés={concord_decl}/{total_decl} "
+          f"concordance_déduits={concord_inf}/{total_inf} distincts={n_distinct}"
+          + ("  ✔" if ok else "  ⚠ A VERIFIER"))
+
+
+# ----------------------------------------------------------------
 # Le filet — invariants vérifiés après CHAQUE exécution du pipeline
 # ----------------------------------------------------------------
 
@@ -355,6 +453,10 @@ def run_invariants(tables, report):
                    sum(1 for e in events if e.get("event_type") == "form_fill")))
     checks.append(("K4", "meeting_booked présents", k["events_meeting_booked"],
                    sum(1 for e in events if e.get("event_type") == "meeting_booked")))
+    checks.append(("K5", "concordance nom normalisé ↔ racine de domaine (déclarés)",
+                   k["concordance_nom_racine_declares"],
+                   sum(1 for r in accounts if r.get("domain_source") == "declared"
+                       and r.get("name_norm") == r.get("domain_root"))))
 
     # -- Bornes de sanité (étapes 1-3)
     s = inv["sanite"]
@@ -372,17 +474,26 @@ def run_invariants(tables, report):
                        if (r.get("domain") or "").strip().lower().startswith("www."))))
     # NB : "0 déduction ambiguë" est couvert par S3 — un cas ambigu ferait
     # passer les fiches sans racine de 133 à 134 → alarme.
+    checks.append(("S6", "fiches marquées (old)/- import/' 2'", s["noms_marques"],
+                   sum(1 for r in accounts if r.get("dup_marker"))))
+    n_distinct_names = len({r.get("name_norm") for r in accounts})
+    checks.append(("S7", "noms normalisés distincts (future table entreprises)",
+                   f"{s['noms_distincts_min']}-{s['noms_distincts_max']}", n_distinct_names))
 
-    ok = True
+    def check_passes(expected, measured):
+        if isinstance(expected, str) and expected.startswith(">="):
+            return measured >= int(expected[2:])
+        if isinstance(expected, str) and "-" in expected:
+            lo, hi = expected.split("-")
+            return int(lo) <= measured <= int(hi)
+        return measured == expected
+
+    results = [(cid, label, e, m, check_passes(e, m)) for cid, label, e, m in checks]
+    ok = all(p for *_, p in results)
     lines = ["## 🛡️ Filet d'invariants — vérifié à chaque exécution\n",
              "| ID | Invariant | Attendu | Mesuré | Statut |",
              "|---|---|---|---|---|"]
-    for cid, label, expected, measured in checks:
-        if isinstance(expected, str) and expected.startswith(">="):
-            passed = measured >= int(expected[2:])
-        else:
-            passed = measured == expected
-        ok &= passed
+    for cid, label, expected, measured, passed in results:
         lines.append(f"| {cid} | {label} | {expected} | {measured} | "
                      f"{'🟢' if passed else '🔴 ALARME'} |")
     lines.append("")
@@ -390,9 +501,8 @@ def run_invariants(tables, report):
     lines.append("")
     report.extend(lines)
 
-    n_green = sum(1 for cid, label, e, m in checks
-                  if (m >= int(e[2:]) if isinstance(e, str) and e.startswith(">=") else m == e))
-    print(f"[filet]   {n_green}/{len(checks)} invariants verts"
+    n_green = sum(1 for *_, p in results if p)
+    print(f"[filet]   {n_green}/{len(results)} invariants verts"
           + ("  ✔" if ok else "  🔴 ALARME — voir rapport"))
     if not ok:
         with open(REPORT_PATH, "w") as f:
@@ -414,6 +524,7 @@ def main():
     step1_dates(tables, report)
     step2_countries(tables, report)
     step3_domains(tables, report)
+    step4_names(tables, report)
 
     run_invariants(tables, report)
 
