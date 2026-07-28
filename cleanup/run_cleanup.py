@@ -518,6 +518,84 @@ def step5_emails(tables, report):
 
 
 # ----------------------------------------------------------------
+# Étape 6 — Dates impossibles & cohérence : neutraliser + tracer, jamais corriger
+# ----------------------------------------------------------------
+
+def step6_date_sanity(tables, report):
+    """Neutralise les dates impossibles (parsée vidée) et pose les flags.
+
+    - contacts.created_date_flag : future | emails_avant_creation |
+      visites_avant_creation | '' (cf. config, étape 6)
+    - accounts.last_activity_flag : future | ''
+    Les events ne sont JAMAIS touchés ni déclassés — seule la fiabilité
+    de la DATE est jugée. La récence du scoring vient des events.
+    """
+    ref = CONFIG["reference_date"]
+
+    # premières dates d'events par contact, séparées email vs visite/linkedin
+    first_email = {}
+    first_other = {}
+    for e in tables["events"]:
+        cid = e.get("contact_id") or ""
+        if not cid:
+            continue
+        d = e["timestamp"][:10]
+        if e["event_type"] in ("email_sent", "email_open", "email_click"):
+            if cid not in first_email or d < first_email[cid]:
+                first_email[cid] = d
+        else:
+            if cid not in first_other or d < first_other[cid]:
+                first_other[cid] = d
+
+    n_future = n_mail = n_visit = 0
+    for row in tables["contacts"]:
+        row["created_date_flag"] = ""
+        parsed = row.get("created_date_parsed") or ""
+        if not parsed:
+            continue
+        if parsed > ref:
+            row["created_date_flag"] = "future"
+            row["created_date_parsed"] = ""      # neutralisée, l'originale reste
+            n_future += 1
+            continue
+        cid = row["contact_id"]
+        if first_email.get(cid, "9999") < parsed:
+            row["created_date_flag"] = "emails_avant_creation"
+            n_mail += 1
+        elif first_other.get(cid, "9999") < parsed:
+            row["created_date_flag"] = "visites_avant_creation"
+            n_visit += 1
+
+    n_la_future = 0
+    for row in tables["accounts"]:
+        row["last_activity_flag"] = ""
+        parsed = row.get("last_activity_date_parsed") or ""
+        if parsed and parsed > ref:
+            row["last_activity_flag"] = "future"
+            row["last_activity_date_parsed"] = ""
+            n_la_future += 1
+
+    report.append("## Étape 6 — Dates impossibles & cohérence\n")
+    report.append(
+        "Une date fausse n'entre jamais dans un calcul : neutralisée (parsée vidée) "
+        "+ flag. Jamais 'corrigée' (vraie valeur inconnaissable), originale conservée. "
+        "Les events ne sont jamais touchés — seule la fiabilité de la date est jugée.\n"
+    )
+    report.append(f"- Contacts créés dans le futur : **{n_future}** (attendu : 6 321) → date neutralisée + flag")
+    report.append(f"- Contacts ayant REÇU des emails avant leur création (impossible → date corrompue) : "
+                  f"**{n_mail}** (attendu : 414)")
+    report.append(f"- Contacts avec seulement visites/linkedin avant création (attribution rétroactive "
+                  f"possible, bénéfice du doute) : **{n_visit}** (attendu : 20)")
+    report.append(f"- Comptes avec dernière activité future : **{n_la_future}** (attendu : 3) → neutralisée + flag")
+    report.append("")
+
+    ok = (n_future == 6321 and n_mail == 414 and n_visit == 20 and n_la_future == 3)
+    print(f"[étape 6] futures={n_future} emails_avant={n_mail} visites_avant={n_visit} "
+          f"last_activity_futures={n_la_future}"
+          + ("  ✔" if ok else "  ⚠ A VERIFIER"))
+
+
+# ----------------------------------------------------------------
 # Le filet — invariants vérifiés après CHAQUE exécution du pipeline
 # ----------------------------------------------------------------
 
@@ -602,6 +680,25 @@ def run_invariants(tables, report):
     checks.append(("S10", "adresses email partagées (doublons de personnes)",
                    s["adresses_email_partagees"],
                    sum(1 for n in email_counts.values() if n >= 2)))
+    checks.append(("S11", "contacts créés dans le futur (neutralisés + flag)",
+                   s["contacts_dates_futures"],
+                   sum(1 for r in contacts if r.get("created_date_flag") == "future")))
+    checks.append(("S12", "contacts avec emails reçus avant création (date corrompue)",
+                   s["contacts_emails_avant_creation"],
+                   sum(1 for r in contacts if r.get("created_date_flag") == "emails_avant_creation")))
+    checks.append(("S13", "contacts en attribution rétroactive possible",
+                   s["contacts_visites_avant_creation"],
+                   sum(1 for r in contacts if r.get("created_date_flag") == "visites_avant_creation")))
+    checks.append(("S14", "comptes à dernière activité future (neutralisés + flag)",
+                   s["accounts_last_activity_future"],
+                   sum(1 for r in accounts if r.get("last_activity_flag") == "future")))
+    ref = CONFIG["reference_date"]
+    checks.append(("S15", "dates parsées encore au futur après neutralisation",
+                   s["dates_parsees_futures_restantes"],
+                   sum(1 for r in contacts if (r.get("created_date_parsed") or "") > ref)
+                   + sum(1 for r in accounts
+                         if (r.get("created_date_parsed") or "") > ref
+                         or (r.get("last_activity_date_parsed") or "") > ref)))
 
     def check_passes(expected, measured):
         if isinstance(expected, str) and expected.startswith(">="):
@@ -649,6 +746,7 @@ def main():
     step3_domains(tables, report)
     step4_names(tables, report)
     step5_emails(tables, report)
+    step6_date_sanity(tables, report)
 
     run_invariants(tables, report)
 

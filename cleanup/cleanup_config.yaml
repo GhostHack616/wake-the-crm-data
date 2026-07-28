@@ -105,6 +105,17 @@ emails:
                        gmx.com, gmx.de, gmx.fr, web.de, icloud.com, me.com,
                        protonmail.com, proton.me, aol.com]
 
+# --- Étape 6 : dates impossibles & cohérence ------------------
+# Règle : une date fausse n'entre JAMAIS dans un calcul — on ne "corrige"
+# pas (la vraie valeur est inconnaissable), on NEUTRALISE (date parsée
+# vidée) et on TRACE (flag). Les events, eux, ne sont jamais touchés.
+# Flags contacts (created_date_flag) :
+#   future                  = créé après le 22/07/2026 (jusqu'à nov. 2027 !)
+#   emails_avant_creation   = a REÇU des emails avant sa création -> date corrompue
+#   visites_avant_creation  = seulement visites/linkedin avant création
+#                             -> attribution rétroactive possible, bénéfice du doute
+# Flag comptes (last_activity_flag) : future = dernière activité après le 22/07.
+
 # --- Le filet : les invariants ------------------------------
 # Des vérités qui doivent rester vraies après CHAQUE exécution.
 # Vérifiées automatiquement en fin de pipeline : un seul rouge = alarme
@@ -137,6 +148,11 @@ invariants:
     emails_repares: 1544             # 769 @@ + 775 espaces
     emails_invalides_apres_reparation: 0
     adresses_email_partagees: 783    # même adresse = même personne, flag anti double-comptage
+    contacts_dates_futures: 6321
+    contacts_emails_avant_creation: 414
+    contacts_visites_avant_creation: 20
+    accounts_last_activity_future: 3
+    dates_parsees_futures_restantes: 0   # après neutralisation, plus aucune date > NOW
   # S'armeront automatiquement avec leurs étapes :
   a_armer:
     - "étape 7 : entités finales entre 19 000 et 22 000"

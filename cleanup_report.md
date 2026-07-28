@@ -81,6 +81,15 @@ email_clean = espaces retirés, @@ → @ (rien d'inventé) · email_status = ok/
 
 > 📌 Honnêteté (mesuré) : cette étape n'améliore la joignabilité d'AUCUN compte chaud (0 des 25 signaux forts avait un email cassé ; 1 est sans adresse, 2 en gmail). C'est du nettoyage de fond, pas de la récupération de rappel — ça change le canal, pas le score.
 
+## Étape 6 — Dates impossibles & cohérence
+
+Une date fausse n'entre jamais dans un calcul : neutralisée (parsée vidée) + flag. Jamais 'corrigée' (vraie valeur inconnaissable), originale conservée. Les events ne sont jamais touchés — seule la fiabilité de la date est jugée.
+
+- Contacts créés dans le futur : **6321** (attendu : 6 321) → date neutralisée + flag
+- Contacts ayant REÇU des emails avant leur création (impossible → date corrompue) : **414** (attendu : 414)
+- Contacts avec seulement visites/linkedin avant création (attribution rétroactive possible, bénéfice du doute) : **20** (attendu : 20)
+- Comptes avec dernière activité future : **3** (attendu : 3) → neutralisée + flag
+
 ## 🛡️ Filet d'invariants — vérifié à chaque exécution
 
 | ID | Invariant | Attendu | Mesuré | Statut |
@@ -106,6 +115,11 @@ email_clean = espaces retirés, @@ → @ (rien d'inventé) · email_status = ok/
 | S8 | emails réparés | 1544 | 1544 | 🟢 |
 | S9 | emails invalides après réparation | 0 | 0 | 🟢 |
 | S10 | adresses email partagées (doublons de personnes) | 783 | 783 | 🟢 |
+| S11 | contacts créés dans le futur (neutralisés + flag) | 6321 | 6321 | 🟢 |
+| S12 | contacts avec emails reçus avant création (date corrompue) | 414 | 414 | 🟢 |
+| S13 | contacts en attribution rétroactive possible | 20 | 20 | 🟢 |
+| S14 | comptes à dernière activité future (neutralisés + flag) | 3 | 3 | 🟢 |
+| S15 | dates parsées encore au futur après neutralisation | 0 | 0 | 🟢 |
 
 À armer avec leurs étapes : étape 7 : entités finales entre 19 000 et 22 000 · étape 7 : aucune entité ne regroupe plus de 5 fiches · étape 7 : écart de somme ARR = exactement les doublons écartés, listés · étape 8 : chaque event rattaché à exactement une entité · étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés) · étape 10 : le bot CON-077194 toujours flagué · étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
 
