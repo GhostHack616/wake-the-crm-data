@@ -90,6 +90,21 @@ names:
   legal_suffixes: [sas, sa, sarl, gmbh, bv, ltd, spa, ab, oy, as, sl,
                    group, france, "& co", and co]
 
+# --- Étape 5 : les emails ------------------------------------
+# Réparations MÉCANIQUES uniquement (rien d'inventé) : espaces internes
+# retirés, @@ réduit à @. Mesuré : 0 chevauchement entre adresses cassées
+# et adresses perso. email_status = ok | repaired | missing | personal.
+# Doublons d'adresses flagués ici (783 adresses / 1 940 porteurs) —
+# anti-double-comptage du buying committee (une personne = un contact).
+emails:
+  # tout email dont le domaine matche la watchlist SANS être dans
+  # domains.personal_email_domains sort en alerte (jamais en silence)
+  freemail_watchlist: [yahoo.com, yahoo.fr, hotmail.com, hotmail.fr,
+                       outlook.com, outlook.fr, live.com, live.fr,
+                       free.fr, orange.fr, wanadoo.fr, sfr.fr, laposte.net,
+                       gmx.com, gmx.de, gmx.fr, web.de, icloud.com, me.com,
+                       protonmail.com, proton.me, aol.com]
+
 # --- Le filet : les invariants ------------------------------
 # Des vérités qui doivent rester vraies après CHAQUE exécution.
 # Vérifiées automatiquement en fin de pipeline : un seul rouge = alarme
@@ -119,6 +134,9 @@ invariants:
     noms_marques: 234                # (old) 80 + '- import' 80 + ' 2' 74
     noms_distincts_min: 19000        # borne basse future table entreprises
     noms_distincts_max: 22000        # borne haute
+    emails_repares: 1544             # 769 @@ + 775 espaces
+    emails_invalides_apres_reparation: 0
+    adresses_email_partagees: 783    # même adresse = même personne, flag anti double-comptage
   # S'armeront automatiquement avec leurs étapes :
   a_armer:
     - "étape 7 : entités finales entre 19 000 et 22 000"

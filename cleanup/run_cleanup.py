@@ -409,6 +409,115 @@ def step4_names(tables, report):
 
 
 # ----------------------------------------------------------------
+# Étape 5 — Les emails : réparation mécanique + statut + doublons de personnes
+# ----------------------------------------------------------------
+
+EMAIL_VALID_RE = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
+
+
+def step5_emails(tables, report):
+    """Ajoute email_clean, email_status, email_domain_root,
+    email_is_duplicate et email_duplicate_count sur contacts.
+
+    - email_clean  : espaces internes retirés, '@@' -> '@', minuscules.
+                     Réparation MÉCANIQUE uniquement — rien d'inventé.
+    - email_status : ok | repaired | missing | personal
+    - email_domain_root : racine du domaine (témoin fusion/rattachement),
+                     vide si missing/personal
+    - email_is_duplicate / email_duplicate_count : la même adresse portée
+      par plusieurs contacts = la même PERSONNE en plusieurs fiches.
+      Flag posé ici pour interdire le double-comptage du buying committee.
+    """
+    personal = set(CONFIG["domains"]["personal_email_domains"])
+    watchlist = set(CONFIG["emails"]["freemail_watchlist"])
+    rows = tables["contacts"]
+
+    n_missing = n_personal = n_repaired_at = n_repaired_space = n_ok = 0
+    n_invalid_after = 0
+    watch_hits = {}
+    examples = []
+
+    for row in rows:
+        raw = (row.get("email") or "").strip()
+        if not raw:
+            row["email_clean"] = ""
+            row["email_status"] = "missing"
+            row["email_domain_root"] = ""
+            n_missing += 1
+            continue
+        had_space = " " in raw
+        had_at = "@@" in raw
+        clean = re.sub(r"@+", "@", raw.lower().replace(" ", ""))
+        row["email_clean"] = clean
+        domain = clean.rsplit("@", 1)[1] if "@" in clean else ""
+        if domain in personal:
+            row["email_status"] = "personal"
+            row["email_domain_root"] = ""
+            n_personal += 1
+        elif had_space or had_at:
+            row["email_status"] = "repaired"
+            row["email_domain_root"] = domain.split(".")[0]
+            if had_at:
+                n_repaired_at += 1
+            else:
+                n_repaired_space += 1
+            if len(examples) < 2:
+                examples.append(f"`{raw}` → `{clean}`")
+        else:
+            row["email_status"] = "ok"
+            row["email_domain_root"] = domain.split(".")[0]
+            n_ok += 1
+        if not EMAIL_VALID_RE.match(clean):
+            n_invalid_after += 1
+        if domain in watchlist and domain not in personal:
+            watch_hits[domain] = watch_hits.get(domain, 0) + 1
+
+    # doublons de personnes : même adresse réparée, portée par >= 2 contacts
+    counts = {}
+    for row in rows:
+        if row["email_clean"]:
+            counts[row["email_clean"]] = counts.get(row["email_clean"], 0) + 1
+    n_dup_addr = sum(1 for n in counts.values() if n >= 2)
+    n_carriers = 0
+    for row in rows:
+        n = counts.get(row["email_clean"], 0)
+        dup = bool(row["email_clean"]) and n >= 2
+        row["email_is_duplicate"] = "1" if dup else "0"
+        row["email_duplicate_count"] = str(n) if dup else ""
+        if dup:
+            n_carriers += 1
+
+    n_repaired = n_repaired_at + n_repaired_space
+    report.append("## Étape 5 — Emails : réparation mécanique + statut + doublons de personnes\n")
+    report.append(
+        "email_clean = espaces retirés, @@ → @ (rien d'inventé) · email_status = "
+        "ok/repaired/missing/personal · doublons d'adresse flagués (même adresse = "
+        "même personne, interdit de la compter deux fois dans un buying committee).\n"
+    )
+    report.append(f"- Réparées : **{n_repaired}** (attendu : 1 544 = 769 `@@` + 775 espaces) — "
+                  f"@@ : {n_repaired_at}, espaces : {n_repaired_space}")
+    report.append(f"- **Encore invalides au regex après réparation : {n_invalid_after}** (attendu : 0 — LE contrôle qui prouve)")
+    report.append(f"- Sans adresse : **{n_missing}** (attendu : 3 065) · Perso (gmail) : **{n_personal}** (attendu : 2 359) · OK : {n_ok}")
+    report.append(f"- Adresses partagées par ≥2 contacts : **{n_dup_addr}** (attendu : 783) · porteurs flagués : **{n_carriers}** (attendu : 1 940, dont 1 157 copies excédentaires)")
+    report.append(f"- Freemails hors config détectés : " + (str(watch_hits) if watch_hits else "aucun (gmail reste le seul domaine perso)"))
+    if examples:
+        report.append(f"- Exemples : " + " · ".join(examples))
+    report.append("")
+    report.append("> 📌 Honnêteté (mesuré) : cette étape n'améliore la joignabilité d'AUCUN compte chaud "
+                  "(0 des 25 signaux forts avait un email cassé ; 1 est sans adresse, 2 en gmail). "
+                  "C'est du nettoyage de fond, pas de la récupération de rappel — ça change le canal, pas le score.\n")
+
+    ok = (n_repaired == 1544 and n_repaired_at == 769 and n_repaired_space == 775
+          and n_invalid_after == 0 and n_missing == 3065 and n_personal == 2359
+          and n_dup_addr == 783 and n_carriers == 1940 and not watch_hits)
+    print(f"[étape 5] contacts: réparées={n_repaired} (@@={n_repaired_at} espaces={n_repaired_space}) "
+          f"invalides_après={n_invalid_after} sans_adresse={n_missing} perso={n_personal} "
+          f"adresses_partagées={n_dup_addr} porteurs={n_carriers} "
+          f"freemails_inconnus={watch_hits or 'aucun'}"
+          + ("  ✔" if ok else "  ⚠ A VERIFIER"))
+
+
+# ----------------------------------------------------------------
 # Le filet — invariants vérifiés après CHAQUE exécution du pipeline
 # ----------------------------------------------------------------
 
@@ -479,6 +588,20 @@ def run_invariants(tables, report):
     n_distinct_names = len({r.get("name_norm") for r in accounts})
     checks.append(("S7", "noms normalisés distincts (future table entreprises)",
                    f"{s['noms_distincts_min']}-{s['noms_distincts_max']}", n_distinct_names))
+    checks.append(("S8", "emails réparés", s["emails_repares"],
+                   sum(1 for r in contacts if r.get("email_status") == "repaired")))
+    checks.append(("S9", "emails invalides après réparation",
+                   s["emails_invalides_apres_reparation"],
+                   sum(1 for r in contacts if r.get("email_clean")
+                       and not EMAIL_VALID_RE.match(r["email_clean"]))))
+    email_counts = {}
+    for r in contacts:
+        e = r.get("email_clean")
+        if e:
+            email_counts[e] = email_counts.get(e, 0) + 1
+    checks.append(("S10", "adresses email partagées (doublons de personnes)",
+                   s["adresses_email_partagees"],
+                   sum(1 for n in email_counts.values() if n >= 2)))
 
     def check_passes(expected, measured):
         if isinstance(expected, str) and expected.startswith(">="):
@@ -525,6 +648,7 @@ def main():
     step2_countries(tables, report)
     step3_domains(tables, report)
     step4_names(tables, report)
+    step5_emails(tables, report)
 
     run_invariants(tables, report)
 

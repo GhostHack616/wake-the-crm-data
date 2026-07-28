@@ -68,6 +68,19 @@ name_norm = minuscules, sans marqueurs de doublon ni mentions juridiques (liste 
 - Concordance nom↔racine (racines déduites des emails) : 2538/2538 (contrôle indépendant bonus)
 - Noms normalisés distincts : **20519** (borne de sanité : 19 000 - 22 000 = future taille de la table entreprises)
 
+## Étape 5 — Emails : réparation mécanique + statut + doublons de personnes
+
+email_clean = espaces retirés, @@ → @ (rien d'inventé) · email_status = ok/repaired/missing/personal · doublons d'adresse flagués (même adresse = même personne, interdit de la compter deux fois dans un buying committee).
+
+- Réparées : **1544** (attendu : 1 544 = 769 `@@` + 775 espaces) — @@ : 769, espaces : 775
+- **Encore invalides au regex après réparation : 0** (attendu : 0 — LE contrôle qui prouve)
+- Sans adresse : **3065** (attendu : 3 065) · Perso (gmail) : **2359** (attendu : 2 359) · OK : 70231
+- Adresses partagées par ≥2 contacts : **783** (attendu : 783) · porteurs flagués : **1940** (attendu : 1 940, dont 1 157 copies excédentaires)
+- Freemails hors config détectés : aucun (gmail reste le seul domaine perso)
+- Exemples : `pierre .durand@doriopradigital.com` → `pierre.durand@doriopradigital.com` · `antoine.boyer@@estevavenlabs.fr` → `antoine.boyer@estevavenlabs.fr`
+
+> 📌 Honnêteté (mesuré) : cette étape n'améliore la joignabilité d'AUCUN compte chaud (0 des 25 signaux forts avait un email cassé ; 1 est sans adresse, 2 en gmail). C'est du nettoyage de fond, pas de la récupération de rappel — ça change le canal, pas le score.
+
 ## 🛡️ Filet d'invariants — vérifié à chaque exécution
 
 | ID | Invariant | Attendu | Mesuré | Statut |
@@ -90,6 +103,9 @@ name_norm = minuscules, sans marqueurs de doublon ni mentions juridiques (liste 
 | S5 | préfixes www. dans la colonne d'origine (recomptés) | 1825 | 1825 | 🟢 |
 | S6 | fiches marquées (old)/- import/' 2' | 234 | 234 | 🟢 |
 | S7 | noms normalisés distincts (future table entreprises) | 19000-22000 | 20519 | 🟢 |
+| S8 | emails réparés | 1544 | 1544 | 🟢 |
+| S9 | emails invalides après réparation | 0 | 0 | 🟢 |
+| S10 | adresses email partagées (doublons de personnes) | 783 | 783 | 🟢 |
 
 À armer avec leurs étapes : étape 7 : entités finales entre 19 000 et 22 000 · étape 7 : aucune entité ne regroupe plus de 5 fiches · étape 7 : écart de somme ARR = exactement les doublons écartés, listés · étape 8 : chaque event rattaché à exactement une entité · étape 9 : events dédupliqués flagués, jamais supprimés (94 838 conservés) · étape 10 : le bot CON-077194 toujours flagué · étape 11+ : ACC-027283 (pages résiliation) jamais en HOT · étape 11+ : aucun contact opted_out dans une liste d'envoi
 
