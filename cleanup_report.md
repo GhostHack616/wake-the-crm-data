@@ -118,14 +118,15 @@ Une date fausse n'entre jamais dans un calcul : neutralisée (parsée vidée) + 
 
 ## Étape 7 — LA FUSION : 30 000 fiches → entreprises
 
-Clé = name_norm (partitions identiques prouvées par 2 clés indépendantes). Élection marqueur-exclu → cascade de statuts → ARR rempli → ancienneté. Statut consolidé = le plus avancé du GROUPE. ARR+renewal ensemble (customer puis churned, renewal la plus tardive). Dernière activité = MAX, création = MIN. Conflits → flags, jamais tranchés en silence. Rien n'est supprimé : merged_into sur chaque doublon.
+Clé = name_norm (partitions identiques prouvées par 2 clés indépendantes). Élection marqueur-exclu → cascade de statuts → ARR rempli → ancienneté. Statut consolidé = le plus avancé du GROUPE. ARR+renewal ensemble (customer puis churned, renewal la plus tardive). Dernière activité = MAX, création = MIN. Conflits → flags, jamais tranchés en silence. Commercial : si la fiche élue n'en a pas, hérité d'une jumelle (cascade d'élection, provenance tracée dans owner_source_account). Rien n'est supprimé : merged_into sur chaque doublon.
 
 - **Entités : 20519** (attendu : 20 519) — tailles : 1 fiches × 11888, 2 fiches × 7809, 3 fiches × 794, 4 fiches × 28
 - Fiches étiquetées élues maîtresses : **0** (attendu : 0)
 - Comptabilité ARR : total fiches **69,681,000 €** = conservé **66,656,000 €** + écarté (doublons) **3,025,000 €** — écart : **0 €** (attendu : 0)
 - Conflits flagués : pays **5947** (attendu 5 947) · ARR **251** (251) · owner **5067** (5 067) · lifecycle **6858** (6 858)
 - Arbitrages churned-vs-opportunity : **80** (attendu : 80)
-- Entités sans commercial (à router) : **2729**
+- Commerciaux hérités d'une fiche jumelle : **1407** (attendu : 1 407)
+- Entités sans commercial (à router) : **2729** (attendu : 2 729)
 
 ## Étape 8 — Ré-attachement : contacts et events rejoignent leurs entités
 
@@ -218,6 +219,9 @@ Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement NE
 | F15 | ARR actif (customers uniquement) | 52032000 | 52032000 | 🟢 |
 | F16 | ARR ex-client (churned, pool win-back) | 14624000 | 14624000 | 🟢 |
 | F17 | ARR actif + ex-client = ARR conservé | 66656000 | 66656000 | 🟢 |
+| F18 | commerciaux hérités d'une jumelle | 1407 | 1407 | 🟢 |
+| F19 | entités sans commercial après héritage | 2729 | 2729 | 🟢 |
+| F20 | owner vide ⟺ à router (double sens) | 0 | 0 | 🟢 |
 | P1 | buyers (périmètre produit) | 16561 | 16561 | 🟢 |
 | P2 | champions | 19701 | 19701 | 🟢 |
 | P3 | utilisateurs | 25573 | 25573 | 🟢 |

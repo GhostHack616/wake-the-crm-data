@@ -678,6 +678,22 @@ def step7_fusion(tables, report):
                     return m[field].strip()
             return ""
 
+        # Commercial : même règle de récupération que l'ARR — si la fiche élue
+        # n'en a pas, on hérite d'une jumelle (choisie par la cascade d'élection,
+        # déterministe). owner_source_account trace la provenance.
+        if (master["owner"] or "").strip():
+            owner_fiche = master
+        else:
+            owner_cands = [m for m in members if (m["owner"] or "").strip()]
+            owner_fiche = min(owner_cands, key=lambda r: (
+                1 if r["dup_marker"] else 0,
+                rank[r["lifecycle_stage"]],
+                0 if r["arr_eur"] else 1,
+                r["created_date_parsed"] or "9999",
+                r["account_id"])) if owner_cands else None
+            if owner_fiche is not None:
+                stats["owner_herite"] += 1
+
         companies.append({
             "entity_id": entity_id,
             "name": master["account_name"],
@@ -701,7 +717,8 @@ def step7_fusion(tables, report):
             "arr_ex_client": arr_fiche["arr_eur"] if arr_fiche and consolidated == "churned" else "",
             "renewal_date": arr_fiche["renewal_date_parsed"] if arr_fiche else "",
             "arr_source_account": arr_fiche["account_id"] if arr_fiche else "",
-            "owner": master["owner"] or "",
+            "owner": owner_fiche["owner"].strip() if owner_fiche else "",
+            "owner_source_account": owner_fiche["account_id"] if owner_fiche else "",
             "created_date_min": min(crs) if crs else "",
             "last_activity_max": max(las) if las else "",
             **{f: ("1" if v else "0") for f, v in flags.items()},
@@ -729,6 +746,8 @@ def step7_fusion(tables, report):
         "Statut consolidé = le plus avancé du GROUPE. ARR+renewal ensemble "
         "(customer puis churned, renewal la plus tardive). Dernière activité = MAX, "
         "création = MIN. Conflits → flags, jamais tranchés en silence. "
+        "Commercial : si la fiche élue n'en a pas, hérité d'une jumelle "
+        "(cascade d'élection, provenance tracée dans owner_source_account). "
         "Rien n'est supprimé : merged_into sur chaque doublon.\n"
     )
     report.append(f"- **Entités : {len(companies)}** (attendu : 20 519) — tailles : "
@@ -741,20 +760,22 @@ def step7_fusion(tables, report):
                   f"ARR **{stats['arr_conflict']}** (251) · owner **{stats['owner_conflict']}** (5 067) · "
                   f"lifecycle **{stats['lifecycle_conflict']}** (6 858)")
     report.append(f"- Arbitrages churned-vs-opportunity : **{stats['review_churned_vs_opportunity']}** (attendu : 80)")
-    report.append(f"- Entités sans commercial (à router) : **{stats['owner_a_router']}**")
+    report.append(f"- Commerciaux hérités d'une fiche jumelle : **{stats['owner_herite']}** (attendu : 1 407)")
+    report.append(f"- Entités sans commercial (à router) : **{stats['owner_a_router']}** (attendu : 2 729)")
     report.append("")
 
     ok = (len(companies) == 20519 and stats["marked_elected"] == 0
           and total - kept - discarded == 0
           and stats["country_conflict"] == 5947 and stats["arr_conflict"] == 251
           and stats["owner_conflict"] == 5067 and stats["lifecycle_conflict"] == 6858
-          and stats["review_churned_vs_opportunity"] == 80)
+          and stats["review_churned_vs_opportunity"] == 80
+          and stats["owner_herite"] == 1407 and stats["owner_a_router"] == 2729)
     print(f"[étape 7] entités={len(companies)} marquées_élues={stats['marked_elected']} "
           f"ARR: {total}={kept}+{discarded} (écart {total-kept-discarded}) "
           f"conflits: pays={stats['country_conflict']} arr={stats['arr_conflict']} "
           f"owner={stats['owner_conflict']} lifecycle={stats['lifecycle_conflict']} "
           f"arbitrages_churned_opp={stats['review_churned_vs_opportunity']} "
-          f"sans_owner={stats['owner_a_router']}"
+          f"owner_herites={stats['owner_herite']} sans_owner={stats['owner_a_router']}"
           + ("  ✔" if ok else "  ⚠ A VERIFIER"))
 
 
@@ -1326,6 +1347,18 @@ def run_invariants(tables, report):
     checks.append(("F15", "ARR actif (customers uniquement)", f["arr_actif"], sum_actif))
     checks.append(("F16", "ARR ex-client (churned, pool win-back)", f["arr_ex_client"], sum_ex))
     checks.append(("F17", "ARR actif + ex-client = ARR conservé", arr_kept, sum_actif + sum_ex))
+    # F18-F20 (correctif owner 28/07) — héritage du commercial depuis les jumelles :
+    # le compte hérité est verrouillé, le reste-vide aussi, et la symétrie
+    # owner vide ⟺ flag à-router est à double sens (aucun cas orphelin des deux côtés).
+    checks.append(("F18", "commerciaux hérités d'une jumelle", f["owner_herites"],
+                   sum(1 for c in companies
+                       if c.get("owner") and c.get("owner_source_account")
+                       and c["owner_source_account"] != c["master_id"])))
+    checks.append(("F19", "entités sans commercial après héritage", f["owner_sans"],
+                   sum(1 for c in companies if not (c.get("owner") or "").strip())))
+    checks.append(("F20", "owner vide ⟺ à router (double sens)", 0,
+                   sum(1 for c in companies
+                       if bool((c.get("owner") or "").strip()) == (c.get("owner_a_router") == "1"))))
 
     # -- Personas (paramètre de scoring) : partition complète, double sens
     p = inv["personas"]

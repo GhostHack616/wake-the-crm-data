@@ -273,6 +273,8 @@ invariants:
     conflits_arr: 251
     conflits_owner: 5067
     conflits_lifecycle: 6858
+    owner_herites: 1407              # correctif 28/07 : commerciaux récupérés d'une fiche jumelle
+    owner_sans: 2729                 # 4 136 vides avant héritage − 1 407 hérités
     arbitrages_churned_opportunity: 80
     corroboration_racine_declaree: 226   # invariant n°28 : toute fusion déclenchée
     corroboration_racine_deduite: 8      # par un marqueur a une 2e preuve indépendante
