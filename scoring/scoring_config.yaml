@@ -121,6 +121,8 @@ invariants:
   tier2: 34                        # 36 de la simulation − 2 « perdus » (score >= 8 mais
                                    # plus personne de joignable : sortis des files, règle actée)
   perdus_canal_mort: 9
+  perte_seche: 2                   # tag C (29/07) : le perdu valait le coup (score >= seuil T2)
+  perte_canal_mort_froid: 7        # canal coupé mais rien à perdre — déjà froid
   perdus_dans_files_de_travail: 0
   entites_scorees_flux: {from_bot: 0, is_duplicate_event: 0, is_anonymous: 0}
   ecart_max_somme_etages: 0.01     # somme des scores personnes = score compte, à l'arrondi près

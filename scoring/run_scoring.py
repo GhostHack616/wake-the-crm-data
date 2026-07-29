@@ -179,6 +179,11 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
         else:
             tier = "T3"
 
+        # Tag C (acté 29/07) : « perdu » ne se ressemble pas — 2 pertes sèches
+        # (le compte valait le coup) vs 7 canaux morts déjà froids. Étiquette
+        # dérivée de chiffres déjà calculés, aucune règle modifiée.
+        perte = ("seche" if d["score"] >= S["tier2"] else "canal_mort_froid") if perdu else ""
+
         # fit A/B/C — ordonne, ne bloque jamais
         taille_ok = f["employee_range"] in cfg["fit"]["tailles_cible"]
         buyer_connu = any(tier_de.get(c) == "buyer" for c in par_entite[ent])
@@ -220,6 +225,11 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
         if d["porte"] == "comite" and d["negatif"] < 0:
             play = "risque"      # un comité actif qui regarde la porte de sortie = à sauver
 
+        if perdu:
+            # Un perdu n'a ni personne à appeler ni preuve : le dire, pas l'inventer.
+            pers, nom, quoi = "", "", ""
+            i = {}
+            canal = "— (canal mort : plus personne de joignable)"
         lignes.append({
             "entity_id": ent, "entreprise": f["name"],
             "score": round(min(S["score_affiche_max"], max(0.0, d["score"])), 1),
@@ -229,7 +239,7 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
             "qui_appeler": nom, "son_titre": i.get("job_title", ""), "preuve": quoi,
             "canal": canal, "play": play, "segment": f["segment"],
             "n_records": f["n_records"], "signaux_negatifs": d["negatif"],
-            "perdu_canal_mort": "1" if perdu else "0",
+            "perdu_canal_mort": "1" if perdu else "0", "perte": perte,
         })
     ordre_fit = {"A": 0, "B": 1, "C": 2}
     lignes.sort(key=lambda r: (r["tier"] != "T1", r["tier"] != "T2", ordre_fit[r["fit"]],
@@ -273,6 +283,10 @@ def invariants(cfg, lignes, score_p, comptes, alarmes):
         ("SC14", "ENT-16714 en play risque, jamais en new business", 0,
          len([r for r in lignes if r["entity_id"] == "ENT-16714" and r["play"] != "risque"])),
         ("SC15", "règles dormantes étiquetées en config", 6, len(cfg["regles_dormantes"])),
+        ("SC16", "pertes sèches (perdu qui valait le coup)", exp["perte_seche"],
+         len([r for r in lignes if r["perte"] == "seche"])),
+        ("SC17", "canaux morts déjà froids", exp["perte_canal_mort_froid"],
+         len([r for r in lignes if r["perte"] == "canal_mort_froid"])),
     ]
     verts = sum(1 for _, _, att, obt in checks if att == obt)
     for cid, lib, att, obt in checks:
@@ -376,6 +390,7 @@ def main():
         graphe["comptes"].append({
             "e": ent, "tier": x["tier"], "porte": x["porte"],
             "score": x["score_brut"], "play": x["play"], "neg": x["signaux_negatifs"],
+            "perte": x["perte"],
             "personnes": [{"n": f"{infos[p].get('first_name','')} {infos[p].get('last_name','')}".strip(),
                            "p": tier_de.get(p, ""), "s": s}
                           for p, s in sorted(score_p[ent].items(), key=lambda y: -y[1])]})
