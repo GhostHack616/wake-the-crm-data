@@ -105,6 +105,8 @@ regles_dormantes:
     mesure: "0 cas sur la fenêtre de 90 jours"
   - regle: "libellé de repli 'signaux récents (15-21 j), sans demande' (aucune personne active sur 14 j)"
     mesure: "0 cas au run du 29/07 — repérée par l'IA n°2 au montage du push"
+  - regle: "plancher de décroissance (25 %) appliqué aux PREUVES"
+    mesure: "structurellement inatteignable : à 21 j (fin de fenêtre plancher), une demi-vie de 30 j vaut encore 0,616 — le plancher ne mord que sur les gestes vers J20-21. Repérée par l'IA n°2 au contrôle des cascades"
 
 # Verrous du run V1.1 (mesurés puis gravés — toute dérive = alarme rouge).
 invariants:

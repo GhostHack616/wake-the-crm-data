@@ -119,7 +119,7 @@ def calcule(cfg, contacts, companies, events):
         # pouvoir afficher « 8 x 0,8 x 0,54 = 3,5 » sans ouvrir le code.
         events_p[ent][p].append({"date": e["timestamp"][:10], "quoi": LIBELLES.get(cle, cle),
                                  "base": pts, "x_porteur": m, "x_temps": round(dk, 3),
-                                 "pts": round(v, 1)})
+                                 "pts": round(v, 2)})
 
     # ---- portes, perdus, fit, comité --------------------------------
     fenetre1 = cfg["portes"]["porte1_conversion_fenetre_jours"]
@@ -273,7 +273,7 @@ def invariants(cfg, lignes, score_p, comptes, alarmes):
          len([r for r in t1 if not r["canal"]])),
         ("SC14", "ENT-16714 en play risque, jamais en new business", 0,
          len([r for r in lignes if r["entity_id"] == "ENT-16714" and r["play"] != "risque"])),
-        ("SC15", "règles dormantes étiquetées en config", 5, len(cfg["regles_dormantes"])),
+        ("SC15", "règles dormantes étiquetées en config", 6, len(cfg["regles_dormantes"])),
     ]
     verts = sum(1 for _, _, att, obt in checks if att == obt)
     for cid, lib, att, obt in checks:
