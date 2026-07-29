@@ -64,6 +64,7 @@ def calcule(cfg, contacts, companies, events):
     conv = defaultdict(list)                              # entité -> (date, personne, type)
     negatif = defaultdict(float)
     clics = defaultdict(lambda: [0, 0])                   # entité -> [clics, clics_optout]
+    avec_event = set()                                    # entités avec >= 1 event net (même à poids 0)
     alarmes = []
     flux_interdit = 0
 
@@ -75,6 +76,7 @@ def calcule(cfg, contacts, companies, events):
             continue
         p = primaire.get(cid, cid)
         ent, et = e["entity_id"], e["event_type"]
+        avec_event.add(ent)
         age = (ref - jour(e["timestamp"])).days
 
         if et == "website_visit":
@@ -140,10 +142,10 @@ def calcule(cfg, contacts, companies, events):
         porte = "conversion" if conv_recente else ("comite" if comite_ok and not conv[ent] else "")
         comptes[ent] = {"score": sc, "porte": porte, "comite_n": len(meilleur),
                         "sponsor": sponsor, "negatif": negatif[ent]}
-    return comptes, score_p, events_p, conv, clics, par_entite, infos, tier_de, alarmes
+    return comptes, score_p, events_p, conv, clics, par_entite, infos, tier_de, alarmes, avec_event
 
 
-def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, tier_de, companies):
+def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, tier_de, companies, avec_event):
     """Tiers, perdus, fit, qui-appeler, canal — la ligne d'action complète."""
     S = cfg["seuils"]
     fiche = {c["entity_id"]: c for c in companies}
@@ -240,6 +242,33 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
             "canal": canal, "play": play, "segment": f["segment"],
             "n_records": f["n_records"], "signaux_negatifs": d["negatif"],
             "perdu_canal_mort": "1" if perdu else "0", "perte": perte,
+            "silence": "",
+        })
+
+    # Partition complète (actée par Romain le 29/07 — « toutes les entreprises
+    # doivent être dedans ») : une entreprise sans aucun signal à poids > 0
+    # n'avait pas de ligne — Tier 3 dans la règle, invisible dans le fichier.
+    # Désormais : une ligne par entreprise du CRM, dans le Tier 3, étiquetée.
+    # Deux réalités distinctes derrière le silence : « sans_signal » (des envois,
+    # des ouvertures, du blog — rien qui compte) et « aucun_evenement » (jamais
+    # la moindre trace). Aucun poids ne bouge : le moteur reste scellé.
+    vues = {r["entity_id"] for r in lignes}
+    for f in companies:
+        ent = f["entity_id"]
+        if ent in vues:
+            continue
+        taille_ok = f["employee_range"] in cfg["fit"]["tailles_cible"]
+        buyer_connu = any(tier_de.get(c) == "buyer" for c in par_entite.get(ent, []))
+        fit = "A" if (taille_ok and buyer_connu) else ("C" if not (taille_ok or buyer_connu) else "B")
+        lignes.append({
+            "entity_id": ent, "entreprise": f["name"],
+            "score": 0.0, "score_brut": 0.0, "tier": "T3", "porte": "",
+            "fit": fit, "comite_personnes_14j": 0, "sponsor_decideur": "non",
+            "qui_appeler": "", "son_titre": "", "preuve": "",
+            "canal": "", "play": f["play"], "segment": f["segment"],
+            "n_records": f["n_records"], "signaux_negatifs": 0.0,
+            "perdu_canal_mort": "0", "perte": "",
+            "silence": "sans_signal" if ent in avec_event else "aucun_evenement",
         })
     ordre_fit = {"A": 0, "B": 1, "C": 2}
     lignes.sort(key=lambda r: (r["tier"] != "T1", r["tier"] != "T2", ordre_fit[r["fit"]],
@@ -287,6 +316,12 @@ def invariants(cfg, lignes, score_p, comptes, alarmes):
          len([r for r in lignes if r["perte"] == "seche"])),
         ("SC17", "canaux morts déjà froids", exp["perte_canal_mort_froid"],
          len([r for r in lignes if r["perte"] == "canal_mort_froid"])),
+        ("SC18", "partition complète : une ligne par entreprise du CRM",
+         exp["partition_totale"], len(lignes)),
+        ("SC19", "silencieuses (aucun signal à poids > 0 en 90 j)",
+         exp["silencieuses_total"], len([r for r in lignes if r["silence"]])),
+        ("SC20", "silencieuse jamais dans une file de travail", 0,
+         len([r for r in lignes if r["silence"] and r["tier"] in ("T1", "T2")])),
     ]
     verts = sum(1 for _, _, att, obt in checks if att == obt)
     for cid, lib, att, obt in checks:
@@ -299,8 +334,8 @@ def robustesse(contacts, companies, events):
     """Secoue chaque poids de ±30 % — la liste Tier 1 doit rester identique
     (les portes sont des règles), le Tier 2 quasi stable."""
     import copy
-    base_c, base_sp, *_ = calcule(CFG, contacts, companies, events)
-    base = enrichit(CFG, base_c, base_sp, *calcule(CFG, contacts, companies, events)[2:8], companies)
+    rb = calcule(CFG, contacts, companies, events)
+    base = enrichit(CFG, rb[0], rb[1], *rb[2:8], companies, rb[9])
     t1_base = {r["entity_id"] for r in base if r["tier"] == "T1"}
     t2_base = {r["entity_id"] for r in base if r["tier"] == "T2"}
 
@@ -314,7 +349,7 @@ def robustesse(contacts, companies, events):
             cfg = copy.deepcopy(CFG)
             cfg[sect][cle] = cfg[sect][cle] * f
             r = calcule(cfg, contacts, companies, events)
-            lignes = enrichit(cfg, r[0], r[1], *r[2:8], companies)
+            lignes = enrichit(cfg, r[0], r[1], *r[2:8], companies, r[9])
             t1 = {x["entity_id"] for x in lignes if x["tier"] == "T1"}
             t2 = {x["entity_id"] for x in lignes if x["tier"] == "T2"}
             j1 = len(t1 & t1_base) / max(1, len(t1 | t1_base))
@@ -329,8 +364,9 @@ def robustesse(contacts, companies, events):
 def main():
     contacts, companies, events = charge()
     r = calcule(CFG, contacts, companies, events)
-    comptes, score_p, events_p, conv, clics, par_entite, infos, tier_de, alarmes = r
-    lignes = enrichit(CFG, comptes, score_p, events_p, conv, clics, par_entite, infos, tier_de, companies)
+    comptes, score_p, events_p, conv, clics, par_entite, infos, tier_de, alarmes, avec_event = r
+    lignes = enrichit(CFG, comptes, score_p, events_p, conv, clics, par_entite, infos, tier_de,
+                      companies, avec_event)
 
     os.makedirs(IN_DIR, exist_ok=True)
     champs = list(lignes[0].keys())
@@ -400,12 +436,22 @@ def main():
             "compteurs": {"tier1": len([x for x in lignes if x["tier"] == "T1"]),
                           "tier2": len([x for x in lignes if x["tier"] == "T2"]),
                           "perdus": len([x for x in lignes if x["perdu_canal_mort"] == "1"]),
-                          "scores_calcules": len(lignes)},
+                          "scores_calcules": len([x for x in lignes if not x["silence"]]),
+                          "tier3_signal_faible": len([x for x in lignes
+                                                      if x["tier"] == "T3" and not x["silence"]]),
+                          "tier3_silencieuses": len([x for x in lignes if x["silence"]]),
+                          "silencieuses_events_sans_poids": len([x for x in lignes
+                                                                 if x["silence"] == "sans_signal"]),
+                          "silencieuses_aucun_evenement": len([x for x in lignes
+                                                               if x["silence"] == "aucun_evenement"]),
+                          "partition_totale": len(lignes)},
             "ops": ops,
             "graphe": graphe,
             "hot_list": detail,
             "tous_scores": [{"e": x["entity_id"], "n": x["entreprise"], "s": x["score"],
-                             "t": x["tier"]} for x in lignes],
+                             "t": x["tier"],
+                             **({"sil": x["silence"]} if x["silence"] else {})}
+                            for x in lignes],
             "replay": replay}
     with open(os.path.join(IN_DIR, "dashboard_data.json"), "w") as f:
         json.dump(dash, f, ensure_ascii=False)
@@ -421,9 +467,11 @@ def main():
                "scores_companies.csv", "contacts_a_enrichir.csv"):
         shutil.copy(os.path.join(IN_DIR, fn), os.path.join(dash_dir, fn))
 
-    print(f"[moteur V1.1] {len(lignes)} entreprises scorées — "
+    print(f"[moteur V1.1] {len(lignes)} entreprises dans la partition — "
           f"T1={dash['compteurs']['tier1']} T2={dash['compteurs']['tier2']} "
-          f"perdus={dash['compteurs']['perdus']}")
+          f"perdus={dash['compteurs']['perdus']} · "
+          f"{dash['compteurs']['scores_calcules']} scorées, "
+          f"{dash['compteurs']['tier3_silencieuses']} silencieuses")
     print(f"[gardes]  {verts}/{total} invariants scoring verts" + ("  ✔" if verts == total else "  ⚠"))
     if "--robustesse" in sys.argv:
         robustesse(contacts, companies, events)

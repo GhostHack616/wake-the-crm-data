@@ -125,4 +125,15 @@ invariants:
   perte_canal_mort_froid: 7        # canal coupé mais rien à perdre — déjà froid
   perdus_dans_files_de_travail: 0
   entites_scorees_flux: {from_bot: 0, is_duplicate_event: 0, is_anonymous: 0}
-  ecart_max_somme_etages: 0.01     # somme des scores personnes = score compte, à l'arrondi près
+  ecart_max_somme_etages: 0.01
+  # Partition complète (actée par Romain le 29/07 — « toutes les entreprises
+  # doivent être dedans ») : le fichier de scores couvre les 20 519 entreprises
+  # du CRM, plus une seule invisible. Les silencieuses ne sont PAS un 4e tier :
+  # elles sont Tier 3, étiquetées — le tier décide l'action (nurture auto), le
+  # score ordonne la file, l'étiquette dit pourquoi le nurture ne suffira
+  # probablement pas (c'est l'enrichissement qui peut les réveiller).
+  partition_totale: 20519
+  tier3_signal: 5741                        # >= 1 signal à poids > 0 (score de 0,0 affiché à 7,8)
+  silencieuses_total: 14709                 # aucun signal à poids > 0 sur la fenêtre de 90 j
+  silencieuses_events_sans_poids: 7686      # des envois/ouvertures/blog — rien qui compte
+  silencieuses_aucun_evenement: 7023        # jamais la moindre trace dans le CRM     # somme des scores personnes = score compte, à l'arrondi près
