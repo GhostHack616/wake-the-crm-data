@@ -4,7 +4,8 @@
 Construit le dataset du dashboard "Wake the CRM" a partir des 3 CSV bruts.
 Sortie : wtc.json  (dataset unique consomme par le dashboard, aucun appel reseau)
 
-Ne lit JAMAIS event_id comme signal (le corrige est reserve a la mesure finale).
+Seuls le contenu et la date d'un evenement entrent dans le score. Aucun
+identifiant technique n'est utilise comme signal, a aucune etape.
 """
 import csv, json, re, os, unicodedata
 from collections import defaultdict, Counter

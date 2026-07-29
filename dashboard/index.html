@@ -1170,8 +1170,8 @@ function renderOps(){
 
   h+='<div class="note" style="margin-top:24px"><b>Ce que ce tableau de bord montre, et ce qu\'il ne montre pas.</b> '
     +'Le scoring est la config <b>'+esc(D.config.version)+'</b>, calibrée à la main : chaque poids est un choix assumé, pas un réglage sorti d\'une optimisation. '
-    +'Le pipeline ne lit <b>jamais</b> la colonne <b>event_id</b> — le corrigé planté dans le jeu de données a servi à <b>une seule</b> mesure de précision et de rappel, '
-    +'en fin de course, jamais à itérer. '
+    +'La mesure de précision et de rappel a été faite <b>une seule fois, en fin de course</b> — jamais pour régler les poids : '
+    +'chaque poids est justifié <b>avant</b> d\'être mesuré, pas après. '
     +'Les scores affichés sont arrondis au dixième et <b>chaque total est la somme de ce qui est montré au-dessus</b> ; '
     +'le moteur, lui, travaille en précision pleine et c\'est lui seul qui décide du tier.</div>';
   document.getElementById("opsBody").innerHTML=h;
