@@ -478,9 +478,10 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
   letter-spacing:-.028em;line-height:1.06}
 .ssay{font-size:clamp(15px,1.5vw,20px);line-height:1.55;color:var(--text-2);margin-top:20px;
   max-width:640px;margin-left:auto;margin-right:auto}
-.snum{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:38px}
-.snum div{min-width:132px;padding:16px 18px;border-radius:var(--r-lg);background:var(--panel);
-  border:1px solid var(--line);box-shadow:var(--shadow-card)}
+.snum{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:36px;max-width:760px;
+  margin-left:auto;margin-right:auto}
+.snum div{min-width:128px;max-width:210px;flex:0 1 auto;padding:14px 16px;border-radius:var(--r-lg);
+  background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-card)}
 .snum b{display:block;font-family:var(--display);font-size:27px;font-weight:600;line-height:1;
   font-variant-numeric:tabular-nums}
 .snum span{display:block;font-size:11px;color:var(--text-3);margin-top:7px;line-height:1.35;max-width:170px}
@@ -1596,7 +1597,8 @@ var PROC=[
  kpi:[["9 / 9","des rendez-vous de la base ont été pris par quelqu'un qui n'est pas décideur"],["25","preuves dans la liste, aucune décotée par son porteur"]],
  pb:"Si le multiplicateur s'appliquait aux preuves, je décotais cent pour cent des rendez-vous de l'exercice. Le décideur déclare, mais c'est l'opérationnel qui organise.",
  q:"Donc un stagiaire qui réserve un rendez-vous compte moins ?",
- r:"Non, et c'est exactement la nuance qui compte. Le multiplicateur ne touche que les <b>gestes</b> — un clic, une visite. Une <b>preuve</b> vaut plein poids quel que soit celui qui l'a faite, et un contrôle automatique le vérifie à chaque exécution. Dans cette base, les <b>9 rendez-vous ont tous été pris par des non-décideurs</b> : le décideur déclare, l'opérationnel prend le créneau. Pondérer les preuves aurait effacé la totalité des rendez-vous."
+ r:"Non, et c'est exactement la nuance qui compte. Le multiplicateur ne touche que les <b>gestes</b> — un clic, une visite. Une <b>preuve</b> vaut plein poids quel que soit celui qui l'a faite, et un contrôle automatique le vérifie à chaque exécution. Dans cette base, les <b>9 rendez-vous ont tous été pris par des non-décideurs</b> : le décideur déclare, l'opérationnel prend le créneau. Pondérer les preuves aurait effacé la totalité des rendez-vous.",
+ qs:[["Pourquoi ce périmètre de décideurs et pas un autre ?","Parce qu'il suit le <b>produit</b>, pas l'ancienneté. Cette entreprise vend trois modules, et chacun a son acheteur : le recrutement s'achète par un responsable acquisition de talents, la performance par un directeur des ressources humaines ou un responsable RH, la paie par une direction RH ou un responsable des opérations RH. Un directeur financier est un décideur dans l'absolu, il ne l'est pas ici. Le périmètre est déclaré en configuration, pas deviné dans le code : le jour où la gamme change, il se change en une ligne."]]
 },
 {
  p:"5 · Scorer", t:"Le temps efface", h:"Un clic d'il y a deux mois n'est pas un clic d'hier", courbe:true,
@@ -1643,7 +1645,7 @@ var PROC=[
  bareme:[
   ["Tier 1 — à appeler cette semaine", "26", "une demande explicite, ou un comité qui bouge"],
   ["Tier 2 — à travailler", "34", "ça chauffe, sans demande"],
-  ["Perdus — canal mort", "9", "le score y est, plus personne de joignable"],
+  ["Perdus — injoignables", "9", "dont 2 qui valaient vraiment le coup, 7 déjà froids"],
   ["Tier 3 — nurture", "5 741", "un signal faible mais réel"],
   ["Silencieuses", "14 709", "aucun signal en quatre-vingt-dix jours"]],
  pb:"La question qu'on ne pose jamais dans ce genre d'exercice : et les vingt mille autres ? Sans réponse, la liste ressemble à une sélection arbitraire.",
@@ -1779,7 +1781,7 @@ function procShow(i){
   if(x.courbe) h+=courbeHTML();
   if(x.kpi){
     h+='<div class="snum">';
-    x.kpi.slice(0,4).forEach(function(k){ h+='<div><b>'+esc(k[0])+'</b><span>'+esc(k[1])+'</span></div>'; });
+    x.kpi.forEach(function(k){ h+='<div><b>'+esc(k[0])+'</b><span>'+esc(k[1])+'</span></div>'; });
     h+='</div>';
   }
   if(x.pb||x.body||x.q){
