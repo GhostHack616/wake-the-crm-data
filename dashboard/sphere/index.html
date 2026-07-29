@@ -132,6 +132,49 @@ a{color:inherit}
 .boot.out{opacity:0;pointer-events:none}
 .boot div{font-size:var(--fs-sm);color:var(--text-3)}
 
+
+/* ── l'écran d'accueil, repris du tableau de bord ──────────────────────────── */
+.splash{position:fixed;inset:0;z-index:9999;
+  background:radial-gradient(120% 100% at 50% 44%, #13141b 0%, #0a0b10 58%, #06070b 100%);
+  display:flex;align-items:center;justify-content:center;padding:34px;text-align:center;
+  transform:translateY(0);transition:transform .9s cubic-bezier(.72,0,.2,1);will-change:transform;
+  box-shadow:0 30px 60px -10px rgba(0,0,0,.6);cursor:pointer}
+.splash::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,transparent 6%,rgba(124,108,240,.9) 50%,transparent 94%);
+  opacity:0;transition:opacity .3s ease;box-shadow:0 0 22px 2px rgba(124,108,240,.5)}
+.splash.hide{transform:translateY(-101%);pointer-events:none}
+.splash.hide::after{opacity:1}
+.sp-sonar{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+.splash-inner{position:relative;z-index:1;transition:opacity .5s ease, transform .6s cubic-bezier(.5,0,.2,1)}
+.splash.hide .splash-inner{opacity:0;transform:translateY(-44px) scale(.965)}
+.sp-status{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.46);margin-bottom:26px}
+.sp-dot{width:7px;height:7px;border-radius:50%;background:#7c6cf0;
+  box-shadow:0 0 10px 1px rgba(124,108,240,.75);animation:spPulse 1.5s ease-in-out infinite}
+.sp-mark{width:46px;height:46px;margin:0 auto 20px;opacity:0;animation:spIn .8s .16s var(--e) forwards}
+.sp-title{font-family:var(--display);font-size:44px;font-weight:600;color:#fff;letter-spacing:-.025em;
+  line-height:1.03;opacity:0;transform:translateY(10px);animation:spIn .75s .42s cubic-bezier(.2,.85,.2,1) forwards}
+.sp-title em{font-style:normal;color:#a99bff}
+.sp-info{margin-top:16px;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.56);
+  letter-spacing:.012em;font-variant-numeric:tabular-nums;opacity:0;transform:translateY(10px);
+  animation:spIn .75s .6s cubic-bezier(.2,.85,.2,1) forwards}
+.sp-info b{color:rgba(255,255,255,.86);font-weight:600}
+.sp-sig{margin-top:34px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.28);opacity:0;animation:spIn .8s 1.05s var(--e) forwards}
+.sp-prog{position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(255,255,255,.07)}
+.sp-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c6cf0,#a99bff);border-radius:0 2px 2px 0}
+.sp-prog i.run{animation:spProg var(--sp-dur,4200ms) cubic-bezier(.3,0,.3,1) forwards}
+.sp-skip{position:absolute;bottom:26px;right:24px;font-size:12.5px;font-weight:600;
+  color:rgba(255,255,255,.55);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:8px 16px;transition:.14s;z-index:2}
+.sp-skip:hover{color:#fff;background:rgba(255,255,255,.14)}
+@keyframes spIn{to{opacity:1;transform:none}}
+@keyframes spPulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spProg{from{width:0}to{width:100%}}
+@keyframes appReveal{0%{opacity:.4;transform:scale(1.02) translateY(14px)}60%{opacity:1}100%{opacity:1;transform:none}}
+body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
+@media(max-width:640px){.sp-title{font-size:31px}.sp-info{font-size:12.5px}.sp-mark{width:38px;height:38px}}
+
 @media(max-width:820px){
   .top{gap:8px;padding:0 10px}
   .brand span{display:none}
@@ -147,6 +190,24 @@ a{color:inherit}
 </style>
 </head>
 <body class="dark">
+<div class="splash" id="splash">
+  <canvas class="sp-sonar" id="spSonar" aria-hidden="true"></canvas>
+  <div class="splash-inner">
+    <div class="sp-status"><span class="sp-dot"></span><span id="spStatus">Sondage de la base</span></div>
+    <svg class="sp-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <circle cx="20" cy="20" r="15" stroke="#7c6cf0" stroke-width="1.4" opacity=".45"/>
+      <ellipse cx="20" cy="20" rx="15" ry="5.6" stroke="#a99bff" stroke-width="1.2" opacity=".7"/>
+      <ellipse cx="20" cy="20" rx="5.6" ry="15" stroke="#a99bff" stroke-width="1.2" opacity=".35"/>
+      <circle cx="20" cy="20" r="3.1" fill="#a99bff"/>
+    </svg>
+    <div class="sp-title">Wake the <em>CRM</em></div>
+    <div class="sp-info" id="spInfo">Chargement de la nuée…</div>
+    <div class="sp-sig">Romain Bouloche · Challenge Bulldozer</div>
+  </div>
+  <button class="sp-skip" id="spSkip">Passer &rarr;</button>
+  <div class="sp-prog"><i id="spProg"></i></div>
+</div>
+
 <div class="app">
   <div class="top">
     <div class="brand"><b>Wake the CRM</b><span>la nuée · préversion</span></div>
@@ -249,6 +310,32 @@ function lireTheme(){
   COL.froid=[+s[0],+s[1],+s[2]];
 }
 
+/* ── le maillage ───────────────────────────────────────────────────────────
+   Un fil entre grains voisins. C'est de la TEXTURE, pas de la donnée : aucune
+   relation commerciale n'est affirmée ici, seulement la proximité géométrique
+   sur la sphère. Un fil n'apparaît que si l'un de ses deux bouts s'est réveillé
+   — le réseau se tisse au fil du replay. Calculé une fois, au démarrage. */
+var MESH=null;
+function tisser(){
+  var pas=Math.max(1,Math.floor(N/1400)), ech=[];
+  for(var i=0;i<N;i+=pas) ech.push(i);
+  var m=ech.length, E=[];
+  for(var a=0;a<m;a++){
+    var ia=ech[a], b1=-1, b2=-1, d1=1e9, d2=1e9;
+    for(var b=0;b<m;b++){
+      if(b===a) continue;
+      var ib=ech[b];
+      var dx=px[ia]-px[ib], dy=py[ia]-py[ib], dz=pz[ia]-pz[ib];
+      var dd=dx*dx+dy*dy+dz*dz;
+      if(dd<d1){ d2=d1; b2=b1; d1=dd; b1=ib; }
+      else if(dd<d2){ d2=dd; b2=ib; }
+    }
+    if(b1>=0) E.push(ia,b1);
+    if(b2>=0) E.push(ia,b2);
+  }
+  MESH=new Int32Array(E);
+}
+
 function taille(){
   var b=cv.getBoundingClientRect();
   DPR=Math.min(2,window.devicePixelRatio||1);
@@ -289,6 +376,54 @@ function dessiner(){
   ctx.clearRect(0,0,W,H);
   ctx.drawImage(dustCv,0,0,DW,DH,0,0,W,H);
 
+  /* 1 bis. le maillage — un seul tracé pour tous les fils, sinon c'est lent */
+  if(MESH){
+    ctx.beginPath();
+    var tire=0;
+    for(var e=0;e<MESH.length;e+=2){
+      var A=MESH[e], B=MESH[e+1];
+      var la=lit[A], lb=lit[B];
+      if(la<0.02 && lb<0.02) continue;
+      var Ax=px[A]*cb+pz[A]*sb, Az=pz[A]*cb-px[A]*sb;
+      var Ay=py[A]*ca-Az*sa,   Az2=Az*ca+py[A]*sa;
+      if(Az2<-0.15) continue;
+      var Bx=px[B]*cb+pz[B]*sb, Bz=pz[B]*cb-px[B]*sb;
+      var By=py[B]*ca-Bz*sa,   Bz2=Bz*ca+py[B]*sa;
+      if(Bz2<-0.15) continue;
+      var da=1/(1.9-Az2*0.55), db=1/(1.9-Bz2*0.55);
+      ctx.moveTo(cx+Ax*R*da*1.9, cy+Ay*R*da*1.9);
+      ctx.lineTo(cx+Bx*R*db*1.9, cy+By*R*db*1.9);
+      tire++;
+    }
+    if(tire){
+      var f2=COL.froid;
+      ctx.strokeStyle="rgba("+f2[0]+","+f2[1]+","+f2[2]+",0.20)";
+      ctx.lineWidth=0.65; ctx.stroke();
+    }
+  }
+
+  /* 1 ter. les fils entre grains VIFS ressortent : le réseau se densifie là où
+     ça bouge, il ne reste pas une grille uniforme */
+  if(MESH){
+    ctx.beginPath();
+    var vif=0;
+    for(var e2=0;e2<MESH.length;e2+=2){
+      var A2=MESH[e2], B2=MESH[e2+1];
+      if(lit[A2]<0.28 && lit[B2]<0.28) continue;
+      var ax2=px[A2]*cb+pz[A2]*sb, az2=pz[A2]*cb-px[A2]*sb;
+      var ay2=py[A2]*ca-az2*sa,    az3=az2*ca+py[A2]*sa;
+      if(az3<-0.1) continue;
+      var bx2=px[B2]*cb+pz[B2]*sb, bz2=pz[B2]*cb-px[B2]*sb;
+      var by2=py[B2]*ca-bz2*sa,    bz3=bz2*ca+py[B2]*sa;
+      if(bz3<-0.1) continue;
+      var da2=1/(1.9-az3*0.55), db2=1/(1.9-bz3*0.55);
+      ctx.moveTo(cx+ax2*R*da2*1.9, cy+ay2*R*da2*1.9);
+      ctx.lineTo(cx+bx2*R*db2*1.9, cy+by2*R*db2*1.9);
+      vif++;
+    }
+    if(vif){ ctx.strokeStyle="rgba(154,141,255,0.20)"; ctx.lineWidth=0.75; ctx.stroke(); }
+  }
+
   /* 2. les constellations, triées par profondeur */
   var vis=[];
   for(var n=0;n<NODES.length;n++){
@@ -314,6 +449,21 @@ function dessiner(){
 
     /* les personnes autour, reliées au compte */
     if(o2.on>0.55 && o2.pp.length){
+      /* les personnes d'un vrai comité (3+) sont reliées entre elles : là, le
+         lien existe pour de bon — c'est la définition gravée. */
+      if(o2.comite>=3){
+        var pos=[];
+        for(var q=0;q<o2.pp.length;q++){
+          var an=o2.pp[q].a+ay*0.4, rq=rad*3;
+          pos.push([o2.sx+Math.cos(an)*rq, o2.sy+Math.sin(an)*rq*0.86]);
+        }
+        ctx.strokeStyle="rgba("+c[0]+","+c[1]+","+c[2]+","+(al2*0.16).toFixed(3)+")";
+        ctx.lineWidth=Math.max(.4,0.7*o2.d); ctx.beginPath();
+        for(var u=0;u<pos.length;u++) for(var v2=u+1;v2<pos.length;v2++){
+          ctx.moveTo(pos[u][0],pos[u][1]); ctx.lineTo(pos[v2][0],pos[v2][1]);
+        }
+        ctx.stroke();
+      }
       for(var p=0;p<o2.pp.length;p++){
         var pp=o2.pp[p];
         var ang=pp.a+ay*0.4;
@@ -457,7 +607,10 @@ function ouvrir(i){
   }
   h+='<div class="note">Préversion — l\'accueil du tableau de bord n\'est pas modifié. '
     +'La poussière est <b>générée dans le navigateur</b> à partir du rang de chaque entreprise : '
-    +'aucune coordonnée n\'est téléchargée. Les couleurs disent le <b>sens de l\'appel</b>, pas le score.</div>';
+    +'aucune coordonnée n\'est téléchargée. Les couleurs disent le <b>sens de l\'appel</b>, pas le score. '
+    +'<b>Les fils entre grains sont décoratifs</b> — ils relient des voisins sur la sphère, ils n\'affirment '
+    +'aucune relation entre entreprises. Les seuls liens qui disent quelque chose sont ceux d\'une '
+    +'constellation : le compte à ses personnes, et les personnes entre elles quand le comité est réel.</div>';
 
   document.getElementById("pbody").innerHTML=h;
   document.getElementById("panel").classList.add("on");
@@ -492,6 +645,95 @@ function ico(){
     ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
 }
 
+
+/* ══════════════════════════════════════════════════════════════════════════
+   L'ACCUEIL — la nuée se forme pendant qu'on charge, ligne de sonde à l'appui.
+   Le même écran que le tableau de bord, mais ce qui s'assemble derrière, ici,
+   c'est la sphère elle-même.
+   ══════════════════════════════════════════════════════════════════════════ */
+function sonarNuee(cv){
+  if(!cv||!cv.getContext) return function(){};
+  var c=cv.getContext("2d"), dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=0,h=0,P=[],raf=0,run=true,t0=performance.now(),NP=2600;
+  var reduce=false; try{ reduce=matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+  function build(){
+    w=cv.clientWidth||innerWidth; h=cv.clientHeight||innerHeight;
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); c.setTransform(dpr,0,0,dpr,0,0);
+    var ga=Math.PI*(3-Math.sqrt(5)); P=[];
+    for(var i=0;i<NP;i++){
+      var hh=Math.sin(i*12.9898)*43758.5453; hh-=Math.floor(hh);
+      var y=1-((i+hh*0.9)/(NP-1))*2, r=Math.sqrt(Math.max(0,1-y*y)), t=ga*i;
+      P.push({x:Math.cos(t)*r,y:y,z:Math.sin(t)*r,lit:0});
+    }
+  }
+  build();
+  function frame(){
+    if(!run) return;
+    var el=(performance.now()-t0)/1000, R=Math.min(w,h)*0.30, cx=w/2, cy=h*0.5;
+    var ay=el*0.20, ca=Math.cos(-0.30), sa=Math.sin(-0.30), cb=Math.cos(ay), sb=Math.sin(ay);
+    c.clearRect(0,0,w,h);
+    var scan=(el/3.4)*(h*1.25)-h*0.12;                 /* la ligne de sonde descend */
+    for(var i=0;i<P.length;i++){
+      var o=P[i];
+      var x1=o.x*cb+o.z*sb, z1=o.z*cb-o.x*sb;
+      var y1=o.y*ca-z1*sa, z2=z1*ca+o.y*sa;
+      var d=1/(1.9-z2*0.55), sx=cx+x1*R*d*1.9, sy=cy+y1*R*d*1.9;
+      if(!o.done && scan>=sy){ o.done=true; o.lit=1; }
+      if(o.done) o.lit=reduce?0.5:(0.28+Math.max(0,o.lit-0.28)*0.94);
+      var prof=(z2+1)*0.5;
+      var a=o.done ? (0.16+prof*0.5)*(0.5+o.lit) : 0.055+prof*0.05;
+      c.fillStyle="rgba(169,155,255,"+a.toFixed(3)+")";
+      c.fillRect(sx,sy,1.5,1.5);
+      if(o.done && o.lit>0.5){
+        var g=c.createRadialGradient(sx,sy,0,sx,sy,7*o.lit);
+        g.addColorStop(0,"rgba(190,180,255,"+(0.34*o.lit).toFixed(3)+")");
+        g.addColorStop(1,"rgba(190,180,255,0)");
+        c.fillStyle=g; c.beginPath(); c.arc(sx,sy,7*o.lit,0,6.2832); c.fill();
+      }
+    }
+    if(scan>0 && scan<h){
+      var la=Math.max(0,1-Math.max(0,el-3.1)/0.5);
+      var gd=c.createLinearGradient(0,scan-44,0,scan+44);
+      gd.addColorStop(0,"rgba(124,108,240,0)");
+      gd.addColorStop(.5,"rgba(124,108,240,"+(0.09*la).toFixed(3)+")");
+      gd.addColorStop(1,"rgba(124,108,240,0)");
+      c.fillStyle=gd; c.fillRect(0,scan-44,w,88);
+      c.strokeStyle="rgba(179,168,255,"+(0.75*la).toFixed(3)+")"; c.lineWidth=1.3;
+      c.beginPath(); c.moveTo(0,scan); c.lineTo(w,scan); c.stroke();
+    }
+    raf=requestAnimationFrame(frame);
+  }
+  var onR=function(){ build(); }; addEventListener("resize",onR);
+  raf=requestAnimationFrame(frame);
+  return function(){ run=false; if(raf)cancelAnimationFrame(raf); removeEventListener("resize",onR); };
+}
+
+function accueil(apres){
+  var sp=document.getElementById("splash");
+  if(!sp){ apres(); return; }
+  var stop=sonarNuee(document.getElementById("spSonar"));
+  var reduce=false; try{ reduce=matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+  var DUR=reduce?1400:4200, FADE=900, fin=false, t1, t2;
+  var pr=document.getElementById("spProg");
+  sp.style.setProperty("--sp-dur",DUR+"ms"); pr.classList.add("run");
+  t1=setTimeout(function(){
+    document.getElementById("spStatus").textContent="Moteur en ligne";
+    document.getElementById("spInfo").innerHTML="<b>20 519</b> entreprises · <b>69</b> à travailler";
+  }, Math.max(300,DUR-900));
+  function close(){
+    if(fin) return; fin=true;
+    clearTimeout(t1); clearTimeout(t2);
+    document.body.classList.add("sp-revealing");
+    setTimeout(function(){ document.body.classList.remove("sp-revealing"); },900);
+    sp.classList.add("hide");
+    setTimeout(stop,FADE);
+    setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); apres(); },FADE+40);
+  }
+  t2=setTimeout(close,DUR);
+  document.getElementById("spSkip").onclick=function(e){ e.stopPropagation(); close(); };
+  sp.onclick=close;
+}
+
 /* ── démarrage ─────────────────────────────────────────────────────────────── */
 function demarrer(j){
   D=j; N=D.ents.length;
@@ -508,17 +750,24 @@ function demarrer(j){
     });
     NODEI[i]=NODES.length;
     NODES.push({ i:i, nom:d.name, k:kind[i], col:c, score:Math.max(1,d.score),
-                 pp:pp, on:0, pulse:0 });
+                 comite:parseInt(d.comite,10)||0, pp:pp, on:0, pulse:0 });
   });
 
   var t1=NODES.filter(function(o){ return o.k===2; }).sort(function(a,b){ return b.score-a.score; });
   t1.forEach(function(o,r){ o.rang=r; });
   NODES.forEach(function(o){ if(o.rang===undefined) o.rang=99; });
 
+  tisser();
   taille();
   poser(D.days-1);
   document.getElementById("boot").classList.add("out");
   boucle();
+
+  /* on arrive sur une nuée éteinte, et elle se réveille toute seule */
+  accueil(function(){
+    poser(0);
+    playing=true; ico();
+  });
 }
 
 cv=document.getElementById("cv"); ctx=cv.getContext("2d");
