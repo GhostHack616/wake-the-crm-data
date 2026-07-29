@@ -873,8 +873,11 @@ var G=(function(){
     return COL.froid;
   }
   function lireTheme(){
-    var v=getComputedStyle(document.body).getPropertyValue("--dust").trim().split(",");
-    COL.froid=[+v[0],+v[1],+v[2]];
+    /* La scène Macro a son propre fond sombre, quel que soit le thème de la page
+       (voir .macro, dégradé fixe). La poussière ne suit donc PAS le thème : la
+       faire suivre peignait des grains noirs sur un fond noir — la nuée
+       disparaissait en thème clair. */
+    COL.froid=[196,206,232];
     NODES.forEach(function(o){ o.col=couleur(o.i); });
   }
   function resize(){
@@ -1383,6 +1386,105 @@ var PROC=[
  body:"La règle appliquée : <b>année à 2 chiffres = américain, année à 4 chiffres = français</b>. Et surtout : aucune date devinée. Illisible, c'est vide plus un drapeau <b>error</b> — jamais une valeur inventée.",
  q:"Comment vous pouvez deviner le mois et le jour ?",
  r:"Je ne devine pas, je démontre. Sur <b>54 419</b> dates, un des deux nombres dépasse 12 : la règle y est vérifiable, et il y a <b>zéro contre-exemple</b>. C'est seulement après cette démonstration que je l'applique aux <b>35 551</b> dates ambiguës — 39,5 % des dates en barres. Sans ça, ces 35 551 dates étaient un pile ou face. <br><br>Au total <b>134 818</b> dates converties, <b>0 échec</b>. Les 94 838 horodatages d'événements étaient déjà en ISO : hors périmètre."
+},
+{
+ p:"2 · Réparer", t:"Étape 2 — les pays", h:"30 façons d'écrire 8 pays", vue:"data",
+ say:"Filtrer « France » dans ce CRM montrait 2 730 fiches. Il y en avait 13 517.",
+ pb:"FR, France, france, FRANCE, Fr — pour une machine ce sont cinq pays différents. Toute segmentation géographique, tout routage commercial, tout reporting par marché était faux, sans que rien ne le signale.",
+ kpi:[["30 → 8","graphies ramenées à des codes ISO"],["30 000 / 30 000","fiches mappées"],["0","pays deviné"]],
+ body:"Table de correspondance déclarée en configuration, pas devinée dans le code. <b>Une graphie absente de la table n'est jamais interprétée</b> : elle reste vide et elle est listée dans le rapport. Le jour où une écriture nouvelle apparaît, elle se voit.",
+ q:"Et si une écriture inconnue arrive demain ?",
+ r:"Elle ne devient pas un pays au hasard. Elle sort vide, elle est comptée dans le rapport, et la table se complète en une ligne de configuration — pas en modifiant le code."
+},
+{
+ p:"2 · Réparer", t:"Étape 3 — les domaines", h:"Déduire n'est pas deviner", vue:"data",
+ say:"2 671 fiches n'avaient aucun domaine. J'en ai récupéré 2 538 — sans en inventer un seul.",
+ pb:"Le domaine est la première clé pour reconnaître deux fiches d'une même entreprise. Sans lui, une boîte reste éclatée en plusieurs comptes pour toujours.",
+ kpi:[["1 825","préfixes www. retirés"],["2 538","racines déduites des emails de leurs contacts"],["0","déduction ambiguë"],["133","fiches sans racine, laissées vides et listées"]],
+ body:"Quand une fiche n'a pas de domaine mais que ses contacts ont tous des adresses professionnelles pointant vers <b>la même</b> racine, la racine est déduite — et la provenance est écrite dans une colonne. Si les contacts ne sont pas unanimes, rien n'est déduit.",
+ q:"Vous avez deviné 2 538 domaines ?",
+ r:"Non, je les ai déduits, et je l'ai validé avant. Sur les <b>25 785</b> comptes qui avaient à la fois un domaine déclaré et des emails professionnels, la racine déduite des emails est identique au domaine déclaré dans <b>25 785 cas sur 25 785</b>. Zéro divergence. C'est cette mesure qui m'autorise à appliquer la déduction là où le domaine manque."
+},
+{
+ p:"2 · Réparer", t:"Étape 4 — les noms", h:"La seconde clé, et son test", vue:"data",
+ say:"J'ai normalisé les noms pour pouvoir comparer deux fiches. Et j'ai vérifié que cette clé disait la même chose que la première.",
+ pb:"« Talosolmedia SARL », « Talosolmedia France », « Talosolmedia (old) » : trois écritures, une entreprise. Sans normalisation, la fusion ne peut pas les voir.",
+ kpi:[["234","marqueurs de doublon repérés — (old), - import, « 2 »"],["27 329 / 27 329","concordance entre la clé nom et la clé domaine"],["20 519","noms normalisés distincts"]],
+ body:"Minuscules, mentions juridiques et marqueurs retirés, ponctuation supprimée. Le marqueur trouvé est <b>mémorisé</b> : une fiche étiquetée « (old) » ne pourra jamais devenir la fiche de référence de son groupe.",
+ q:"Vous retirez « France » et « SARL » — vous allez fusionner deux filiales différentes.",
+ r:"C'est le risque, et c'est pour ça que je ne me fie pas à cette clé seule. Sur les <b>27 329</b> comptes qui ont un domaine déclaré, la clé nom et la clé domaine donnent <b>exactement le même regroupement</b> — 27 329 sur 27 329. Deux clés indépendantes qui produisent la même partition, ce n'est plus une intuition."
+},
+{
+ p:"2 · Réparer", t:"Étape 5 — les emails", h:"Réparer sans inventer", vue:"data",
+ say:"1 544 adresses étaient cassées mécaniquement. Je les répare — et je vous dis tout de suite que ça n'a fait gagner aucun compte chaud.",
+ pb:"Un double arobase ou un espace au milieu d'une adresse : elle est invalide, le contact est injoignable, et rien ne le signale.",
+ kpi:[["1 544","réparées — 769 doubles arobases, 775 espaces"],["0","adresse encore invalide après réparation"],["783","adresses partagées par plusieurs contacts"]],
+ body:"Uniquement des gestes mécaniques : retirer un espace, remplacer deux arobases par une. <b>Aucun caractère ajouté.</b> Et une adresse partagée par deux fiches signale la même personne comptée deux fois — interdit de la faire passer pour un comité d'achat à elle seule.",
+ q:"À quoi ça sert si ça ne change aucun score ?",
+ r:"À rien sur le score, et je le dis avant qu'on me le demande : <b>aucun</b> des comptes prioritaires n'avait d'email cassé. Ça change le <b>canal</b>, pas le classement — au moment d'appeler, on sait qui est joignable. Présenter ça comme un gain de détection serait faux."
+},
+{
+ p:"2 · Réparer", t:"Étape 6 — les dates impossibles", h:"Une date fausse n'entre jamais dans un calcul", vue:"ops",
+ say:"6 321 contacts étaient créés dans le futur. Je ne corrige pas ces dates : je les neutralise.",
+ pb:"Une date de création postérieure à aujourd'hui fausse tout calcul d'ancienneté. Mais on ne peut pas deviner la vraie : la corriger serait inventer une donnée.",
+ kpi:[["6 321","contacts créés dans le futur"],["414","ont reçu des emails avant leur propre création"],["20","cas laissés au bénéfice du doute"]],
+ body:"La date est <b>vidée et signalée</b>, l'originale reste visible. Elle ne pollue plus aucun calcul et personne ne peut la prendre pour vraie. Les événements, eux, ne sont jamais touchés — c'est la fiabilité de la date qui est jugée, pas l'activité.",
+ q:"Des événements avant la création du contact, c'est peut-être juste de l'attribution rétroactive ?",
+ r:"J'ai fait la différence. <b>414</b> contacts ont <b>reçu des emails</b> avant leur date de création : c'est impossible, on n'envoie pas à quelqu'un qui n'existe pas encore — la date est corrompue. <b>20</b> n'ont que des visites ou du LinkedIn avant création : là, l'attribution rétroactive est plausible, je leur laisse le bénéfice du doute et je le signale."
+},
+{
+ p:"3 · Reconstruire", t:"Étape 7 — la fusion", h:"30 000 fiches, 20 519 entreprises", vue:"data",
+ say:"Un tiers du CRM était des doublons. J'ai reconstruit la table qui manquait : celle des entreprises.",
+ pb:"Sans elle, un commercial appelle deux fois la même boîte, l'ARR est compté deux fois, et l'activité d'une entreprise reste éclatée sur trois fiches qui semblent toutes tièdes.",
+ kpi:[["20 519","entreprises réelles"],["9 481","fiches absorbées, aucune supprimée"],["0 €","d'écart dans la comptabilité de l'ARR"],["1 407","commerciaux récupérés d'une fiche jumelle"]],
+ body:"La fiche de référence est élue par cascade : jamais une fiche marquée, puis le statut le plus avancé, puis celle qui porte l'ARR, puis la plus ancienne. Les vides se complètent depuis les jumelles, avec la provenance tracée. <b>Les conflits ne sont jamais tranchés en silence</b> : 5 947 sur le pays, 251 sur l'ARR, 5 067 sur le commercial — tous signalés pour revue humaine.",
+ q:"Comment vous savez que vous n'avez pas fusionné deux entreprises différentes ?",
+ r:"Deux clés indépendantes — le nom normalisé et la racine de domaine — produisent <b>exactement la même partition</b>. Et la comptabilité ferme : 69 681 000 € au départ = 66 656 000 € conservés + 3 025 000 € écartés en doublons. <b>Écart : zéro euro.</b> Enfin rien n'est supprimé : chaque doublon garde un lien vers sa fiche de référence, le retour arrière est intégral."
+},
+{
+ p:"3 · Reconstruire", t:"Étape 8 — le ré-attachement", h:"Fusionner sans re-attacher ne sert à rien", vue:"data",
+ say:"La table des entreprises ne vaut que si les contacts et les événements la rejoignent. Un événement sur une fiche doublon est un signal perdu.",
+ pb:"Le signal était éclaté : trois fiches tièdes au lieu d'une entreprise chaude. C'est ici que les traces se recollent.",
+ kpi:[["29 184","événements re-rattachés à leur vraie entreprise — 32 % des rattachables"],["547","contacts orphelins rattachés par le domaine de leur email"],["53","vrais inconnus, listés comme comptes à créer"],["105","doublons de personnes signalés"]],
+ body:"Même geste qu'à l'étape 3, et même prudence : un orphelin n'est rattaché que si le domaine de son email désigne <b>une seule</b> entreprise. Les autres partent dans une liste de comptes à créer plutôt que d'être rangés au hasard. Et 11 contacts ont récupéré un titre depuis leur doublon — dont un directeur des ressources humaines qui était jusque-là sans fonction.",
+ q:"32 % des événements changent de compte, ça ne vous inquiète pas ?",
+ r:"C'est la mesure de ce que la fusion a réparé. Ces 29 184 événements étaient rattachés à des fiches doublons : ils existaient, mais ils comptaient pour une entreprise qui n'existe pas. Aucun événement n'a été perdu — <b>90 838 rattachés plus 4 000 anonymes conservés, on retombe sur 94 838</b>."
+},
+{
+ p:"4 · Assainir et classer", t:"Étape 9 — les doublons d'événements", h:"Trois ouvertures du même email ne font pas trois signaux", vue:"ops",
+ say:"Sans cette étape, les comptes les plus matraqués par les campagnes ressortent en tête. Pas les plus intéressés : les plus arrosés.",
+ pb:"Un même envoi ouvert trois fois dans la journée gonfle le score d'un compte qui n'a rien fait de plus qu'un autre.",
+ kpi:[["1 988","lignes signalées comme doublons"],["0","conversion touchée"],["0","événement supprimé"]],
+ body:"La clé inclut <b>la page</b> : sans ça, quelqu'un qui visite la page tarifs puis la démo le même jour perdrait la moitié de son parcours. Et les visites anonymes sont laissées intactes — leur appliquer la même règle effacerait 2 872 lignes à tort, je l'ai mesuré.",
+ q:"Vous supprimez des événements ?",
+ r:"Jamais. Ils sont <b>signalés</b>, pas retirés : le scoring les ignore, le fichier les garde. Si la règle est mauvaise, on l'annule sans avoir rien perdu."
+},
+{
+ p:"4 · Assainir et classer", t:"Étape 10 — le robot", h:"Ce n'est pas le volume qui trahit, c'est le chronomètre", vue:"data",
+ say:"Un contact avait 420 événements. C'était le compte le plus actif de toute la base — et ce n'était pas un humain.",
+ pb:"N'importe quel scoring naïf mettait ce compte en tête de la liste d'appels. Un commercial aurait passé son coup de fil.",
+ kpi:[["4 s","délai médian entre l'envoi et l'ouverture"],["420","événements neutralisés"],["0","humain signalé à tort"]],
+ body:"La règle ne regarde pas combien, elle regarde <b>à quelle vitesse</b> : un robot de sécurité ouvre en quelques secondes, un humain met des heures. Le témoin de contrôle, un contact au volume comparable, ouvre en <b>23 heures</b> de médiane — il n'est pas signalé. Et la détection se fait sur le flux brut : après déduplication, le motif mécanique a disparu.",
+ q:"Et si un humain très réactif se faisait attraper ?",
+ r:"Il faudrait qu'il ouvre en moins d'une minute, en médiane, sur au moins cinq emails. Sur cette base, le contact humain le plus actif est à 23 heures. L'écart n'est pas serré : il est de trois ordres de grandeur."
+},
+{
+ p:"4 · Assainir et classer", t:"Étape 11 — la segmentation", h:"On ne prospecte pas un client, on ne relance pas un mort", vue:"data",
+ say:"Avant de scorer, il faut savoir à qui on parle. Le segment précède le score.",
+ pb:"Un client actif et un prospect froid peuvent avoir le même score d'engagement. Ce n'est pas le même appel, pas le même interlocuteur, pas la même séquence.",
+ kpi:[["11 → 9","états factuels traduits en actions"],["3 037","clients actifs → fidélisation"],["209","renouvellements échus → risque"],["36","churns contradictoires → audit"]],
+ body:"Les règles s'appliquent dans un ordre strict, sur des <b>faits</b> : statut consolidé, date de renouvellement, engagement net. Le champ « mort » déclaré dans le CRM n'est utilisé qu'en dernier recours, et il est signalé. Décision importante : la liste d'appels finale est <b>unique, tous segments confondus</b> — trois des entreprises les plus chaudes ne sont pas des prospects.",
+ q:"Pourquoi une seule liste et pas une par segment ?",
+ r:"Parce qu'une liste par segment aurait fait passer à côté d'un ex-client qui revient et d'un client dont le renouvellement approche. Le segment ne décide pas de l'entrée dans la liste — il décide de <b>ce qu'on dit</b> en appelant."
+},
+{
+ p:"4 · Assainir et classer", t:"Étape 12 — l'audit", h:"Ce que je remonte de moi-même", vue:"ops",
+ say:"Le rapport se génère à chaque exécution. Et il contient ce que personne ne m'a demandé de chercher.",
+ pb:"Un rapport écrit à la main devient faux dès la première correction. Celui-là est produit par le code, à partir des fichiers.",
+ kpi:[["2 015","emails partis vers des désinscrits"],["1 607","emails partis vers des contacts sans adresse valide"],["0","ligne supprimée sur les trois fichiers"]],
+ body:"Ces deux chiffres ne faisaient pas partie de l'exercice. Ce sont des faits que le nettoyage a fait apparaître et qui engagent l'entreprise, pas seulement la performance commerciale — alors ils sont dans le rapport.",
+ q:"Personne ne vous demandait ça.",
+ r:"Non. Mais quelqu'un qui nettoie un CRM et qui voit <b>2 015</b> emails partis vers des gens qui ont demandé à ne plus être contactés, et qui ne le dit pas, a mal fait son travail. Le reste du rapport se recalcule à chaque exécution — il ne peut pas mentir sur un état ancien."
 }
 ];
 
