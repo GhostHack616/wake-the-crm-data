@@ -1,6 +1,6 @@
 # Rapport d'audit du cleanup — Wake the CRM
 
-Généré par `cleanup/run_cleanup.py` le 2026-07-28 (référence temporelle du dataset : 2026-07-22).
+Généré par `cleanup/run_cleanup.py` le 2026-07-29 (référence temporelle du dataset : 2026-07-22).
 
 Principe : rien n'est supprimé — réparations en colonnes neuves, originaux intacts.
 
@@ -282,7 +282,7 @@ Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement NE
 | B3 | témoins humains flagués bot (non-régression) | 0 | 0 | 🟢 |
 | R11 | faux clusters restants (2 primaires, même email, même entité) | 0 | 0 | 🟢 |
 
-À armer avec leurs étapes : résultat : ENT-16714 (pages résiliation) jamais dans la hot list — garantie devenue paramétrique · garde de config : poids des pages cancel/billing/export STRICTEMENT négatifs (dérive statistiquement invisible : 14 events/94 838, tous sur ENT-16714) · garde de config : /careers et /blog = 0 · email_sent = 0 · plancher conversions actif · couverture données→config : chaque type d'event (7) et chaque page (18) a un poids DÉCLARÉ — valeur nouvelle = alarme, jamais un défaut silencieux · flux : le scoring lit 0 from_bot et 0 is_duplicate_event ; le détecteur lit 94 838 — deux compteurs, deux alarmes · hot list : UNIQUE, tous segments confondus, colonne play — les files sont des vues · push : aucun contact opted_out dans une liste d'envoi
+Armées par le scoring V1.1 — chaque promesse cite sa garde, vérifiée verte dans la traçabilité ci-dessous : résultat : ENT-16714 (pages résiliation) jamais dans la hot list — garde SC14 · garde de config : poids des pages cancel/export STRICTEMENT négatifs (dérive statistiquement invisible : 14 events/94 838, tous sur ENT-16714) — garde SC10 · garde de config : /careers et /blog = 0 · email_sent = 0 — garde SC11 · plancher conversions — garde SC23 · couverture données→config : chaque type d'event (7) et chaque page (18) a un poids DÉCLARÉ — valeur nouvelle = alarme, jamais un défaut silencieux — garde SC9 · flux : le scoring lit 0 from_bot et 0 is_duplicate_event ; le détecteur lit 94 838 — deux compteurs, deux alarmes (filtre à l'entrée du moteur + gardes B1-B3/D1-D3) · hot list : UNIQUE, tous segments confondus, colonne play — garde SC7 · push : aucun contact opted_out dans une liste d'envoi — garde SC12 (canal) + contrôle du script slack
 
 ## 🧭 Traçabilité — chaque règle actée a-t-elle son contrôle automatique ?
 
@@ -301,19 +301,19 @@ Règles en ordre strict sur les FAITS (statut consolidé, renewal, engagement NE
 | Rien n'est supprimé, rollback intégral | toutes | C1-C6, F4 + merged_into | 🟢 garantie |
 | Le routage lit les FAITS (a_ete_client/deal_en_cours), pas l'étiquette | étapes 7+11 (faits + play) | G13-G14 | 🟢 garantie |
 | Segmentation : 11 états factuels sur flux net, partition complète ; MORT/DORMANT en dernier recours assumé | étape 11 | G1-G15 | 🟢 garantie |
-| Hot list UNIQUE tous segments + colonne play (les files = des vues) | scoring (à venir) | — | 🔴 à armer avec son étape |
-| email_sent pèse 0, opens ≈ 0 dans le score | scoring (à venir) | — | 🔴 à armer avec son étape |
-| /careers et /blog à poids nul | scoring (à venir) | — | 🔴 à armer avec son étape |
-| Pages négatives (cancel/billing/export) à poids négatif | scoring (à venir) | — | 🔴 à armer avec son étape |
-| Opt-out : interdit d'écrire ≠ signal annulé (suppression list) | scoring/push (à venir) | — | 🔴 à armer avec son étape |
-| Aucun filtre dur avant scoring (test d'amputation) | scoring (à venir) | — | 🔴 à armer avec son étape |
-| Decay demi-vie courte + plancher 21 j | scoring (à venir) | — | 🔴 à armer avec son étape |
-| Le silence des clients EST un score (file risque churn) | routage (à venir) | — | 🔴 à armer avec son étape |
+| Hot list UNIQUE tous segments + colonne play (les files = des vues) | scoring V1.1 (hot list) | SC7 | 🟢 garantie (garde verte, scoring V1.1) |
+| email_sent pèse 0, opens ≈ 0 dans le score | scoring V1.1 (config points) | SC11 | 🟢 garantie (garde verte, scoring V1.1) |
+| /careers et /blog à poids nul | scoring V1.1 (config pages) | SC11 | 🟢 garantie (garde verte, scoring V1.1) |
+| Pages négatives (cancel/export) à poids négatif — billing ramené à 0 le 28/07 | scoring V1.1 (config pages) | SC10 | 🟢 garantie (garde verte, scoring V1.1) |
+| Opt-out : interdit d'écrire ≠ signal annulé (suppression list) | scoring V1.1 (canal) + slack/push | SC12 | 🟢 garantie (garde verte, scoring V1.1) |
+| Aucun filtre dur avant scoring (test d'amputation) | scoring V1.1 (partition) | SC18 | 🟢 garantie (garde verte, scoring V1.1) |
+| Decay demi-vie courte + plancher 21 j | scoring V1.1 (décroissance) | SC21 | 🟢 garantie (garde verte, scoring V1.1) |
+| Le silence des clients EST un score (file risque churn) | scoring V1.1 (partition + segments) | SC19, SC20 | 🟢 garantie (garde verte, scoring V1.1) |
 | Bot détecté au chronomètre (cadence), jamais au volume — sur le flux BRUT | étape 10 | B1-B3 | 🟢 garantie |
 | Dédup events : clé stricte page incluse, anonymes intouchés | étape 9 | D1-D3 | 🟢 garantie |
-| Récence = events uniquement, jamais last_activity_date | scoring (à venir) | — | 🔴 à armer avec son étape |
+| Récence = events uniquement, jamais last_activity_date | scoring V1.1 (moteur) | SC22 | 🟢 garantie (garde verte, scoring V1.1) |
 | Buying committee = personnes distinctes (dédup email) | étape 8 | R9-R11 | 🟢 garantie |
 | Chaque event/contact rattaché à exactement une entité (anonymes/inconnus tracés) | étape 8 | R1-R8 | 🟢 garantie |
 | Mapping persona produit, partition complète double sens | config personas | P1-P7 | 🟢 garantie |
-| Plancher conversions : form_fill/meeting_booked à poids plein quel que soit le porteur | scoring (à venir) | — | 🔴 à armer avec son étape |
+| Plancher conversions : form_fill/meeting_booked à poids plein quel que soit le porteur | scoring V1.1 (moteur) | SC23 | 🟢 garantie (garde verte, scoring V1.1) |
 

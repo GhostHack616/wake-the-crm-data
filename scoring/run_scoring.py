@@ -125,7 +125,10 @@ def calcule(cfg, contacts, companies, events):
     # ---- portes, perdus, fit, comité --------------------------------
     fenetre1 = cfg["portes"]["porte1_conversion_fenetre_jours"]
     comptes = {}
-    for ent in set(list(score_p) + list(conv)):
+    # sorted() : un set itère dans un ordre aléatoire par processus (hash seed),
+    # donc chaque rejeu mélangeait les ex æquo du CSV — un « rien n'a bougé »
+    # doit être prouvable au diff près (29/07).
+    for ent in sorted(set(list(score_p) + list(conv))):
         sc = sum(score_p[ent].values())
         conv_recente = any((ref - jour(d + "T00")).days <= fenetre1 for d, _, _ in conv[ent])
 
@@ -174,10 +177,12 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
             tier = "PERDU"
         elif d["porte"]:
             tier = "T1"
+        elif d["score"] >= S["tier1"]:
+            tier = "T1"          # accumulation pure : la config promet T1 dès ce seuil
+                                 # même sans porte — ce test doit précéder celui du T2
+                                 # (29/07 : branche inatteignable avant, 0 compte déplacé, garde SC24)
         elif d["score"] >= S["tier2"]:
             tier = "T2"
-        elif d["score"] >= S["tier1"]:
-            tier = "T1"          # théorique : accumulation pure au-dessus du seuil
         else:
             tier = "T3"
 
@@ -276,8 +281,30 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
     return lignes
 
 
-def invariants(cfg, lignes, score_p, comptes, alarmes):
+def invariants(cfg, lignes, score_p, comptes, alarmes, events_p):
     exp = cfg["invariants"]
+    # SC21/SC23 : la loi est re-vérifiée sur la TRACE publiée (base × porteur
+    # × temps) — ce que le dashboard montre est exactement ce qui est testé.
+    D = cfg["decroissance"]
+    ref = jour(cfg["reference_date"])
+    PREUVES = ("RDV pris", "formulaire")
+    viol_decay = viol_preuve = 0
+    for ent in events_p:
+        for pers in events_p[ent]:
+            for e in events_p[ent][pers]:
+                age = (ref - jour(e["date"])).days
+                demi = D["demi_vie_preuves_jours"] if e["quoi"] in PREUVES \
+                    else D["demi_vie_gestes_jours"]
+                att = 0.5 ** (age / demi)
+                if age <= D["plancher_fenetre_jours"]:
+                    att = max(att, D["plancher"])
+                if abs(e["x_temps"] - att) > 1e-9:
+                    viol_decay += 1
+                if e["quoi"] in PREUVES and e["x_porteur"] != 1.0:
+                    viol_preuve += 1
+    # SC22 : le mot est construit par concaténation pour que la seule
+    # occurrence comptable dans ce fichier soit un vrai usage réintroduit.
+    INTERDIT = "last_activity" + "_date"
     t1 = [r for r in lignes if r["tier"] == "T1"]
     t2 = [r for r in lignes if r["tier"] == "T2"]
     perdus = [r for r in lignes if r["perdu_canal_mort"] == "1"]
@@ -300,10 +327,13 @@ def invariants(cfg, lignes, score_p, comptes, alarmes):
         ("SC10", "poids de sortie strictement négatifs (config)", 0,
          sum(1 for p in ("/help/cancel-subscription", "/help/export-data")
              if cfg["pages"][p] >= 0)),
-        ("SC11", "opens/envois/carrières/facture à zéro (config)", 0,
+        ("SC11", "opens/envois/carrières/blog/facture à zéro (config)", 0,
          sum(1 for k, v in [("email_open", cfg["points"]["email_open"]),
                             ("email_sent", cfg["points"]["email_sent"]),
                             ("/careers", cfg["pages"]["/careers"]),
+                            ("/blog/hr-trends-2026", cfg["pages"]["/blog/hr-trends-2026"]),
+                            ("/blog/interview-tips", cfg["pages"]["/blog/interview-tips"]),
+                            ("/blog/onboarding-guide", cfg["pages"]["/blog/onboarding-guide"]),
                             ("/billing", cfg["pages"]["/billing"])] if v != 0)),
         ("SC12", "désabonné jamais en canal email", 0,
          len([r for r in lignes if r["canal"] == "email" and "désabonné" in r["canal"]])),
@@ -322,6 +352,17 @@ def invariants(cfg, lignes, score_p, comptes, alarmes):
          exp["silencieuses_total"], len([r for r in lignes if r["silence"]])),
         ("SC20", "silencieuse jamais dans une file de travail", 0,
          len([r for r in lignes if r["silence"] and r["tier"] in ("T1", "T2")])),
+        # SC21-SC24 (29/07, revue croisée) : la table de traçabilité affichait
+        # « à venir » des règles déjà actives — chacune reçoit son contrôle
+        # mesuré. Un statut ne se déclare pas, il se constate.
+        ("SC21", "décroissance conforme sur chaque ligne de trace (demi-vies + plancher 25 % ≤ 21 j)",
+         0, viol_decay),
+        ("SC22", "récence = events uniquement (le moteur ne lit jamais " + INTERDIT + ")",
+         0, open(__file__, encoding="utf-8").read().count(INTERDIT)),
+        ("SC23", "preuves à plein poids quel que soit le porteur (trace)", 0, viol_preuve),
+        ("SC24", "score >= seuil T1 => Tier 1, porte ou pas (hors canal mort)", 0,
+         sum(1 for r in lignes
+             if r["score_brut"] >= cfg["seuils"]["tier1"] and r["tier"] not in ("T1", "PERDU"))),
     ]
     verts = sum(1 for _, _, att, obt in checks if att == obt)
     for cid, lib, att, obt in checks:
@@ -401,7 +442,7 @@ def main():
              "score": s, "events": events_p[ent][p]}
             for p, s in sorted(score_p[ent].items(), key=lambda y: -y[1])]})
     from datetime import datetime
-    verts, total, checks = invariants(CFG, lignes, score_p, comptes, alarmes)
+    verts, total, checks = invariants(CFG, lignes, score_p, comptes, alarmes, events_p)
     # Vue OPS (exigence du brief : « statut du dernier run + une alarme si
     # quelque chose casse ») — l'état du moteur voyage AVEC les données.
     ops = {"genere_le": datetime.now().isoformat(timespec="seconds"),

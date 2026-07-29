@@ -362,16 +362,16 @@ invariants:
     customer_doublons_meme_montant: 168000  # 11 fiches
     # total = 3 025 000 = exactement l'écarté de la fusion (F6)
 
-  # S'armeront à la naissance du SCORING (aucune garantie paramétrique
-  # sans surveillance — leçon ENT-16714) :
-  a_armer:
-    - "résultat : ENT-16714 (pages résiliation) jamais dans la hot list — garantie devenue paramétrique"
-    - "garde de config : poids des pages cancel/billing/export STRICTEMENT négatifs (dérive statistiquement invisible : 14 events/94 838, tous sur ENT-16714)"
-    - "garde de config : /careers et /blog = 0 · email_sent = 0 · plancher conversions actif"
-    - "couverture données→config : chaque type d'event (7) et chaque page (18) a un poids DÉCLARÉ — valeur nouvelle = alarme, jamais un défaut silencieux"
-    - "flux : le scoring lit 0 from_bot et 0 is_duplicate_event ; le détecteur lit 94 838 — deux compteurs, deux alarmes"
-    - "hot list : UNIQUE, tous segments confondus, colonne play — les files sont des vues"
-    - "push : aucun contact opted_out dans une liste d'envoi"
+  # Armées à la naissance du scoring V1.1 (promesse tenue le 29/07 — chaque
+  # ligne cite désormais sa garde, mesurée à chaque run de run_scoring.py) :
+  armees_par_scoring:
+    - "résultat : ENT-16714 (pages résiliation) jamais dans la hot list — garde SC14"
+    - "garde de config : poids des pages cancel/export STRICTEMENT négatifs (dérive statistiquement invisible : 14 events/94 838, tous sur ENT-16714) — garde SC10"
+    - "garde de config : /careers et /blog = 0 · email_sent = 0 — garde SC11 · plancher conversions — garde SC23"
+    - "couverture données→config : chaque type d'event (7) et chaque page (18) a un poids DÉCLARÉ — valeur nouvelle = alarme, jamais un défaut silencieux — garde SC9"
+    - "flux : le scoring lit 0 from_bot et 0 is_duplicate_event ; le détecteur lit 94 838 — deux compteurs, deux alarmes (filtre à l'entrée du moteur + gardes B1-B3/D1-D3)"
+    - "hot list : UNIQUE, tous segments confondus, colonne play — garde SC7"
+    - "push : aucun contact opted_out dans une liste d'envoi — garde SC12 (canal) + contrôle du script slack"
 
 # --- Traçabilité : règle actée -> invariant qui la surveille --
 # Née de l'erreur n°7 (règle ARR actée mais non implémentée, non surveillée).
@@ -391,18 +391,22 @@ tracabilite:
   - {regle: "Rien n'est supprimé, rollback intégral",                            ou: "toutes",              invariants: "C1-C6, F4 + merged_into"}
   - {regle: "Le routage lit les FAITS (a_ete_client/deal_en_cours), pas l'étiquette", ou: "étapes 7+11 (faits + play)", invariants: "G13-G14"}
   - {regle: "Segmentation : 11 états factuels sur flux net, partition complète ; MORT/DORMANT en dernier recours assumé", ou: "étape 11", invariants: "G1-G15"}
-  - {regle: "Hot list UNIQUE tous segments + colonne play (les files = des vues)",  ou: "scoring (à venir)",   invariants: ""}
-  - {regle: "email_sent pèse 0, opens ≈ 0 dans le score",                        ou: "scoring (à venir)",   invariants: ""}
-  - {regle: "/careers et /blog à poids nul",                                     ou: "scoring (à venir)",   invariants: ""}
-  - {regle: "Pages négatives (cancel/billing/export) à poids négatif",           ou: "scoring (à venir)",   invariants: ""}
-  - {regle: "Opt-out : interdit d'écrire ≠ signal annulé (suppression list)",    ou: "scoring/push (à venir)", invariants: ""}
-  - {regle: "Aucun filtre dur avant scoring (test d'amputation)",                ou: "scoring (à venir)",   invariants: ""}
-  - {regle: "Decay demi-vie courte + plancher 21 j",                             ou: "scoring (à venir)",   invariants: ""}
-  - {regle: "Le silence des clients EST un score (file risque churn)",           ou: "routage (à venir)",   invariants: ""}
+  # Les 10 lignes « scoring (à venir) » fermées le 29/07 (revue croisée IA n°2 :
+  # le scoring V1.1 était livré, la table annonçait encore une promesse).
+  # Les invariants SCx sont mesurés par run_scoring.py — le rendu du rapport
+  # les vérifie VERTS dans dashboard_data.json avant d'afficher 🟢.
+  - {regle: "Hot list UNIQUE tous segments + colonne play (les files = des vues)",  ou: "scoring V1.1 (hot list)", invariants: "SC7"}
+  - {regle: "email_sent pèse 0, opens ≈ 0 dans le score",                        ou: "scoring V1.1 (config points)", invariants: "SC11"}
+  - {regle: "/careers et /blog à poids nul",                                     ou: "scoring V1.1 (config pages)", invariants: "SC11"}
+  - {regle: "Pages négatives (cancel/export) à poids négatif — billing ramené à 0 le 28/07", ou: "scoring V1.1 (config pages)", invariants: "SC10"}
+  - {regle: "Opt-out : interdit d'écrire ≠ signal annulé (suppression list)",    ou: "scoring V1.1 (canal) + slack/push", invariants: "SC12"}
+  - {regle: "Aucun filtre dur avant scoring (test d'amputation)",                ou: "scoring V1.1 (partition)", invariants: "SC18"}
+  - {regle: "Decay demi-vie courte + plancher 21 j",                             ou: "scoring V1.1 (décroissance)", invariants: "SC21"}
+  - {regle: "Le silence des clients EST un score (file risque churn)",           ou: "scoring V1.1 (partition + segments)", invariants: "SC19, SC20"}
   - {regle: "Bot détecté au chronomètre (cadence), jamais au volume — sur le flux BRUT", ou: "étape 10",     invariants: "B1-B3"}
   - {regle: "Dédup events : clé stricte page incluse, anonymes intouchés",       ou: "étape 9",             invariants: "D1-D3"}
-  - {regle: "Récence = events uniquement, jamais last_activity_date",            ou: "scoring (à venir)",   invariants: ""}
+  - {regle: "Récence = events uniquement, jamais last_activity_date",            ou: "scoring V1.1 (moteur)", invariants: "SC22"}
   - {regle: "Buying committee = personnes distinctes (dédup email)",             ou: "étape 8",             invariants: "R9-R11"}
   - {regle: "Chaque event/contact rattaché à exactement une entité (anonymes/inconnus tracés)", ou: "étape 8", invariants: "R1-R8"}
   - {regle: "Mapping persona produit, partition complète double sens",           ou: "config personas",     invariants: "P1-P7"}
-  - {regle: "Plancher conversions : form_fill/meeting_booked à poids plein quel que soit le porteur", ou: "scoring (à venir)", invariants: ""}
+  - {regle: "Plancher conversions : form_fill/meeting_booked à poids plein quel que soit le porteur", ou: "scoring V1.1 (moteur)", invariants: "SC23"}

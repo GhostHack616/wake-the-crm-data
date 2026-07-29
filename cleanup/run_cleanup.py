@@ -1589,7 +1589,9 @@ def run_invariants(tables, report):
         lines.append(f"| {cid} | {label} | {expected} | {measured} | "
                      f"{'🟢' if passed else '🔴 ALARME'} |")
     lines.append("")
-    lines.append("À armer avec leurs étapes : " + " · ".join(inv["a_armer"]))
+    lines.append("Armées par le scoring V1.1 — chaque promesse cite sa garde, "
+                 "vérifiée verte dans la traçabilité ci-dessous : "
+                 + " · ".join(inv["armees_par_scoring"]))
     lines.append("")
     report.extend(lines)
 
@@ -1747,18 +1749,50 @@ def step12_final_report(tables, report):
 def render_traceability(report):
     """La table règle actée → invariant garant. Née de l'erreur 'règle ARR
     actée mais jamais implémentée' : une ligne sans invariant = un trou
-    VISIBLE, au lieu d'être découvert par hasard. Régénérée à chaque run."""
+    VISIBLE, au lieu d'être découvert par hasard. Régénérée à chaque run.
+
+    Correctif 29/07 (revue croisée) : la table a produit l'erreur INVERSE —
+    10 règles implémentées encore affichées « à venir ». Depuis : les
+    invariants SCx appartiennent au run de SCORING, et une ligne SCx n'est
+    verte que si sa garde est VERTE dans dashboard_data.json au moment de la
+    génération. Un statut ne se déclare pas dans un yaml, il se constate."""
+    import json
     rows = CONFIG["tracabilite"]
-    n_ok = sum(1 for r in rows if r["invariants"])
+    gardes, version_scoring = {}, ""
+    dj = os.path.join(ROOT, "dashboard_data", "dashboard_data.json")
+    if os.path.exists(dj):
+        with open(dj) as f:
+            ops = json.load(f)["ops"]
+        gardes = {g["id"]: g["ok"] for g in ops["gardes"]}
+        version_scoring = ops["config_version"]
+
+    def statut_de(inv):
+        if not inv:
+            return "🔴 à armer avec son étape"
+        sc = [i.strip() for i in inv.split(",") if i.strip().startswith("SC")]
+        if not sc:
+            return "🟢 garantie"           # invariant du cleanup, mesuré dans CE run
+        if not gardes:
+            return "🔴 run de scoring introuvable — lancer run_scoring.py"
+        absentes = [i for i in sc if i not in gardes]
+        rouges = [i for i in sc if gardes.get(i) is False]
+        if absentes:
+            return "🔴 garde absente du run de scoring : " + ", ".join(absentes)
+        if rouges:
+            return "🔴 garde ROUGE au run de scoring : " + ", ".join(rouges)
+        return f"🟢 garantie (garde verte, scoring {version_scoring})"
+
     report.append("## 🧭 Traçabilité — chaque règle actée a-t-elle son contrôle automatique ?\n")
     report.append("| Règle actée | Implémentée où | Invariant garant | Statut |")
     report.append("|---|---|---|---|")
+    n_ok = 0
     for r in rows:
-        statut = "🟢 garantie" if r["invariants"] else "🔴 à armer avec son étape"
+        statut = statut_de(r["invariants"])
+        n_ok += statut.startswith("🟢")
         report.append(f"| {r['regle']} | {r['ou']} | {r['invariants'] or '—'} | {statut} |")
     report.append("")
-    print(f"[traça]   {n_ok}/{len(rows)} règles actées sous contrôle automatique, "
-          f"{len(rows) - n_ok} à armer avec leurs étapes (visibles dans le rapport)")
+    print(f"[traça]   {n_ok}/{len(rows)} règles actées sous contrôle automatique vérifié, "
+          f"{len(rows) - n_ok} non garanties (visibles dans le rapport)")
 
 
 def main():
