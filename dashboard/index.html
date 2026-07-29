@@ -397,6 +397,115 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .curve-lg i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:6px}
 .curve-lg b{color:var(--text);font-weight:600}
 @media(max-width:900px){.llist{width:250px}.ldetail{padding:18px}.ops{padding:18px}}
+
+/* ══ PROCESS — le déroulé de l'exercice, et la visite guidée ══════════════ */
+.proc{position:absolute;inset:0;display:flex;overflow:hidden}
+.prail{width:290px;flex:0 0 auto;border-right:1px solid var(--line);overflow:auto;background:var(--panel)}
+.prail-h{padding:20px 20px 14px;border-bottom:1px solid var(--line)}
+.prail-h h2{font-family:var(--display);font-size:19px;font-weight:600;letter-spacing:-.015em}
+.prail-h p{font-size:var(--fs-xs);color:var(--text-2);margin-top:5px;line-height:1.55}
+.pstart{margin-top:14px;width:100%;padding:10px;border-radius:var(--r-sm);background:var(--ink);
+  color:var(--on-ink);font-size:var(--fs-sm);font-weight:600;display:flex;align-items:center;
+  justify-content:center;gap:8px;transition:.14s}
+.pstart:hover{opacity:.86}
+.pstart svg{width:12px;height:12px;fill:currentColor}
+.ppart{padding:16px 20px 7px;font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--text-3);font-weight:700}
+.pitem{display:flex;gap:11px;align-items:flex-start;padding:9px 20px;cursor:pointer;
+  border-left:2px solid transparent;transition:.13s}
+.pitem:hover{background:var(--soft)}
+.pitem.on{background:var(--violet-soft);border-left-color:var(--violet)}
+.pitem i{flex:0 0 20px;height:20px;border-radius:50%;background:var(--soft-2);color:var(--text-3);
+  display:grid;place-items:center;font-style:normal;font-size:10.5px;font-weight:700;margin-top:1px}
+.pitem.on i{background:var(--violet);color:#fff}
+.pitem b{font-size:var(--fs-sm);font-weight:500;color:var(--text-2);line-height:1.4}
+.pitem.on b{color:var(--text);font-weight:600}
+.pbody{flex:1;min-width:0;overflow:auto;padding:34px 40px 60px}
+.pbody .pw{max-width:760px}
+.pkick{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--violet);font-weight:700}
+.pbody h1{font-family:var(--display);font-size:31px;font-weight:600;letter-spacing:-.022em;
+  line-height:1.12;margin:9px 0 0}
+.psay{margin-top:20px;padding:17px 20px;border-radius:var(--r-md);background:var(--soft);
+  border-left:3px solid var(--violet);font-size:var(--fs-lg);line-height:1.62}
+.psay em{font-style:italic;color:var(--text)}
+.pblock{margin-top:26px}
+.pblock h3{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--text-3);
+  font-weight:700;margin-bottom:9px}
+.pblock p{font-size:var(--fs-md);line-height:1.68;color:var(--text-2)}
+.pblock p b{color:var(--text);font-weight:600}
+.pq{margin-top:26px;padding:16px 19px;border-radius:var(--r-md);border:1px solid var(--line);
+  background:var(--panel)}
+.pq .qq{font-size:var(--fs-md);font-weight:600;line-height:1.5}
+.pq .qq::before{content:"🎤 ";}
+.pq .qr{font-size:var(--fs-md);color:var(--text-2);line-height:1.68;margin-top:9px;
+  padding-top:9px;border-top:1px solid var(--line-2)}
+.pq .qr b{color:var(--text);font-weight:600}
+.pkpi{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:9px;margin-top:20px}
+.pkpi div{padding:12px 14px;border-radius:var(--r-md);background:var(--soft)}
+.pkpi b{display:block;font-family:var(--display);font-size:22px;font-weight:600;line-height:1;
+  font-variant-numeric:tabular-nums}
+.pkpi span{display:block;font-size:var(--fs-xs);color:var(--text-2);margin-top:5px;line-height:1.4}
+.pkpi.bad b{color:var(--danger)}
+.pgo{margin-top:24px;display:inline-flex;align-items:center;gap:8px;padding:9px 15px;
+  border-radius:var(--r-pill);border:1px solid var(--line);font-size:var(--fs-sm);font-weight:600;
+  color:var(--text-2);transition:.14s}
+.pgo:hover{background:var(--soft);color:var(--text)}
+
+/* le schéma de la boucle */
+.loop{margin-top:22px;padding:26px 20px;border-radius:var(--r-md);background:var(--soft);
+  display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap}
+.lnode{text-align:center;padding:13px 17px;border-radius:var(--r-md);background:var(--panel);
+  border:1px solid var(--line);min-width:118px}
+.lnode b{display:block;font-family:var(--display);font-size:15px;font-weight:600}
+.lnode span{display:block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--text-3);margin-top:3px}
+.lnode.mid{background:var(--ink);border-color:var(--ink)}
+.lnode.mid b{color:var(--on-ink)} .lnode.mid span{color:rgba(255,255,255,.5)}
+body:not(.dark) .lnode.mid span{color:rgba(255,255,255,.6)}
+.larr{flex:0 0 74px;position:relative;height:34px}
+.larr::before,.larr::after{content:"";position:absolute;left:6px;right:6px;height:1.5px;
+  background:var(--violet);opacity:.55}
+.larr::before{top:10px} .larr::after{top:22px}
+.larr i{position:absolute;font-style:normal;color:var(--violet);font-size:11px;line-height:1}
+.larr i.a{top:5px;right:2px} .larr i.b{top:17px;left:2px}
+.lrule{width:100%;text-align:center;margin-top:18px;font-size:var(--fs-sm);color:var(--text-2);
+  line-height:1.6}
+.lrule b{color:var(--text);font-weight:600}
+
+/* la barre de visite guidée, présente par-dessus toutes les vues */
+.tour{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--top-bg);
+  backdrop-filter:blur(16px);border-top:1px solid var(--line);
+  transform:translateY(101%);transition:transform .3s var(--e)}
+.tour.on{transform:none}
+.tour-b{display:flex;align-items:center;gap:12px;padding:10px 16px}
+.tour-b .nav{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);
+  display:grid;place-items:center;flex:0 0 auto;font-size:15px;color:var(--text-2);transition:.14s}
+.tour-b .nav:hover{background:var(--soft);color:var(--text)}
+.tour-b .nav[disabled]{opacity:.3;cursor:default}
+.tour-b .mid{flex:1;min-width:0}
+.tour-b .mid em{font-style:normal;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--violet);font-weight:700}
+.tour-b .mid b{display:block;font-size:var(--fs-md);font-weight:600;margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tour-b .cnt{font-size:var(--fs-sm);color:var(--text-3);font-variant-numeric:tabular-nums;flex:0 0 auto}
+.tour-b .sq{width:34px;height:34px;border-radius:var(--r-sm);display:grid;place-items:center;
+  color:var(--text-3);flex:0 0 auto;font-size:16px}
+.tour-b .sq:hover{background:var(--soft);color:var(--text)}
+.tour-card{max-height:0;overflow:hidden;transition:max-height .3s var(--e);border-top:1px solid transparent}
+.tour.open .tour-card{max-height:46vh;overflow:auto;border-top-color:var(--line-2)}
+.tour-card .in{padding:16px 18px 22px;max-width:920px}
+.tour-prog{height:2px;background:var(--soft-2)}
+.tour-prog i{display:block;height:100%;background:var(--violet);transition:width .3s var(--e)}
+
+@media(max-width:900px){ .prail{width:224px} .pbody{padding:24px 22px 60px} }
+@media(max-width:680px){
+  .proc{flex-direction:column}
+  .prail{width:100%;height:auto;max-height:38%;border-right:0;border-bottom:1px solid var(--line)}
+  .pbody{padding:20px 16px 60px} .pbody h1{font-size:23px}
+  .psay{font-size:var(--fs-md);padding:14px 16px}
+  .loop{gap:10px;padding:18px 12px} .larr{flex:0 0 48px}
+}
+
 @media(max-width:680px){
   .logic{flex-direction:column}.llist{width:100%;height:44%;border-right:0;border-bottom:1px solid var(--line)}
   .tabs button{padding:6px 11px;font-size:11.5px}.brand span{display:none}
@@ -449,6 +558,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
       <button data-v="logic">Logique</button>
       <button data-v="ops">Ops</button>
       <button data-v="data">Données</button>
+      <button data-v="proc">Process</button>
     </nav>
     <button class="tbtn" id="themeBtn" title="Thème" aria-label="Basculer le thème">
       <svg viewBox="0 0 20 20" fill="none" id="thIcon"><path d="M16 11.2A6.6 6.6 0 0 1 8.8 4a6.6 6.6 0 1 0 7.2 7.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -520,6 +630,23 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
     <section class="view" id="vOps"><div class="ops" id="opsBody"></div></section>
 
     <!-- ─────── DONNÉES ─────── -->
+    <!-- ─────── PROCESS ─────── -->
+    <section class="view" id="vProc">
+      <div class="proc">
+        <aside class="prail">
+          <div class="prail-h">
+            <h2>Le déroulé</h2>
+            <p>Ce qui a été fait, dans l'ordre, avec les problèmes rencontrés et les chiffres qui les prouvent.</p>
+            <button class="pstart" id="pStart">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Démarrer la visite
+            </button>
+          </div>
+          <div id="pList"></div>
+        </aside>
+        <div class="pbody" id="pBody"></div>
+      </div>
+    </section>
+
     <section class="view" id="vData">
       <div class="dataw">
         <div class="dbar">
@@ -541,6 +668,20 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
       </div>
     </section>
   </div>
+</div>
+
+<!-- ══════════ VISITE GUIDÉE — par-dessus toutes les vues ══════════ -->
+<div class="tour" id="tour">
+  <div class="tour-prog"><i id="tourProg"></i></div>
+  <div class="tour-b">
+    <button class="nav" id="tPrev" title="précédent (←)">‹</button>
+    <div class="mid"><em id="tPart">—</em><b id="tTitle">—</b></div>
+    <div class="cnt" id="trCount">—</div>
+    <button class="nav" id="tNext" title="suivant (→)">›</button>
+    <button class="sq" id="tCard" title="afficher la carte">▾</button>
+    <button class="sq" id="tQuit" title="quitter la visite">×</button>
+  </div>
+  <div class="tour-card"><div class="in" id="tIn"></div></div>
 </div>
 
 <script>
@@ -1061,6 +1202,169 @@ function openLogic(i){
   var r=document.querySelector('.lrow[data-i="'+i+'"]'); if(r) r.scrollIntoView({block:"center"});
 }
 
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PROCESS — le déroulé de l'exercice.
+   Chaque temps porte trois choses : ce que Romain raconte, le problème
+   rencontré, et la question que Gab va poser avec sa réponse. Un temps peut
+   emmener le tableau de bord sur la vue qui le prouve.
+
+   INTERDIT D'ÉCRAN (gravé) — ne jamais écrire ici, quel que soit le build :
+     1. tout ce qui touche au générateur du jeu de données — mécanisme,
+        colonne, seuil, bloc. Cela se dit à l'oral, au moment choisi.
+     2. les antisèches d'oral : formulations préparées, réponses apprises.
+     3. les notes internes : brouillons, hésitations, versions rejetées.
+   Le registre des erreurs, lui, est assumé : il montre ce qui a été corrigé.
+   ══════════════════════════════════════════════════════════════════════════ */
+var PROC=[
+{
+ p:"1 · L'analyse", t:"Comment on a travaillé",
+ h:"Deux modèles, une seule personne qui décide",
+ say:"Je n'ai pas fait relire mon travail par celui qui l'avait écrit. Dès que l'un des deux construisait quelque chose, l'autre le reprenait depuis les fichiers bruts — et cherchait à le casser.",
+ loop:true,
+ pb:"Un modèle qui vérifie son propre travail ne trouve que ce qu'il a pensé à chercher. Il fallait un contradicteur, pas un correcteur.",
+ body:"Aucun des deux ne se parle. Je suis le seul canal, et le seul à trancher. Quand les chiffres divergeaient, personne n'argumentait : chacun renvoyait <b>sa définition exécutable et son chiffre</b>, et je comparais. Aucune décision n'a été prise parce qu'un modèle était plus convaincant que l'autre.",
+ kpi:[["1 407","commerciaux récupérés par une vérification croisée — pendant que 88 contrôles automatiques étaient au vert"],
+      ["0","différence entre les fichiers des deux chaînes, octet pour octet, depuis deux checkouts séparés"]],
+ q:"Et concrètement, ça vous a servi à quoi ?",
+ r:"Un champ commercial qui ne s'héritait jamais entre fiches fusionnées : <b>1 407 comptes</b> récupérables, et le filet de contrôles ne voyait rien — il était vert. Un test vérifie ce qu'on a pensé à tester ; une seconde implémentation vérifie ce qu'on n'a pas pensé. La limite, je l'assume : c'est manuel. Sur un vrai pipeline, les deux implémentations tourneraient en intégration continue et le build casserait sur divergence."
+},
+{
+ p:"1 · L'analyse", t:"Ce que cette double lecture a trouvé",
+ h:"Un CRM de 8 ans, et rien qui tienne debout",
+ say:"Avant de toucher à quoi que ce soit, on a chiffré les dégâts. Voilà ce qu'il y avait dans les trois fichiers.",
+ pb:"Aucun de ces problèmes ne déclenche d'erreur. Le CRM s'ouvre, les filtres répondent, les chiffres s'affichent — et ils sont faux en silence.",
+ kpi:[["32 %","des fiches sont des doublons : 30 000 fiches pour 20 519 entreprises réelles"],
+      ["3","formats de dates mélangés dans les mêmes colonnes"],
+      ["30","façons d'écrire 8 pays — filtrer « France » en montrait 2 730 sur 13 517"],
+      ["2 671","fiches sans aucun domaine"],
+      ["1 544","adresses email cassées — @@ ou espaces"],
+      ["4 000","événements sans personne rattachée"],
+      ["69,7 M€","d'ARR additionné qu'on ne pouvait pas défendre"]],
+ body:"C'est cette liste qui a donné la structure du chantier : <b>réparer</b> ce qui est réparable, <b>reconstruire</b> la table qui manquait — celle des entreprises — puis <b>classer</b>. Trois phases, douze étapes, traitées une par une.",
+ q:"Vous avez trouvé ça comment, exactement ?",
+ r:"En comptant. Pas en ouvrant le fichier au hasard : en passant chaque colonne au crible et en comparant deux comptages indépendants. Tous les chiffres de cet écran se recalculent depuis les CSV d'origine."
+},
+{
+ p:"1 · L'analyse", t:"La règle posée avant tout code",
+ h:"Rien n'est jamais supprimé ni écrasé",
+ vue:"data",
+ say:"Avant de nettoyer, j'ai décidé de ne rien détruire. Vos colonnes d'origine sont là, intactes. Les miennes sont à côté.",
+ pb:"Un nettoyage qui écrase est irréversible. Si une règle est fausse, on ne peut plus revenir en arrière — et on ne peut plus prouver ce qu'on a changé.",
+ body:"Chaque réparation vit dans une <b>colonne neuve</b>, avec sa trace et son drapeau. L'original reste au caractère près. Le retour arrière est toujours possible, et la comparaison avant/après est vérifiable à l'écran, ligne par ligne.",
+ kpi:[["12 + 17","fiches CRM : 12 colonnes d'origine intactes, 17 ajoutées"],
+      ["8 + 17","contacts : 8 d'origine, 17 ajoutées"],
+      ["0","donnée supprimée sur les trois fichiers"]],
+ go:["data","Ouvrir la table et comparer"],
+ q:"Comment je vérifie que vous n'avez pas touché à mes données ?",
+ r:"Vous les avez sous les yeux. Dans l'onglet <b>Données</b>, les colonnes grises sont les vôtres — jamais modifiées — et les violettes sont les miennes. Vous prenez n'importe quelle ligne et vous comparez."
+},
+{
+ p:"2 · Réparer", t:"Étape 1 — les dates",
+ h:"Trois formats dans le même champ",
+ vue:"ops",
+ say:"Puis j'ai commencé. Trois formats de dates cohabitaient dans les mêmes colonnes, à peu près un tiers chacun.",
+ pb:"Se tromper de format n'affiche aucune erreur. Ça produit des dates fausses en silence — et toutes les fenêtres de temps derrière sont décalées : « actif ces 14 jours », « renouvellement dans 90 jours », tout devient faux.",
+ kpi:[["44 848","au format ISO — 2022-12-13"],
+      ["45 057","à l'américaine — 05/19/24, mois d'abord"],
+      ["44 913","à la française — 21/03/2022, jour d'abord"]],
+ body:"La règle appliquée : <b>année à 2 chiffres = américain, année à 4 chiffres = français</b>. Et surtout : aucune date devinée. Illisible, c'est vide plus un drapeau <b>error</b> — jamais une valeur inventée.",
+ q:"Comment vous pouvez deviner le mois et le jour ?",
+ r:"Je ne devine pas, je démontre. Sur <b>54 419</b> dates, un des deux nombres dépasse 12 : la règle y est vérifiable, et il y a <b>zéro contre-exemple</b>. C'est seulement après cette démonstration que je l'applique aux <b>35 551</b> dates ambiguës — 39,5 % des dates en barres. Sans ça, ces 35 551 dates étaient un pile ou face. <br><br>Au total <b>134 818</b> dates converties, <b>0 échec</b>. Les 94 838 horodatages d'événements étaient déjà en ISO : hors périmètre."
+}
+];
+
+var PI=0, TOUR=false;
+
+function procList(){
+  var h="", part=null;
+  PROC.forEach(function(x,i){
+    if(x.p!==part){ part=x.p; h+='<div class="ppart">'+esc(part)+'</div>'; }
+    h+='<div class="pitem'+(i===PI?" on":"")+'" data-i="'+i+'"><i>'+(i+1)+'</i><b>'+esc(x.t)+'</b></div>';
+  });
+  document.getElementById("pList").innerHTML=h;
+}
+
+function loopSVG(){
+  return '<div class="loop">'
+    +'<div class="lnode"><b>Fable 5</b><span>modèle</span></div>'
+    +'<div class="larr"><i class="a">▸</i><i class="b">◂</i></div>'
+    +'<div class="lnode mid"><b>Romain</b><span>décide</span></div>'
+    +'<div class="larr"><i class="a">▸</i><i class="b">◂</i></div>'
+    +'<div class="lnode"><b>Opus 5</b><span>modèle</span></div>'
+    +'<div class="lrule">Dès que l\'un construisait, <b>l\'autre regardait</b>. Jamais son propre travail.</div>'
+    +'</div>';
+}
+
+function procCard(x, compact){
+  var h='<div class="pw">';
+  if(!compact) h+='<div class="pkick">'+esc(x.p)+'</div><h1>'+esc(x.h)+'</h1>';
+  h+='<div class="psay"><em>« '+esc(x.say)+' »</em></div>';
+  if(x.loop) h+=loopSVG();
+  if(x.kpi){
+    h+='<div class="pkpi">';
+    x.kpi.forEach(function(k){ h+='<div><b>'+esc(k[0])+'</b><span>'+esc(k[1])+'</span></div>'; });
+    h+='</div>';
+  }
+  if(x.pb) h+='<div class="pblock"><h3>Le problème</h3><p>'+x.pb+'</p></div>';
+  if(x.body) h+='<div class="pblock"><h3>Ce qui a été fait</h3><p>'+x.body+'</p></div>';
+  if(x.q) h+='<div class="pq"><div class="qq">'+esc(x.q)+'</div><div class="qr">'+x.r+'</div></div>';
+  if(x.go) h+='<button class="pgo" data-go="'+x.go[0]+'">'+esc(x.go[1])+' →</button>';
+  return h+'</div>';
+}
+
+function procShow(i, suivreVue){
+  PI=Math.max(0,Math.min(PROC.length-1,i));
+  var x=PROC[PI];
+  procList();
+  document.getElementById("pBody").innerHTML=procCard(x,false);
+  document.getElementById("pBody").scrollTop=0;
+  if(TOUR){
+    document.getElementById("tPart").textContent=x.p;
+    document.getElementById("tTitle").textContent=x.t;
+    document.getElementById("trCount").textContent=(PI+1)+" / "+PROC.length;
+    document.getElementById("tPrev").disabled=PI===0;
+    document.getElementById("tNext").disabled=PI===PROC.length-1;
+    document.getElementById("tourProg").style.width=((PI+1)/PROC.length*100)+"%";
+    document.getElementById("tIn").innerHTML=procCard(x,true);
+    if(suivreVue!==false) showView(x.vue||"proc");
+  }
+}
+
+function tourOn(v){
+  TOUR=v;
+  document.getElementById("tour").classList.toggle("on",v);
+  document.body.style.paddingBottom = v ? "0" : "";
+  if(v) procShow(PI);
+}
+
+function initProc(){
+  procList(); procShow(0,false);
+  document.getElementById("pList").onclick=function(e){
+    var b=e.target.closest(".pitem"); if(!b) return;
+    procShow(+b.dataset.i, TOUR);
+  };
+  document.getElementById("pBody").onclick=function(e){
+    var g=e.target.closest("[data-go]"); if(g) showView(g.dataset.go);
+  };
+  document.getElementById("pStart").onclick=function(){ PI=0; tourOn(true); };
+  document.getElementById("tPrev").onclick=function(){ procShow(PI-1); };
+  document.getElementById("tNext").onclick=function(){ procShow(PI+1); };
+  document.getElementById("tQuit").onclick=function(){ tourOn(false); showView("proc"); };
+  document.getElementById("tCard").onclick=function(){
+    var t=document.getElementById("tour"); t.classList.toggle("open");
+    this.textContent=t.classList.contains("open")?"▴":"▾";
+  };
+  document.addEventListener("keydown",function(e){
+    if(!TOUR) return;
+    var tag=(e.target.tagName||"").toLowerCase();
+    if(tag==="input"||tag==="textarea") return;
+    if(e.key==="ArrowRight"){ e.preventDefault(); procShow(PI+1); }
+    else if(e.key==="ArrowLeft"){ e.preventDefault(); procShow(PI-1); }
+    else if(e.key==="Escape"){ tourOn(false); showView("proc"); }
+  });
+}
+
 /* ══════════════════════════════════════════════════════════════
    OPS — statut du dernier run + alarmes
    ══════════════════════════════════════════════════════════════ */
@@ -1282,6 +1586,7 @@ function showView(v){
   document.getElementById("vLogic").classList.toggle("on",v==="logic");
   document.getElementById("vOps").classList.toggle("on",v==="ops");
   document.getElementById("vData").classList.toggle("on",v==="data");
+  document.getElementById("vProc").classList.toggle("on",v==="proc");
   if(v==="macro") G.resize();
   if(v==="data") loadTables();
 }
@@ -1307,7 +1612,7 @@ function boot(){
     this.querySelectorAll(".lrow").forEach(function(x){ x.classList.toggle("on",x===r); });
     renderDetail(SEL);
   };
-  G.init(); renderRows(); renderOps(); initData();
+  G.init(); renderRows(); renderOps(); initData(); initProc();
   if(D.top.length){ SEL=D.top[0]; renderRows(); renderDetail(SEL); }
 }
 
