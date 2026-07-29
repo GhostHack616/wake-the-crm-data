@@ -462,7 +462,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
   font-weight:700;margin-bottom:7px}
 .sdet p{font-size:14px;line-height:1.7;color:var(--text-2);margin-bottom:22px}
 .sdet p b{color:var(--text);font-weight:600}
-.sask{padding:16px 18px;border-radius:var(--r-md);background:var(--panel);border:1px solid var(--line)}
+.sask{padding:16px 18px;border-radius:var(--r-md);background:var(--panel);border:1px solid var(--line);margin-bottom:12px}
 .sask .aq{font-size:14px;font-weight:600;line-height:1.45}
 .sask .ar{font-size:13.5px;color:var(--text-2);line-height:1.7;margin-top:10px;padding-top:10px;
   border-top:1px solid var(--line-2)}
@@ -1348,7 +1348,7 @@ function openLogic(i){
    INTERDIT D'ÉCRAN (gravé) — ne jamais écrire ici, quel que soit le build :
      1. tout ce qui touche au générateur du jeu de données — mécanisme,
         colonne, seuil, bloc. Cela se dit à l'oral, au moment choisi.
-     2. les antisèches d'oral : formulations préparées, réponses apprises.
+     2. les formulations préparées pour l'oral, les réponses apprises par cœur.
      3. les notes internes : brouillons, hésitations, versions rejetées.
    Le registre des erreurs, lui, est assumé : il montre ce qui a été corrigé.
    ══════════════════════════════════════════════════════════════════════════ */
@@ -1360,10 +1360,10 @@ var PROC=[
  loop:true,
  pb:"Un modèle qui vérifie son propre travail ne trouve que ce qu'il a pensé à chercher. Il fallait un contradicteur, pas un correcteur.",
  body:"Aucun des deux ne se parle. Je suis le seul canal, et le seul à trancher. Quand les chiffres divergeaient, personne n'argumentait : chacun renvoyait <b>sa définition exécutable et son chiffre</b>, et je comparais. Aucune décision n'a été prise parce qu'un modèle était plus convaincant que l'autre.",
- kpi:[["1 407","commerciaux récupérés par une vérification croisée — pendant que 88 contrôles automatiques étaient au vert"],
-      ["0","différence entre les fichiers des deux chaînes, octet pour octet, depuis deux checkouts séparés"]],
+ kpi:[["1 407","commerciaux récupérés par une vérification croisée, alors que le filet de contrôles était au vert"],
+      ["2","chaînes indépendantes qui produisent les mêmes fichiers, comparés octet par octet"]],
  q:"Et concrètement, ça vous a servi à quoi ?",
- r:"Un champ commercial qui ne s'héritait jamais entre fiches fusionnées : <b>1 407 comptes</b> récupérables, et le filet de contrôles ne voyait rien — il était vert. Un test vérifie ce qu'on a pensé à tester ; une seconde implémentation vérifie ce qu'on n'a pas pensé. La limite, je l'assume : c'est manuel. Sur un vrai pipeline, les deux implémentations tourneraient en intégration continue et le build casserait sur divergence."
+ r:"Un champ commercial qui ne s'héritait jamais entre fiches fusionnées : <b>1 407 comptes</b> récupérables. Le filet comptait 88 contrôles à ce moment-là, tous verts — il en compte 95 aujourd'hui, le correctif en a ajouté 7. Un test vérifie ce qu'on a pensé à tester ; une seconde implémentation vérifie ce qu'on n'a pas pensé. La limite, je l'assume : c'est manuel. Sur un vrai pipeline, les deux implémentations tourneraient en intégration continue et le build casserait sur divergence."
 },
 {
  p:"1 · L'analyse", t:"Ce que cette double lecture a trouvé",
@@ -1415,7 +1415,8 @@ var PROC=[
  kpi:[["30 → 8","graphies ramenées à des codes ISO"],["30 000 / 30 000","fiches mappées"],["0","pays deviné"]],
  body:"Table de correspondance déclarée en configuration, pas devinée dans le code. <b>Une graphie absente de la table n'est jamais interprétée</b> : elle reste vide et elle est listée dans le rapport. Le jour où une écriture nouvelle apparaît, elle se voit.",
  q:"Et si une écriture inconnue arrive demain ?",
- r:"Elle ne devient pas un pays au hasard. Elle sort vide, elle est comptée dans le rapport, et la table se complète en une ligne de configuration — pas en modifiant le code."
+ r:"Elle ne devient pas un pays au hasard. Elle sort vide, elle est comptée dans le rapport, et la table se complète en une ligne de configuration — pas en modifiant le code.",
+ qs:[["Et quand deux doublons de la même entreprise se contredisent sur le pays ?","C'est massif, et je l'ai chiffré : <b>5 947 cas</b>, soit 69 % des entreprises qui ont plusieurs fiches. Je tranche par <b>vote majoritaire</b> des fiches ; à égalité, la fiche de référence l'emporte, et le conflit est signalé pour revue. Et j'en tire une conclusion de conception : à ce niveau de contradiction, le pays déclaré ne peut pas servir de critère de ciblage sans être re-vérifié."]]
 },
 {
  p:"2 · Réparer", t:"Étape 3 — les domaines", h:"Déduire n'est pas deviner", vue:"data",
@@ -1424,7 +1425,8 @@ var PROC=[
  kpi:[["1 825","préfixes www. retirés"],["2 538","racines déduites des emails de leurs contacts"],["0","déduction ambiguë"],["133","fiches sans racine, laissées vides et listées"]],
  body:"Quand une fiche n'a pas de domaine mais que ses contacts ont tous des adresses professionnelles pointant vers <b>la même</b> racine, la racine est déduite — et la provenance est écrite dans une colonne. Si les contacts ne sont pas unanimes, rien n'est déduit.",
  q:"Vous avez deviné 2 538 domaines ?",
- r:"Non, je les ai déduits, et je l'ai validé avant. Sur les <b>25 785</b> comptes qui avaient à la fois un domaine déclaré et des emails professionnels, la racine déduite des emails est identique au domaine déclaré dans <b>25 785 cas sur 25 785</b>. Zéro divergence. C'est cette mesure qui m'autorise à appliquer la déduction là où le domaine manque."
+ r:"Non, je les ai déduits, et j'ai validé la méthode avant de l'appliquer. Là où je peux tester — les <b>25 785</b> comptes qui ont à la fois un domaine déclaré et des emails professionnels — la racine déduite des emails tombe sur le domaine déclaré <b>25 785 fois sur 25 785</b>. Zéro divergence sur les cas testables : c'est ce qui autorise les 2 538 déductions là où le domaine manque. Elles ne sont pas vérifiées une par une, elles sont couvertes par la méthode.",
+ qs:[["Pourquoi vous retirez l'extension ? acme.fr et acme.com peuvent être deux sociétés différentes.","Je l'ai mesuré avant de trancher : <b>5 547 racines</b> existent en plusieurs extensions dans cette base, et <b>zéro cas</b> où la même racine porte des noms d'entreprise différents. Et par sécurité, la fusion n'utilise jamais la racine seule : elle exige aussi l'égalité du nom normalisé. Dans une base où ce ne serait pas vrai, la règle sauterait — c'est pour ça qu'elle est mesurée, pas supposée."]]
 },
 {
  p:"2 · Réparer", t:"Étape 4 — les noms", h:"La seconde clé, et son test", vue:"data",
@@ -1433,7 +1435,7 @@ var PROC=[
  kpi:[["234","marqueurs de doublon repérés — (old), - import, « 2 »"],["27 329 / 27 329","concordance entre la clé nom et la clé domaine"],["20 519","noms normalisés distincts"]],
  body:"Minuscules, mentions juridiques et marqueurs retirés, ponctuation supprimée. Le marqueur trouvé est <b>mémorisé</b> : une fiche étiquetée « (old) » ne pourra jamais devenir la fiche de référence de son groupe.",
  q:"Vous retirez « France » et « SARL » — vous allez fusionner deux filiales différentes.",
- r:"C'est le risque, et c'est pour ça que je ne me fie pas à cette clé seule. Sur les <b>27 329</b> comptes qui ont un domaine déclaré, la clé nom et la clé domaine donnent <b>exactement le même regroupement</b> — 27 329 sur 27 329. Deux clés indépendantes qui produisent la même partition, ce n'est plus une intuition."
+ r:"C'est le risque, et c'est pour ça que je ne me fie pas à cette clé seule. Sur les <b>27 329</b> comptes qui ont un domaine déclaré, la clé nom et la clé domaine donnent <b>exactement le même regroupement</b>. Deux clés indépendantes, la même partition : ce n'est plus une intuition. Je précise le périmètre : <b>133 fiches n'ont aucune racine de domaine</b> — celles-là ne sont couvertes que par une seule clé, et elles sont listées."
 },
 {
  p:"2 · Réparer", t:"Étape 5 — les emails", h:"Réparer sans inventer", vue:"data",
@@ -1457,10 +1459,11 @@ var PROC=[
  p:"3 · Reconstruire", t:"Étape 7 — la fusion", h:"30 000 fiches, 20 519 entreprises", vue:"data",
  say:"Un tiers du CRM était des doublons. J'ai reconstruit la table qui manquait : celle des entreprises.",
  pb:"Sans elle, un commercial appelle deux fois la même boîte, l'ARR est compté deux fois, et l'activité d'une entreprise reste éclatée sur trois fiches qui semblent toutes tièdes.",
- kpi:[["20 519","entreprises réelles"],["9 481","fiches absorbées, aucune supprimée"],["0 €","d'écart dans la comptabilité de l'ARR"],["1 407","commerciaux récupérés d'une fiche jumelle"]],
+ kpi:[["20 519","entreprises réelles"],["9 481","fiches absorbées, aucune supprimée"],["52,0 M€","d'ARR actif, sur 3 246 clients"],["14,6 M€","d'ARR ex-client, sur 2 094 churnés"]],
  body:"La fiche de référence est élue par cascade : jamais une fiche marquée, puis le statut le plus avancé, puis celle qui porte l'ARR, puis la plus ancienne. Les vides se complètent depuis les jumelles, avec la provenance tracée. <b>Les conflits ne sont jamais tranchés en silence</b> : 5 947 sur le pays, 251 sur l'ARR, 5 067 sur le commercial — tous signalés pour revue humaine.",
  q:"Comment vous savez que vous n'avez pas fusionné deux entreprises différentes ?",
- r:"Deux clés indépendantes — le nom normalisé et la racine de domaine — produisent <b>exactement la même partition</b>. Et la comptabilité ferme : 69 681 000 € au départ = 66 656 000 € conservés + 3 025 000 € écartés en doublons. <b>Écart : zéro euro.</b> Enfin rien n'est supprimé : chaque doublon garde un lien vers sa fiche de référence, le retour arrière est intégral."
+ r:"Deux clés indépendantes — le nom normalisé et la racine de domaine — produisent <b>exactement la même partition</b>. Et la comptabilité ferme : 69 681 000 € au départ = 66 656 000 € conservés + 3 025 000 € écartés en doublons. <b>Écart : zéro euro.</b> Enfin rien n'est supprimé : chaque doublon garde un lien vers sa fiche de référence, le retour arrière est intégral.",
+ qs:[["Un ex-client élu fiche de référence alors qu'une négociation est en cours, vous enterrez le deal.","L'étiquette ne décide de rien. Le routage lit <b>deux colonnes de faits</b> — a-t-il été client, y a-t-il un deal en cours — jamais le statut affiché. Et les <b>80 cas exacts</b> où ça se produit partent dans une liste d'arbitrage dédiée. Sur un champ que votre propre brief déclare peu fiable, je neutralise le problème au lieu de le trancher en silence."],["Votre ARR consolidé, il vaut combien ?","À l'euro près, et je le publie en <b>deux lignes</b> : <b>52,0 M€ d'ARR actif</b> sur 3 246 clients, et <b>14,6 M€ d'ARR ex-client</b> sur 2 094 churnés — celui-là dimensionne le pool de reconquête, il ne se facture pas. Les additionner, c'est le piège que j'ai trouvé dans la base de départ : <b>100 % des churnés y gardent leur ARR</b>, donc 21,9 % du total est fantôme. La séparation est verrouillée par trois contrôles, pas seulement documentée."]]
 },
 {
  p:"3 · Reconstruire", t:"Étape 8 — le ré-attachement", h:"Fusionner sans re-attacher ne sert à rien", vue:"data",
@@ -1484,10 +1487,10 @@ var PROC=[
  p:"4 · Assainir et classer", t:"Étape 10 — le robot", h:"Ce n'est pas le volume qui trahit, c'est le chronomètre", vue:"data",
  say:"Un contact avait 420 événements. C'était le compte le plus actif de toute la base — et ce n'était pas un humain.",
  pb:"N'importe quel scoring naïf mettait ce compte en tête de la liste d'appels. Un commercial aurait passé son coup de fil.",
- kpi:[["4 s","délai médian entre l'envoi et l'ouverture"],["420","événements neutralisés"],["0","humain signalé à tort"]],
- body:"La règle ne regarde pas combien, elle regarde <b>à quelle vitesse</b> : un robot de sécurité ouvre en quelques secondes, un humain met des heures. Le témoin de contrôle, un contact au volume comparable, ouvre en <b>23 heures</b> de médiane — il n'est pas signalé. Et la détection se fait sur le flux brut : après déduplication, le motif mécanique a disparu.",
+ kpi:[["4 s","délai médian entre l'envoi et l'ouverture, pour le robot"],["23,4 h","le même délai pour le contact humain le plus actif de la base"],["420","événements neutralisés"]],
+ body:"La règle ne regarde pas combien, elle regarde <b>à quelle vitesse</b> : un robot de sécurité ouvre en quelques secondes, un humain met des heures. Le contact humain le plus actif de toute la base ouvre en <b>23,4 heures</b> de médiane — il n'est pas signalé, et il fait sept fois moins d'événements que le robot. La détection se fait sur le flux brut : après déduplication, le motif mécanique a disparu.",
  q:"Et si un humain très réactif se faisait attraper ?",
- r:"Il faudrait qu'il ouvre en moins d'une minute, en médiane, sur au moins cinq emails. Sur cette base, le contact humain le plus actif est à 23 heures. L'écart n'est pas serré : il est de trois ordres de grandeur."
+ r:"Il faudrait qu'il ouvre en moins d'une minute, en médiane, sur au moins cinq emails. Sur cette base, le contact humain le plus actif est à <b>23,4 heures</b>. L'écart n'est pas serré : il y a un facteur <b>21 000</b> entre les deux."
 },
 {
  p:"4 · Assainir et classer", t:"Étape 11 — la segmentation", h:"On ne prospecte pas un client, on ne relance pas un mort", vue:"data",
@@ -1502,7 +1505,7 @@ var PROC=[
  p:"4 · Assainir et classer", t:"Étape 12 — l'audit", h:"Ce que je remonte de moi-même", vue:"ops",
  say:"Le rapport se génère à chaque exécution. Et il contient ce que personne ne m'a demandé de chercher.",
  pb:"Un rapport écrit à la main devient faux dès la première correction. Celui-là est produit par le code, à partir des fichiers.",
- kpi:[["2 015","emails partis vers des désinscrits"],["1 607","emails partis vers des contacts sans adresse valide"],["0","ligne supprimée sur les trois fichiers"]],
+ kpi:[["2 015","emails partis vers des gens qui avaient demandé à ne plus être contactés"],["2 367","emails partis vers des adresses incapables de les recevoir, dont 1 607 vers le néant"],["0","ligne supprimée sur les trois fichiers"]],
  body:"Ces deux chiffres ne faisaient pas partie de l'exercice. Ce sont des faits que le nettoyage a fait apparaître et qui engagent l'entreprise, pas seulement la performance commerciale — alors ils sont dans le rapport.",
  q:"Personne ne vous demandait ça.",
  r:"Non. Mais quelqu'un qui nettoie un CRM et qui voit <b>2 015</b> emails partis vers des gens qui ont demandé à ne plus être contactés, et qui ne le dit pas, a mal fait son travail. Le reste du rapport se recalcule à chaque exécution — il ne peut pas mentir sur un état ancien."
@@ -1555,7 +1558,10 @@ function procShow(i){
       +'<div class="sdet" id="sDet"><div class="sdet-in">';
     if(x.pb)   h+='<h5>Le problème</h5><p>'+x.pb+'</p>';
     if(x.body) h+='<h5>Ce qui a été fait</h5><p>'+x.body+'</p>';
-    if(x.q)    h+='<div class="sask"><div class="aq">🎤 '+esc(x.q)+'</div><div class="ar">'+x.r+'</div></div>';
+    var Q=[]; if(x.q) Q.push([x.q,x.r]); if(x.qs) Q=Q.concat(x.qs);
+    Q.forEach(function(z){
+      h+='<div class="sask"><div class="aq">🎤 '+esc(z[0])+'</div><div class="ar">'+z[1]+'</div></div>';
+    });
     if(x.vue)  h+='<button class="sgo" data-go="'+x.vue+'">Le montrer dans le tableau de bord →</button>';
     h+='</div></div>';
   }
@@ -1872,4 +1878,5 @@ fetch("wtc.json").then(function(r){ return r.json(); }).then(function(j){
 });
 </script>
 </body>
-</html>
+</html>,
+ qs:[["Comment vous savez que votre nettoyage n'a rien cassé ailleurs ?","<b>95 contrôles</b> tournent à chaque exécution : conservation des lignes, cohérence, bornes de sanité, non-régression. Un seul au rouge et le pipeline refuse de continuer. Si une règle casse quelque chose à l'autre bout de la base, je le sais avant même de regarder la liste d'appels."],["Comment vous garantissez que vos règles sont vraiment appliquées, et pas seulement écrites ?","Chaque décision a une ligne dans une table : la règle, où elle est implémentée, et le contrôle qui prouve qu'elle tourne. <b>Une ligne ne passe au vert que si son contrôle est vert au moment où le rapport se génère</b> — pas parce qu'un fichier de configuration l'affirme. Cette table est née d'un vrai problème : des règles actées puis jamais implémentées. Elle a ensuite produit l'erreur inverse, dix règles implémentées mais toujours affichées comme à venir. C'est ce qui a conduit à ce verrou : un statut ne se déclare pas, il se constate."]]
