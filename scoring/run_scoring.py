@@ -417,7 +417,8 @@ def main():
     dash_dir = os.path.join(ROOT, "dashboard_data")
     os.makedirs(dash_dir, exist_ok=True)
     for fn in ("companies.csv", "accounts_clean.csv", "contacts_clean.csv",
-               "hot_list.csv", "dashboard_data.json", "scores_persons.csv"):
+               "hot_list.csv", "dashboard_data.json", "scores_persons.csv",
+               "scores_companies.csv"):
         shutil.copy(os.path.join(IN_DIR, fn), os.path.join(dash_dir, fn))
 
     print(f"[moteur V1.1] {len(lignes)} entreprises scorées — "
