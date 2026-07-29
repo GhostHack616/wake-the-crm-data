@@ -47,18 +47,22 @@ def euro(v):
 def preuve(r):
     """La preuve telle que la donnée la soutient.
 
-    `hot_list.preuve` écrit « membre le plus actif du comité » sur les 34 lignes Tier 2 —
-    or 28 d'entre elles n'ont QU'UNE personne active. Le mot « comité » a une définition
-    gravée (≥ 3 personnes distinctes, dont un décideur, sur 14 jours) : on ne l'imprime que
-    lorsqu'elle est vérifiée. Sinon on dit ce qui s'est réellement passé.
+    Le moteur écrit désormais le bon libellé (correctif du 29/07, après les 28 lignes qui
+    annonçaient un « comité » pour UNE personne active) : on l'affiche tel quel.
+
+    Ce qui suit est un FILET, pas une réécriture. Il ne se déclenche que si le mot
+    « comité » réapparaît un jour sur un compte qui n'en a pas un. La définition est
+    gravée — ≥ 3 personnes distinctes, dont un décideur, sur 14 jours — et un libellé
+    qui la contredit ne part pas dans Slack.
+
+    Retourne (texte, faut-il ajouter le compte de personnes en méta).
     """
     n = int(r["comite_personnes_14j"] or 0)
-    if "comit" not in r["preuve"]:
-        return r["preuve"], True                # formulaire / RDV : preuve datée, on la garde telle quelle
-    if n >= 3:
-        return "comité actif : %d personnes en 14 j" % n, False
-    return "%d personne%s active%s en 14 j, sans demande (score %s)" % (
-           n, "s" if n > 1 else "", "s" if n > 1 else "", r["score"]), False
+    p = r["preuve"]
+    if "comit" in p.lower() and n < 3:
+        return "%d personne%s active%s / 14 j, sans demande (score %s)" % (
+               n, "s" if n > 1 else "", "s" if n > 1 else "", r["score"]), False
+    return p, ("personne" not in p.lower() and "comit" not in p.lower())
 
 
 def ligne(r):
