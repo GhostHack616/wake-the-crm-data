@@ -110,11 +110,15 @@ def calcule(cfg, contacts, companies, events):
         else:                                      # geste : pondéré par le porteur
             m, demi = MULT.get(tier_de.get(p, ""), MULT["sans_titre"]), D["demi_vie_gestes_jours"]
 
-        v = pts * m * decay(age, demi)
+        dk = decay(age, demi)
+        v = pts * m * dk
         score_p[ent][p] += v
         if v < 0:
             negatif[ent] += v
+        # La décomposition complète part au dashboard : la vue Logique doit
+        # pouvoir afficher « 8 x 0,8 x 0,54 = 3,5 » sans ouvrir le code.
         events_p[ent][p].append({"date": e["timestamp"][:10], "quoi": LIBELLES.get(cle, cle),
+                                 "base": pts, "x_porteur": m, "x_temps": round(dk, 3),
                                  "pts": round(v, 1)})
 
     # ---- portes, perdus, fit, comité --------------------------------
@@ -269,13 +273,13 @@ def invariants(cfg, lignes, score_p, comptes, alarmes):
          len([r for r in t1 if not r["canal"]])),
         ("SC14", "ENT-16714 en play risque, jamais en new business", 0,
          len([r for r in lignes if r["entity_id"] == "ENT-16714" and r["play"] != "risque"])),
-        ("SC15", "règles dormantes étiquetées en config", 4, len(cfg["regles_dormantes"])),
+        ("SC15", "règles dormantes étiquetées en config", 5, len(cfg["regles_dormantes"])),
     ]
     verts = sum(1 for _, _, att, obt in checks if att == obt)
     for cid, lib, att, obt in checks:
         etat = "🟢" if att == obt else "🔴"
         print(f"  {etat} {cid:5s} {lib:52s} attendu {att} · obtenu {obt}")
-    return verts, len(checks)
+    return verts, len(checks), checks
 
 
 def robustesse(contacts, companies, events):
@@ -347,6 +351,18 @@ def main():
              "titre": infos[p].get("job_title", ""), "persona": tier_de.get(p, ""),
              "score": round(s, 1), "events": events_p[ent][p]}
             for p, s in sorted(score_p[ent].items(), key=lambda y: -y[1])]})
+    from datetime import datetime
+    verts, total, checks = invariants(CFG, lignes, score_p, comptes, alarmes)
+    # Vue OPS (exigence du brief : « statut du dernier run + une alarme si
+    # quelque chose casse ») — l'état du moteur voyage AVEC les données.
+    ops = {"genere_le": datetime.now().isoformat(timespec="seconds"),
+           "config_version": CFG["version"],
+           "reference_date": CFG["reference_date"],
+           "gardes": [{"id": c[0], "libelle": c[1], "attendu": c[2], "obtenu": c[3],
+                       "ok": c[2] == c[3]} for c in checks],
+           "gardes_vertes": f"{verts}/{total}",
+           "alarme": verts != total,
+           "regles_dormantes": CFG["regles_dormantes"]}
     replay = [{"d": e["timestamp"][:10], "e": e["entity_id"], "t": e["event_type"]}
               for e in events
               if e["entity_id"] and e["is_duplicate_event"] != "1" and e["from_bot"] != "1"]
@@ -356,6 +372,7 @@ def main():
                           "tier2": len([x for x in lignes if x["tier"] == "T2"]),
                           "perdus": len([x for x in lignes if x["perdu_canal_mort"] == "1"]),
                           "scores_calcules": len(lignes)},
+            "ops": ops,
             "hot_list": detail,
             "tous_scores": [{"e": x["entity_id"], "n": x["entreprise"], "s": x["score"],
                              "t": x["tier"]} for x in lignes],
@@ -376,7 +393,6 @@ def main():
     print(f"[moteur V1.1] {len(lignes)} entreprises scorées — "
           f"T1={dash['compteurs']['tier1']} T2={dash['compteurs']['tier2']} "
           f"perdus={dash['compteurs']['perdus']}")
-    verts, total = invariants(CFG, lignes, score_p, comptes, alarmes)
     print(f"[gardes]  {verts}/{total} invariants scoring verts" + ("  ✔" if verts == total else "  ⚠"))
     if "--robustesse" in sys.argv:
         robustesse(contacts, companies, events)

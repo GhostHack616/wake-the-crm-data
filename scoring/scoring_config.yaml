@@ -103,6 +103,8 @@ regles_dormantes:
     mesure: "0 clic < 5 s, minimum 64 s, médiane envoi->clic ~18 h"
   - regle: "alerte 'chaud sans relance de notre part' (le silence est le nôtre)"
     mesure: "0 cas sur la fenêtre de 90 jours"
+  - regle: "libellé de repli 'signaux récents (15-21 j), sans demande' (aucune personne active sur 14 j)"
+    mesure: "0 cas au run du 29/07 — repérée par l'IA n°2 au montage du push"
 
 # Verrous du run V1.1 (mesurés puis gravés — toute dérive = alarme rouge).
 invariants:
