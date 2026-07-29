@@ -365,6 +365,21 @@ def main():
     replay = [{"d": e["timestamp"][:10], "e": e["entity_id"], "t": e["event_type"]}
               for e in events
               if e["entity_id"] and e["is_duplicate_event"] != "1" and e["from_bot"] != "1"]
+    # Bloc « graphe » pour la sphère-nuée — AU SCHÉMA DE L'IA N°2 (elle possède
+    # le rendu : aucune coordonnée, aucune couleur, aucune taille ici — le sens
+    # seulement). Les 60 comptes des files + les 9 perdus (l'histoire complète).
+    graphe = {"n_total": len(companies), "comptes": []}
+    for x in lignes:
+        if x["tier"] not in ("T1", "T2") and x["perdu_canal_mort"] != "1":
+            continue
+        ent = x["entity_id"]
+        graphe["comptes"].append({
+            "e": ent, "tier": x["tier"], "porte": x["porte"],
+            "score": x["score_brut"], "play": x["play"], "neg": x["signaux_negatifs"],
+            "personnes": [{"n": f"{infos[p].get('first_name','')} {infos[p].get('last_name','')}".strip(),
+                           "p": tier_de.get(p, ""), "s": s}
+                          for p, s in sorted(score_p[ent].items(), key=lambda y: -y[1])]})
+
     dash = {"meta": {"config": CFG["version"], "reference_date": CFG["reference_date"],
                      "genere_par": "scoring/run_scoring.py"},
             "compteurs": {"tier1": len([x for x in lignes if x["tier"] == "T1"]),
@@ -372,6 +387,7 @@ def main():
                           "perdus": len([x for x in lignes if x["perdu_canal_mort"] == "1"]),
                           "scores_calcules": len(lignes)},
             "ops": ops,
+            "graphe": graphe,
             "hot_list": detail,
             "tous_scores": [{"e": x["entity_id"], "n": x["entreprise"], "s": x["score"],
                              "t": x["tier"]} for x in lignes],
