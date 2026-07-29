@@ -1,0 +1,193 @@
+{
+ "text": "La liste d'appels du jour — 60 comptes (26 Tier 1)",
+ "blocks": [
+  {
+   "type": "header",
+   "text": {
+    "type": "plain_text",
+    "text": "☎️  La liste d'appels du jour",
+    "emoji": true
+   }
+  },
+  {
+   "type": "context",
+   "elements": [
+    {
+     "type": "mrkdwn",
+     "text": "*60 comptes à travailler* sur 20 519 · Tier 1 : *26* · Tier 2 : *34* — chaque ligne porte sa preuve datée."
+    }
+   ]
+  },
+  {
+   "type": "divider"
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*🔴  Tier 1 — ils ont levé la main*  ·  _25 comptes, les 8 premiers_"
+   }
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*Juntonexworks*  _DE · 201-500_\n> 📞 Anna Lambert — People Ops Manager\n> 🔎 RDV pris le 07-20 · 6 personnes actives / 14 j · sponsor décideur ✅ · email"
+   }
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*EderigorConsulting SARL*  _FR · 51-200_\n> 📞 Thomas Michel — People Ops Manager\n> 🔎 RDV pris le 07-20 · 4 personnes actives / 14 j · sponsor décideur ✅ · email"
+   }
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*Iberirinlab*  _BE · 51-200_\n> 📞 Greta Laurent — Head of People\n> 🔎 formulaire le 07-20 · 4 personnes actives / 14 j · sponsor décideur ✅ · email"
+   }
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*Fernotasmobility*  _DE · 11-50_\n> 📞 Pablo Faure — Compensation & Benefits Manager\n> 🔎 RDV pris le 07-20 · 4 personnes actives / 14 j · sponsor décideur ✅ · email"
+   }
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*NordibelForge France*  _FR · 11-50_\n> 📞 Emil Garcia — HR Manager\n> 🔎 RDV pris le 07-20 · 4 personnes actives / 14 j · sponsor décideur ✅ · email"
+   }
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*GrimodorMobility France*  _FR · 501-1000 · 40 000 €_\n> 📞 Laura Rossi — Chargee de recrutement\n> 🔎 RDV pris le 07-17 · 4 personnes actives / 14 j · sponsor décideur ✅ · téléphone/LinkedIn (désabonné) · rétention"
+   }
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*Meriquiconseil & Co*  _IT · 51-200_\n> 📞 Lea Michel — VP People\n> 🔎 formulaire le 07-18 · 3 personnes actives / 14 j · sponsor décideur ✅ · téléphone/LinkedIn (pas d'adresse pro)"
+   }
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*Kelvibelgroup*  _IT · 11-50_\n> 📞 Anais Rousseau — HR Director\n> 🔎 formulaire le 07-19 · 5 personnes actives / 14 j · sponsor décideur ✅ · email"
+   }
+  },
+  {
+   "type": "context",
+   "elements": [
+    {
+     "type": "mrkdwn",
+     "text": "…et *17 autres* en Tier 1 dans le tableau de bord."
+    }
+   ]
+  },
+  {
+   "type": "divider"
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*🟣  Personne n'a rien demandé — et c'est le plus urgent*\n*Sylvasolfinance Group*  _CH · 51-200_\n> 📞 Hugo Petit — Responsable Recrutement\n> 🔎 comité actif : 4 personnes en 14 j · sponsor décideur ✅ · téléphone/LinkedIn (désabonné) · risque\n> ⛔ *signaux de départ* (-76 pts) · ex client reactif — appel de rétention, pas de prospection"
+   }
+  },
+  {
+   "type": "context",
+   "elements": [
+    {
+     "type": "mrkdwn",
+     "text": "Aucun formulaire, aucun RDV : son score est à *0.0*. C'est le comité qui le sort — 4 personnes actives en 14 jours, dont un décideur. Un filtre sur le score ne l'aurait jamais vu."
+    }
+   ]
+  },
+  {
+   "type": "divider"
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*🟠  Tier 2 — ça chauffe, sans demande*  ·  _34 comptes_"
+   }
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*HaldemarTech*  _DE · 201-500 · 8 000 €_\n> 📞 Sanne Serrano — CEO\n> 🔎 2 personnes actives en 14 j, sans demande (score 20.4) · sponsor décideur ✅ · email · rétention"
+   }
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*Roccaviaforge France*  _FR · 201-500 · 12 000 €_\n> 📞 Nicolas Michel — VP People\n> 🔎 1 personne active en 14 j, sans demande (score 15.1) · sponsor décideur ✅ · téléphone/LinkedIn (désabonné) · rétention"
+   }
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*Vertipradigital*  _DE · 1-10_\n> 📞 Vincent Boyer — Head of Talent Acquisition\n> 🔎 1 personne active en 14 j, sans demande (score 14.8) · sponsor décideur ✅ · email"
+   }
+  },
+  {
+   "type": "context",
+   "elements": [
+    {
+     "type": "mrkdwn",
+     "text": "…et *31 autres*. À travailler en séquence, pas au téléphone."
+    }
+   ]
+  },
+  {
+   "type": "divider"
+  },
+  {
+   "type": "section",
+   "text": {
+    "type": "mrkdwn",
+    "text": "*⚠️  12 comptes injoignables par email*\n• téléphone/LinkedIn (désabonné) — *7*\n• téléphone/LinkedIn (pas d'adresse pro) — *5*\nIls restent dans la liste : le canal est mort, pas l'intérêt. Téléphone ou LinkedIn."
+   }
+  },
+  {
+   "type": "divider"
+  },
+  {
+   "type": "actions",
+   "elements": [
+    {
+     "type": "button",
+     "style": "primary",
+     "text": {
+      "type": "plain_text",
+      "text": "Ouvrir le tableau de bord",
+      "emoji": true
+     },
+     "url": "https://wake-the-crm.netlify.app"
+    }
+   ]
+  },
+  {
+   "type": "context",
+   "elements": [
+    {
+     "type": "mrkdwn",
+     "text": "Généré depuis `dashboard_data/hot_list.csv` · scoring V1.1 · 2 portes (conversion ∪ comité 14 j)"
+    }
+   ]
+  }
+ ]
+}
