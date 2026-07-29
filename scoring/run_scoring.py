@@ -118,8 +118,7 @@ def calcule(cfg, contacts, companies, events):
         # La décomposition complète part au dashboard : la vue Logique doit
         # pouvoir afficher « 8 x 0,8 x 0,54 = 3,5 » sans ouvrir le code.
         events_p[ent][p].append({"date": e["timestamp"][:10], "quoi": LIBELLES.get(cle, cle),
-                                 "base": pts, "x_porteur": m, "x_temps": round(dk, 3),
-                                 "pts": round(v, 2)})
+                                 "base": pts, "x_porteur": m, "x_temps": dk, "pts": v})
 
     # ---- portes, perdus, fit, comité --------------------------------
     fenetre1 = cfg["portes"]["porte1_conversion_fenetre_jours"]
@@ -140,7 +139,7 @@ def calcule(cfg, contacts, companies, events):
 
         porte = "conversion" if conv_recente else ("comite" if comite_ok and not conv[ent] else "")
         comptes[ent] = {"score": sc, "porte": porte, "comite_n": len(meilleur),
-                        "sponsor": sponsor, "negatif": round(negatif[ent], 1)}
+                        "sponsor": sponsor, "negatif": negatif[ent]}
     return comptes, score_p, events_p, conv, clics, par_entite, infos, tier_de, alarmes
 
 
@@ -224,7 +223,7 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
         lignes.append({
             "entity_id": ent, "entreprise": f["name"],
             "score": round(min(S["score_affiche_max"], max(0.0, d["score"])), 1),
-            "score_brut": round(d["score"], 2), "tier": tier, "porte": d["porte"],
+            "score_brut": d["score"], "tier": tier, "porte": d["porte"],
             "fit": fit, "comite_personnes_14j": d["comite_n"],
             "sponsor_decideur": "oui" if d["sponsor"] else "non",
             "qui_appeler": nom, "son_titre": i.get("job_title", ""), "preuve": quoi,
@@ -336,7 +335,7 @@ def main():
             for p, s in sorted(score_p[ent].items(), key=lambda x: -x[1]):
                 i = infos.get(p, {})
                 w.writerow([ent, p, f"{i.get('first_name','')} {i.get('last_name','')}".strip(),
-                            i.get("job_title", ""), tier_de.get(p, ""), round(s, 1),
+                            i.get("job_title", ""), tier_de.get(p, ""), s,
                             " · ".join(f"{e['quoi']} {e['date'][5:]} ({e['pts']})"
                                        for e in events_p[ent][p])])
 
@@ -349,7 +348,7 @@ def main():
         detail.append({**x, "personnes": [
             {"nom": f"{infos[p].get('first_name','')} {infos[p].get('last_name','')}".strip(),
              "titre": infos[p].get("job_title", ""), "persona": tier_de.get(p, ""),
-             "score": round(s, 1), "events": events_p[ent][p]}
+             "score": s, "events": events_p[ent][p]}
             for p, s in sorted(score_p[ent].items(), key=lambda y: -y[1])]})
     from datetime import datetime
     verts, total, checks = invariants(CFG, lignes, score_p, comptes, alarmes)
