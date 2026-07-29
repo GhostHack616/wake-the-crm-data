@@ -470,7 +470,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
             <div class="mstat"><b id="sAwake">0</b><span>comptes réveillés</span></div>
             <div class="mstat hot"><b id="sHot">0</b><span>hot</span></div>
             <div class="mstat warm"><b id="sWarm">0</b><span>warm</span></div>
-            <div class="mstat risk"><b id="sRisk">0</b><span>suspects écartés</span></div>
+            <div class="mstat risk"><b id="sRisk">0</b><span>perdus — canal mort</span></div>
           </div>
           <div class="ticker" id="ticker"></div>
           <div class="legend">
@@ -478,7 +478,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
             <div class="lg"><i style="background:#5a5f8c"></i>actif</div>
             <div class="lg"><i style="background:#e3a648"></i>warm</div>
             <div class="lg"><i style="background:#a99bff;box-shadow:0 0 8px 1px rgba(169,155,255,.7)"></i>hot</div>
-            <div class="lg"><i style="background:#e8685c"></i>suspect</div>
+            <div class="lg"><i style="background:#e8685c"></i>perdu</div>
           </div>
         </div>
         <div class="transport">
@@ -506,7 +506,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
             <div class="lfilters" id="filters">
               <button data-f="hot" class="on">Hot</button>
               <button data-f="warm">Warm</button>
-              <button data-f="trap">Suspects</button>
+              <button data-f="trap">Perdus</button>
               <button data-f="all">Tout</button>
             </div>
           </div>
@@ -730,7 +730,7 @@ var G=(function(){
   function tick(idx,w){
     var e=D.ents[idx], k=e[10], t=document.getElementById("ticker");
     var cls = k===2?"hot" : (k===3?"risk":"");
-    var lab = k===3 ? "suspect écarté" : (k===2 ? "passe HOT" : EVN[w]||"activité");
+    var lab = k===3 ? "perdu — canal mort" : (k===2 ? "passe HOT" : EVN[w]||"activité");
     var el=document.createElement("div"); el.className="tk "+cls;
     el.innerHTML='<i></i><b>'+esc(e[0])+'</b> · '+lab+'<em>'+e[6]+'</em>';
     t.insertBefore(el,t.firstChild);
@@ -950,10 +950,10 @@ function listIdx(){
   }
   function byScore(a){ return a.sort(function(x,y){ return D.ents[y][6]-D.ents[x][6]; }); }
   if(FILT==="hot")  return byScore(D.top.slice());
-  if(FILT==="trap") return D.suspects.slice();
+  if(FILT==="trap") return byScore((D.perdus||D.suspects||[]).slice());
   if(FILT==="warm"){ for(var j=0;j<D.ents.length;j++) if(D.ents[j][10]===1) out.push(j); return byScore(out).slice(0,200); }
-  for(var k=0;k<D.ents.length&&out.length<200;k++) out.push(k);
-  return out;
+  for(var k=0;k<D.ents.length;k++) if(D.ents[k][6]>0) out.push(k);
+  return byScore(out).slice(0,200);
 }
 function renderRows(){
   var ix=listIdx(), h="";
@@ -967,7 +967,7 @@ function renderRows(){
   });
   document.getElementById("rows").innerHTML=h||'<div class="empty" style="padding:30px">Aucun résultat.</div>';
 }
-var KL={0:["Froid","k0"],1:["Warm","k1"],2:["HOT","k2"],3:["Suspect","k3"]};
+var KL={0:["Froid","k0"],1:["Warm","k1"],2:["HOT","k2"],3:["Perdu","k3"]};
 var TYL={email_sent:"email envoyé",email_open:"ouverture",email_click:"clic email",
   form_fill:"formulaire",meeting_booked:"RDV booké",website_visit:"visite site",
   pricing_visit:"visite /pricing",linkedin_engagement:"LinkedIn"};
@@ -990,7 +990,7 @@ function renderDetail(i){
     +(d.brut&&d.brut>d.score+0.05?' · brut '+d.brut.toFixed(1):'')+'</div></div></div>';
 
   h+='<div class="facts">'
-    +'<div class="fact">entré par <b>'+(d.porte==="conversion"?"une demande":"le comité")+'</b></div>'
+    +'<div class="fact">'+(d.porte==="conversion"?'entré par <b>une demande</b>':d.porte==="comite"?'entré par <b>le comité</b>':'<b>aucune porte</b> — sorti des files')+'</div>'
     +'<div class="fact"><b>'+esc(d.comite)+'</b> personnes actives / 14 j</div>'
     +'<div class="fact">sponsor décideur <b>'+esc(d.sponsor)+'</b></div>'
     +(e[9]>1?'<div class="fact"><b>'+e[9]+'</b> fiches fusionnées</div>':'')
@@ -998,7 +998,7 @@ function renderDetail(i){
     +'</div>';
 
   /* la ligne d'action */
-  h+='<div class="sec"><div class="sec-h"><h3>Qui appeler</h3><em>celui qui a levé la main</em></div>'
+  h+='<div class="sec"><div class="sec-h"><h3>'+(d.tier==="PERDU"?'Pourquoi personne':'Qui appeler')+'</h3>'+'<em>'+(d.tier==="PERDU"?'le score existe, le canal non':'celui qui a levé la main')+'</em></div>'
     +'<div class="card" style="padding:16px 18px">'
     +'<div style="font-family:var(--display);font-size:19px;font-weight:600">'+esc(d.qui)+'</div>'
     +'<div style="font-size:var(--fs-sm);color:var(--text-2);margin-top:3px">'+esc(d.titre)+'</div>'
@@ -1078,7 +1078,7 @@ function renderOps(){
     +'<div class="kpi"><b>'+nf(D.counts.events)+'</b><span>events / 90 j</span><em>'+nf(D.counts.anon_events)+' non rattachables</em></div>'
     +'<div class="kpi hi"><b>'+D.counts.hot+'</b><span>comptes hot</span><em>seuil '+D.config.thresholds.hot+' pts</em></div>'
     +'<div class="kpi"><b>'+D.counts.warm+'</b><span>warm</span><em>seuil '+D.config.thresholds.warm+' pts</em></div>'
-    +'<div class="kpi al"><b>'+nf(D.counts.risk)+'</b><span>suspects écartés</span><em>fantômes, bots, injoignables</em></div>'
+    +'<div class="kpi al"><b>'+nf(D.counts.risk)+'</b><span>perdus — canal mort</span><em>le score y est, le canal n\'y est plus</em></div>'
     +'<div class="kpi"><b>'+done+' / '+S.length+'</b><span>étapes cleanup</span><em>phase '+(S[Math.min(done,S.length-1)].phase||"—")+'</em></div>'
     +'<div class="kpi"><b>'+nf(D.counts.dormant)+'</b><span>entités muettes</span><em>0 event sur la fenêtre</em></div>'
     +'</div>';
