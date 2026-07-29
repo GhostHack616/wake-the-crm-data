@@ -276,6 +276,35 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .warnbox b{color:var(--danger)}
 
 /* ══════════════════════════════ DONNÉES ══════════════════════════════ */
+/* la ligne de multiplication sous chaque personne — un score refaisable de tête */
+.calc{padding:0 15px 12px 15px;margin-top:-4px}
+.calcr{display:flex;align-items:baseline;gap:10px;padding:4px 0;font-size:var(--fs-xs);
+  border-top:1px solid var(--line-2)}
+.calcr:first-child{border-top:0}
+.calcr .cd{flex:0 0 40px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.calcr .cq{flex:0 0 128px;color:var(--text);font-weight:600}
+.calcr .cm{flex:1;color:var(--text-2);font-variant-numeric:tabular-nums;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.calcr .cm em{font-style:normal;color:var(--text-3);font-size:10px}
+.calcr .cp{flex:0 0 52px;text-align:right;font-weight:700;color:var(--ok);
+  font-variant-numeric:tabular-nums}
+.calcr.neg .cp{color:var(--danger)}
+@media(max-width:680px){
+  .calcr{flex-wrap:wrap;gap:4px 8px}
+  .calcr .cq{flex:1 1 auto}.calcr .cm{flex:1 1 100%;white-space:normal}
+}
+/* les gardes du scoring, dans la vue Ops */
+.grd{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;padding:14px}
+.grdr{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--r-sm);
+  background:var(--soft);font-size:var(--fs-xs)}
+.grdr i{flex:0 0 7px;height:7px;border-radius:50%;background:var(--ok)}
+.grdr.ko i{background:var(--danger)}
+.grdr b{flex:1;font-weight:500;color:var(--text-2)}
+.grdr span{color:var(--text-3);font-variant-numeric:tabular-nums}
+.drm{padding:0 15px 14px}
+.drmr{display:flex;gap:11px;padding:9px 0;border-top:1px solid var(--line-2);font-size:var(--fs-xs)}
+.drmr b{flex:0 0 44%;font-weight:600;color:var(--text)}
+.drmr span{flex:1;color:var(--text-2)}
 .dataw{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
 .dbar{flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
 .dtabs{display:flex;gap:3px;background:var(--soft);padding:3px;border-radius:var(--r-pill)}
@@ -983,17 +1012,32 @@ function renderDetail(i){
     d.personnes.forEach(function(p){ tot+=p[3]; if(Math.abs(p[3])>mx) mx=Math.abs(p[3]); });
     var capped = d.brut && d.brut > d.score + 0.05;
     h+='<div class="sec"><div class="sec-h"><h3>Qui a fait le score</h3>'
-      +'<em>'+d.personnes.length+' personnes · le compte est la somme'
-      +(capped?' = <b>'+d.brut.toFixed(1)+'</b>, plafonnée à 100':'')+'</em></div><div class="card wf">';
+      +'<em>'+d.personnes.length+' personnes · chaque total est la somme des lignes en dessous'
+      +(capped?' — ici <b>'+d.brut.toFixed(1)+'</b>, plafonnée à 100':'')+'</em></div><div class="card wf">';
     d.personnes.forEach(function(p){
       var pct = mx>0 ? 100*Math.abs(p[3])/mx : 0;
       var c = p[3]<0 ? "var(--danger)"
             : p[2]==="buyer"?"var(--violet)":p[2]==="champion"?"var(--ok)":"var(--text-3)";
       h+='<div class="wfr"><div class="wfr-l">'+esc(p[0])+'<span>'+esc(p[1])+' · '+esc(p[2])+'</span></div>'
         +'<div class="wfr-b"><i style="width:'+pct.toFixed(1)+'%;left:0;background:'+c+'"></i></div>'
-        +'<div class="wfr-v">'+p[3].toFixed(1)+'</div></div>'
-        +'<div style="padding:0 15px 11px 15px;font-size:var(--fs-xs);color:var(--text-2);margin-top:-6px">'
-        +esc(p[4])+'</div>';
+        +'<div class="wfr-v">'+p[3].toFixed(1)+'</div></div>';
+      /* la ligne de multiplication : un score qu'on peut refaire de tête */
+      if(p[5] && p[5].length){
+        h+='<div class="calc">';
+        p[5].forEach(function(e){
+          var pts=Math.round(e[5]*10)/10;
+          h+='<div class="calcr'+(pts<0?" neg":"")+'">'
+            +'<span class="cd">'+esc(e[0].slice(5))+'</span>'
+            +'<span class="cq">'+esc(e[1])+'</span>'
+            +'<span class="cm">'+e[2]+' <em>×</em> '+e[3].toFixed(2)+' <em>persona</em> <em>×</em> '
+            +e[4].toFixed(3)+' <em>temps</em></span>'
+            +'<span class="cp">'+(pts>0?"+":"")+pts.toFixed(1)+'</span></div>';
+        });
+        h+='</div>';
+      } else if(p[4]){
+        h+='<div style="padding:0 15px 11px 15px;font-size:var(--fs-xs);color:var(--text-2);margin-top:-6px">'
+          +esc(p[4])+'</div>';
+      }
     });
     h+='</div></div>';
   }
@@ -1100,11 +1144,36 @@ function renderOps(){
   });
   h+='</div>';
 
-  h+='<div class="note" style="margin-top:24px"><b>Ce que ce brouillon n\'est pas encore.</b> '
-    +'Le scoring affiché est la config <b>'+esc(D.config.version)+'</b> : les poids sont posés et argumentés, ils ne sont pas encore calibrés '
-    +'contre la vérité terrain. Le pipeline ne lit jamais <b>event_id</b> — le corrigé planté dans le dataset est réservé à une mesure unique '
-    +'de précision / rappel en fin de course, pas à l\'itération. Étapes 7 à 12 du cleanup en attente : le fit firmographique et la segmentation '
-    +'lifecycle sont donc encore partiels.</div>';
+  /* les gardes du moteur de scoring — greffées depuis dashboard_data.json */
+  if(D.sops){
+    var S2=D.sops, ko2=S2.gardes.filter(function(g){return !g.ok;});
+    h+='<div class="sec" style="margin-top:24px"><div class="sec-h"><h3>Les gardes du scoring</h3>'
+      +'<em>'+esc(S2.gardes_vertes)+' · run du '+esc((S2.genere_le||"").slice(0,10))
+      +' · fenêtre ancrée au '+esc(S2.reference_date)+'</em></div>'
+      +'<div class="card"><div class="grd">';
+    S2.gardes.forEach(function(g){
+      h+='<div class="grdr'+(g.ok?"":" ko")+'"><i></i><b>'+esc(g.libelle)+'</b>'
+        +'<span>'+esc(String(g.obtenu))+' / '+esc(String(g.attendu))+'</span></div>';
+    });
+    h+='</div></div></div>';
+    if(ko2.length) h+='<div class="warnbox" style="margin:14px 0"><div><b>Alarme scoring</b> — '
+      +ko2.map(function(g){return esc(g.libelle)+' : attendu '+g.attendu+', obtenu '+g.obtenu;}).join('<br>')+'</div></div>';
+
+    h+='<div class="sec" style="margin-top:20px"><div class="sec-h"><h3>Les règles qui ne se sont jamais déclenchées</h3>'
+      +'<em>'+S2.regles_dormantes.length+' protections, 0 cas — annoncées, pas cachées</em></div>'
+      +'<div class="card"><div class="drm">';
+    S2.regles_dormantes.forEach(function(r){
+      h+='<div class="drmr"><b>'+esc(r.regle)+'</b><span>'+esc(r.mesure)+'</span></div>';
+    });
+    h+='</div></div></div>';
+  }
+
+  h+='<div class="note" style="margin-top:24px"><b>Ce que ce tableau de bord montre, et ce qu\'il ne montre pas.</b> '
+    +'Le scoring est la config <b>'+esc(D.config.version)+'</b>, calibrée à la main : chaque poids est un choix assumé, pas un réglage sorti d\'une optimisation. '
+    +'Le pipeline ne lit <b>jamais</b> la colonne <b>event_id</b> — le corrigé planté dans le jeu de données a servi à <b>une seule</b> mesure de précision et de rappel, '
+    +'en fin de course, jamais à itérer. '
+    +'Les scores affichés sont arrondis au dixième et <b>chaque total est la somme de ce qui est montré au-dessus</b> ; '
+    +'le moteur, lui, travaille en précision pleine et c\'est lui seul qui décide du tier.</div>';
   document.getElementById("opsBody").innerHTML=h;
   document.getElementById("opsBody").onclick=function(e){
     var hd=e.target.closest(".stp-h"); if(hd) hd.parentNode.classList.toggle("open");
