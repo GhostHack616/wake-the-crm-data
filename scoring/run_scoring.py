@@ -187,7 +187,19 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
             quoi = f"{LIBELLES[type_c]} le {date_c[5:]}"
         elif score_p[ent]:
             pers = max(score_p[ent], key=score_p[ent].get)
-            date_c, quoi = "", "membre le plus actif du comité"
+            date_c = ""
+            # Le mot « comité » ne s'imprime que quand sa définition gravée est
+            # vraie (3+ personnes dont un décideur) — sinon on dit le FAIT.
+            # Correctif de libellé 29/07 (attrapé par l'IA n°2 au push Slack) :
+            # 28 lignes disaient « comité » pour UNE personne active.
+            n = d["comite_n"]
+            if d["porte"] == "comite":
+                quoi = f"comité : {n} personnes actives / 14 j dont un décideur, sans demande"
+            elif n == 0:
+                quoi = "signaux récents (15-21 j), sans demande"
+            else:
+                p_ = "s" if n > 1 else ""
+                quoi = f"{n} personne{p_} active{p_} / 14 j, sans demande"
         else:
             pers, quoi = "", ""
         i = infos.get(pers, {})

@@ -16,7 +16,7 @@ ENT-13743,PrimomarLogistics,80.8,80.84,T1,conversion,A,5,oui,Greta Garnier,Head 
 ENT-08050,Iberinexforge Group,79.5,79.52,T1,conversion,A,3,oui,Hugo Petit,Compensation & Benefits Manager,RDV pris le 07-15,email,new_business,PROSPECT_CHAUD,1,0.0,0
 ENT-08679,Juntodorenergie Group,67.8,67.76,T1,conversion,A,3,oui,Romain Girard,Directeur RH,formulaire le 07-19,email,new_business,PROSPECT_CHAUD,1,0.0,0
 ENT-18013,Ulmiviaconseil SAS,58.2,58.21,T1,conversion,A,4,oui,Emil Fischer,Office Manager,RDV pris le 07-15,email,new_business,PROSPECT_CHAUD,1,0.0,0
-ENT-16714,Sylvasolfinance Group,0.0,-55.76,T1,comite,A,4,oui,Hugo Petit,Responsable Recrutement,membre le plus actif du comité,téléphone/LinkedIn (désabonné),risque,EX_CLIENT_REACTIF,1,-76.3,0
+ENT-16714,Sylvasolfinance Group,0.0,-55.76,T1,comite,A,4,oui,Hugo Petit,Responsable Recrutement,"comité : 4 personnes actives / 14 j dont un décideur, sans demande",téléphone/LinkedIn (désabonné),risque,EX_CLIENT_REACTIF,1,-76.3,0
 ENT-06605,Grimobelpartners SA,56.9,56.91,T1,conversion,B,4,oui,Benjamin Dubois,HRBP,formulaire le 07-20,téléphone/LinkedIn (pas d'adresse pro),new_business,PROSPECT_CHAUD,3,0.0,0
 ENT-09043,Kelvibelgroup,89.8,89.83,T1,conversion,B,5,oui,Anais Rousseau,HR Director,formulaire le 07-19,email,new_business,PROSPECT_CHAUD,2,0.0,0
 ENT-16665,SylvaquiData,78.8,78.79,T1,conversion,B,4,oui,Claire Andre,COO,formulaire le 07-15,email,new_business,PROSPECT_CHAUD,2,0.0,0
@@ -25,37 +25,37 @@ ENT-05731,Fernotasmobility,100,109.74,T1,conversion,B,4,oui,Pablo Faure,Compensa
 ENT-11497,NordibelForge France,94.4,94.42,T1,conversion,B,4,oui,Emil Garcia,HR Manager,RDV pris le 07-20,email,new_business,PROSPECT_CHAUD,1,0.0,0
 ENT-09782,Lorritasdata,87.4,87.41,T1,conversion,B,4,oui,Thomas Moreau,CHRO,formulaire le 07-15,email,new_business,PROSPECT_CHAUD,1,0.0,0
 ENT-19636,Wallivendigital SARL,70.3,70.27,T1,conversion,B,3,oui,Elise Garcia,Directeur RH,formulaire le 07-19,email,new_business,PROSPECT_CHAUD,1,0.0,0
-ENT-15161,Roccaviaforge France,15.1,15.09,T2,,A,1,oui,Nicolas Michel,VP People,membre le plus actif du comité,téléphone/LinkedIn (désabonné),retention,CLIENT_ACTIF,3,0.0,0
-ENT-07204,HaldemarTech,20.4,20.38,T2,,A,2,oui,Sanne Serrano,CEO,membre le plus actif du comité,email,retention,CLIENT_ACTIF,2,0.0,0
-ENT-02665,CendralexImmo SA,12.5,12.51,T2,,A,1,non,Lea Dubois,HR Manager,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-05475,Fernoforge & Co,9.0,8.96,T2,,A,1,non,Greta Boyer,HR Manager,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-01261,Belfobellogic SAS,8.9,8.91,T2,,A,1,oui,Femke Rossi,Head of Talent Acquisition,membre le plus actif du comité,téléphone/LinkedIn (désabonné),retention,CLIENT_ACTIF,2,0.0,0
-ENT-00216,Altamarhub & Co,8.9,8.9,T2,,A,1,non,Marta Moreau,,membre le plus actif du comité,téléphone/LinkedIn (désabonné),new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-11340,Neopramedia SA,8.4,8.44,T2,,A,2,oui,Lea Jansen,Chief People Officer,membre le plus actif du comité,téléphone/LinkedIn (désabonné),retention,CLIENT_ACTIF,2,0.0,0
-ENT-00044,Altacalpartners SA,8.1,8.12,T2,,A,1,oui,Pierre Girard,Head of HR Operations,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-10372,Mavigormobility,8.0,8.02,T2,,A,2,oui,Lea Guerin,VP People,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-06092,FlexisolForge SARL,8.0,8.0,T2,,A,1,oui,Emil Garcia,Head of HR Operations,membre le plus actif du comité,email,win_back,EX_CLIENT_REACTIF,2,0.0,0
-ENT-02623,CendragorTech Group,9.0,9.0,T2,,A,1,non,Margaux Martin,Talent Acquisition Manager,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,1,0.0,0
-ENT-11583,Nordifinsolutions France,8.9,8.89,T2,,A,2,oui,Florian Muller,CHRO,membre le plus actif du comité,téléphone/LinkedIn (désabonné),new_business,PROSPECT_TIEDE,1,0.0,0
-ENT-03113,Cortimarconseil SA,8.8,8.81,T2,,A,1,oui,Benjamin Serrano,COO,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,1,0.0,0
-ENT-09836,Lorriviaimmo,8.5,8.55,T2,,A,1,oui,Manon Andre,COO,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,1,0.0,0
-ENT-19818,YellohalSoft,8.1,8.05,T2,,A,1,non,Elise Smit,HRBP,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,1,0.0,0
-ENT-06083,Flexiservices SARL,8.1,8.12,T2,,B,1,oui,Nicolas Garcia,Head of HR Operations,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,3,0.0,0
-ENT-18709,Vertipradigital,14.8,14.79,T2,,B,1,oui,Vincent Boyer,Head of Talent Acquisition,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-07689,HelioquiWorks SARL,13.5,13.53,T2,,B,1,oui,Thomas Navarro,Head of HR Operations,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-05462,FernofinLogic,13.5,13.46,T2,,B,1,oui,Sophie Muller,VP Human Resources,membre le plus actif du comité,téléphone/LinkedIn (pas d'adresse pro),new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-19823,Yellohub & Co,11.6,11.63,T2,,B,2,oui,Nicolas Rossi,CHRO,membre le plus actif du comité,email,win_back,EX_CLIENT_REACTIF,2,0.0,0
-ENT-00686,ArdenpraHub France,10.8,10.82,T2,,B,1,non,Diego Petit,HR Business Partner,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-16677,Sylvaquilogistics SAS,10.1,10.06,T2,,B,1,oui,Vincent Rossi,Head of Talent Acquisition,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-04698,EstevaImmo SARL,9.7,9.72,T2,,B,1,non,Guillaume Muller,HR Business Partner,membre le plus actif du comité,téléphone/LinkedIn (pas d'adresse pro),new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-18664,VertimarFlow,9.6,9.6,T2,,B,1,oui,Quentin Leroy,Head of HR Operations,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-07305,Halderintech,9.0,8.96,T2,,B,1,oui,Jonas Michel,Directeur RH,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-19416,Wallihub,8.5,8.53,T2,,B,1,non,Margaux Serrano,Responsable Recrutement,membre le plus actif du comité,email,retention,CLIENT_ACTIF,2,0.0,0
-ENT-09377,Kelvitastech,8.2,8.22,T2,,B,1,non,Marion Fournier,Talent Acquisition Specialist,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-04256,Ederifinworks France,11.4,11.42,T2,,B,1,oui,Claire Smit,Directrice RH,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,1,0.0,0
-ENT-09817,Lorrivenmobility & Co,10.4,10.36,T2,,B,1,oui,Guillaume Jansen,Head of People,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,1,0.0,0
-ENT-07280,Haldequiworks,9.8,9.85,T2,,B,1,oui,Quentin Muller,CEO,membre le plus actif du comité,email,reactivation,LOST_REACTIF,1,0.0,0
-ENT-05434,Fernodorlab,8.2,8.18,T2,,B,1,non,Femke Boyer,People Ops Manager,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,1,0.0,0
-ENT-11299,NeoMobility,13.3,13.31,T2,,C,2,non,Laura Roux,People Ops Coordinator,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-02819,CendraSoft,8.9,8.88,T2,,C,1,non,Lucas Serrano,Recruiter,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,2,0.0,0
-ENT-17126,TalosolLogic Group,9.0,8.98,T2,,C,1,non,Sophie Mercier,People Ops Coordinator,membre le plus actif du comité,email,new_business,PROSPECT_TIEDE,1,0.0,0
+ENT-15161,Roccaviaforge France,15.1,15.09,T2,,A,1,oui,Nicolas Michel,VP People,"1 personne active / 14 j, sans demande",téléphone/LinkedIn (désabonné),retention,CLIENT_ACTIF,3,0.0,0
+ENT-07204,HaldemarTech,20.4,20.38,T2,,A,2,oui,Sanne Serrano,CEO,"2 personnes actives / 14 j, sans demande",email,retention,CLIENT_ACTIF,2,0.0,0
+ENT-02665,CendralexImmo SA,12.5,12.51,T2,,A,1,non,Lea Dubois,HR Manager,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-05475,Fernoforge & Co,9.0,8.96,T2,,A,1,non,Greta Boyer,HR Manager,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-01261,Belfobellogic SAS,8.9,8.91,T2,,A,1,oui,Femke Rossi,Head of Talent Acquisition,"1 personne active / 14 j, sans demande",téléphone/LinkedIn (désabonné),retention,CLIENT_ACTIF,2,0.0,0
+ENT-00216,Altamarhub & Co,8.9,8.9,T2,,A,1,non,Marta Moreau,,"1 personne active / 14 j, sans demande",téléphone/LinkedIn (désabonné),new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-11340,Neopramedia SA,8.4,8.44,T2,,A,2,oui,Lea Jansen,Chief People Officer,"2 personnes actives / 14 j, sans demande",téléphone/LinkedIn (désabonné),retention,CLIENT_ACTIF,2,0.0,0
+ENT-00044,Altacalpartners SA,8.1,8.12,T2,,A,1,oui,Pierre Girard,Head of HR Operations,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-10372,Mavigormobility,8.0,8.02,T2,,A,2,oui,Lea Guerin,VP People,"2 personnes actives / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-06092,FlexisolForge SARL,8.0,8.0,T2,,A,1,oui,Emil Garcia,Head of HR Operations,"1 personne active / 14 j, sans demande",email,win_back,EX_CLIENT_REACTIF,2,0.0,0
+ENT-02623,CendragorTech Group,9.0,9.0,T2,,A,1,non,Margaux Martin,Talent Acquisition Manager,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,1,0.0,0
+ENT-11583,Nordifinsolutions France,8.9,8.89,T2,,A,2,oui,Florian Muller,CHRO,"2 personnes actives / 14 j, sans demande",téléphone/LinkedIn (désabonné),new_business,PROSPECT_TIEDE,1,0.0,0
+ENT-03113,Cortimarconseil SA,8.8,8.81,T2,,A,1,oui,Benjamin Serrano,COO,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,1,0.0,0
+ENT-09836,Lorriviaimmo,8.5,8.55,T2,,A,1,oui,Manon Andre,COO,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,1,0.0,0
+ENT-19818,YellohalSoft,8.1,8.05,T2,,A,1,non,Elise Smit,HRBP,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,1,0.0,0
+ENT-06083,Flexiservices SARL,8.1,8.12,T2,,B,1,oui,Nicolas Garcia,Head of HR Operations,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,3,0.0,0
+ENT-18709,Vertipradigital,14.8,14.79,T2,,B,1,oui,Vincent Boyer,Head of Talent Acquisition,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-07689,HelioquiWorks SARL,13.5,13.53,T2,,B,1,oui,Thomas Navarro,Head of HR Operations,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-05462,FernofinLogic,13.5,13.46,T2,,B,1,oui,Sophie Muller,VP Human Resources,"1 personne active / 14 j, sans demande",téléphone/LinkedIn (pas d'adresse pro),new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-19823,Yellohub & Co,11.6,11.63,T2,,B,2,oui,Nicolas Rossi,CHRO,"2 personnes actives / 14 j, sans demande",email,win_back,EX_CLIENT_REACTIF,2,0.0,0
+ENT-00686,ArdenpraHub France,10.8,10.82,T2,,B,1,non,Diego Petit,HR Business Partner,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-16677,Sylvaquilogistics SAS,10.1,10.06,T2,,B,1,oui,Vincent Rossi,Head of Talent Acquisition,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-04698,EstevaImmo SARL,9.7,9.72,T2,,B,1,non,Guillaume Muller,HR Business Partner,"1 personne active / 14 j, sans demande",téléphone/LinkedIn (pas d'adresse pro),new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-18664,VertimarFlow,9.6,9.6,T2,,B,1,oui,Quentin Leroy,Head of HR Operations,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-07305,Halderintech,9.0,8.96,T2,,B,1,oui,Jonas Michel,Directeur RH,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-19416,Wallihub,8.5,8.53,T2,,B,1,non,Margaux Serrano,Responsable Recrutement,"1 personne active / 14 j, sans demande",email,retention,CLIENT_ACTIF,2,0.0,0
+ENT-09377,Kelvitastech,8.2,8.22,T2,,B,1,non,Marion Fournier,Talent Acquisition Specialist,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-04256,Ederifinworks France,11.4,11.42,T2,,B,1,oui,Claire Smit,Directrice RH,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,1,0.0,0
+ENT-09817,Lorrivenmobility & Co,10.4,10.36,T2,,B,1,oui,Guillaume Jansen,Head of People,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,1,0.0,0
+ENT-07280,Haldequiworks,9.8,9.85,T2,,B,1,oui,Quentin Muller,CEO,"1 personne active / 14 j, sans demande",email,reactivation,LOST_REACTIF,1,0.0,0
+ENT-05434,Fernodorlab,8.2,8.18,T2,,B,1,non,Femke Boyer,People Ops Manager,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,1,0.0,0
+ENT-11299,NeoMobility,13.3,13.31,T2,,C,2,non,Laura Roux,People Ops Coordinator,"2 personnes actives / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-02819,CendraSoft,8.9,8.88,T2,,C,1,non,Lucas Serrano,Recruiter,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,2,0.0,0
+ENT-17126,TalosolLogic Group,9.0,8.98,T2,,C,1,non,Sophie Mercier,People Ops Coordinator,"1 personne active / 14 j, sans demande",email,new_business,PROSPECT_TIEDE,1,0.0,0
