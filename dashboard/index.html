@@ -341,12 +341,17 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .drmr b{flex:0 0 44%;font-weight:600;color:var(--text)}
 .drmr span{flex:1;color:var(--text-2)}
 .dataw{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
-.dbar{flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
-.dtabs{display:flex;gap:3px;background:var(--soft);padding:3px;border-radius:var(--r-pill)}
+.dbar{flex:0 0 auto;display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+.dtabs{display:flex;align-items:center;flex-wrap:wrap;gap:3px;background:var(--soft);padding:3px;border-radius:var(--r-pill)}
 .dtabs button{padding:6px 13px;border-radius:var(--r-pill);font-size:var(--fs-sm);font-weight:600;color:var(--text-2);transition:.16s var(--e);white-space:nowrap}
 .dtabs button b{font-weight:700;color:var(--text-3);margin-left:5px;font-variant-numeric:tabular-nums}
 .dtabs button.on{background:var(--panel);color:var(--text);box-shadow:var(--shadow-card)}
 .dtabs button.on b{color:var(--violet)}
+/* Deux des cinq tables n'existaient pas : il faut le lire AVANT de cliquer,
+   pas seulement dans la légende une fois dedans. */
+.dgrp{padding:0 7px 0 9px;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3);white-space:nowrap}
+.dgrp.nous{color:var(--violet)}
+.dsep{width:1px;height:17px;background:var(--line);margin:0 5px}
 .dbar input{flex:1;max-width:340px;padding:8px 12px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--soft);color:var(--text);font-size:var(--fs-sm);outline:0;transition:.14s}
 .dbar input:focus{border-color:var(--violet);box-shadow:0 0 0 3px var(--violet-soft);background:var(--panel)}
 .dcount{margin-left:auto;font-size:var(--fs-xs);color:var(--text-3);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -368,6 +373,9 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .dtable tr:hover td.add{background:var(--violet-soft);filter:brightness(.97)}
 .dtable td.num{text-align:right;font-variant-numeric:tabular-nums}
 .dload{padding:60px;text-align:center;color:var(--text-3);font-size:var(--fs-sm)}
+/* Une table qui s'arrête sans le dire donne l'impression d'être bloquée. */
+.dtable tfoot td.dfin{position:sticky;left:0;padding:20px 14px;text-align:center;background:var(--soft);
+  color:var(--text-3);font-size:var(--fs-xs);white-space:normal;border-bottom:0}
 @media(max-width:680px){
   .dbar{flex-wrap:wrap;gap:8px;padding:10px 12px}
   .dbar input{max-width:none;width:100%;order:3}
@@ -714,9 +722,13 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
       <div class="dataw">
         <div class="dbar">
           <div class="dtabs" id="dtabs">
-            <button data-t="companies" class="on">Entreprises <b>20 519</b></button>
+            <span class="dgrp">reçus de vous</span>
             <button data-t="accounts">Fiches CRM <b>30 000</b></button>
             <button data-t="contacts">Contacts <b>77 199</b></button>
+            <button data-t="events">Événements <b>94 838</b></button>
+            <span class="dsep"></span>
+            <span class="dgrp nous">produits par nous</span>
+            <button data-t="companies" class="on">Entreprises <b>20 519</b></button>
             <button data-t="hot_list">Hot list <b>60</b></button>
           </div>
           <input id="dq" type="search" placeholder="Rechercher…" autocomplete="off">
@@ -2035,15 +2047,18 @@ var ORIG={
  accounts:["account_id","account_name","domain","industry","employee_range","country",
            "lifecycle_stage","created_date","last_activity_date","owner","arr_eur","renewal_date"],
  contacts:["contact_id","account_id","first_name","last_name","email","job_title","opted_out","created_date"],
+ events:"*",   /* "*" = tout est d'origine : le fichier est publié tel quel */
  hot_list:[]
 };
 var LEGENDE={
  companies:["champ repris de vos fiches, consolidé","champ produit par le nettoyage"],
  accounts :["colonnes d'origine, jamais modifiées","colonnes ajoutées par le nettoyage"],
  contacts :["colonnes d'origine, jamais modifiées","colonnes ajoutées par le nettoyage"],
+ events   :["le fichier tel que vous nous l'avez donné — rien ajouté, rien retiré, rien trié",null],
  hot_list :[null,"table entièrement produite — elle n'existait pas"]
 };
-var TLABEL={companies:"entreprises",accounts:"fiches CRM",contacts:"contacts",hot_list:"lignes"};
+var TLABEL={companies:"entreprises",accounts:"fiches CRM",contacts:"contacts",
+            events:"événements",hot_list:"lignes"};
 
 function loadTables(){
   if(T[TCUR]) { renderTable(); return; }
@@ -2080,10 +2095,12 @@ function renderTable(){
     });
   }
   var LIM=400, show=rows.slice(0,LIM);
-  var og=ORIG[TCUR]||[];
+  var og=ORIG[TCUR]||[], tout=(og==="*");
+  /* tout===true : la table est le fichier reçu, aucune colonne n'est de nous */
+  function ajoutee(nom){ return tout ? false : og.indexOf(nom)<0; }
   var h='<thead><tr>';
   for(var c=0;c<t.cols.length;c++){
-    var add = og.indexOf(t.cols[c])<0;
+    var add = ajoutee(t.cols[c]);
     var ar = (TSORT===c) ? '<span class="ar">'+(TDESC?"▾":"▴")+'</span>' : '';
     h+='<th class="'+(add?"add":"")+'" data-c="'+c+'">'+esc(t.cols[c])+ar+'</th>';
   }
@@ -2091,26 +2108,36 @@ function renderTable(){
   for(var i=0;i<show.length;i++){
     h+='<tr>';
     for(var c2=0;c2<t.cols.length;c2++){
-      var v=show[i][c2], add2 = og.indexOf(t.cols[c2])<0;
+      var v=show[i][c2], add2 = ajoutee(t.cols[c2]);
       var num = v!=="" && !isNaN(parseFloat(v)) && String(v).length<12;
       h+='<td class="'+(add2?"add ":"")+(num?"num":"")+'" title="'+esc(v)+'">'+esc(v)+'</td>';
     }
     h+='</tr>';
   }
   h+='</tbody>';
+  /* Le plafond est annoncé LÀ OÙ on le rencontre — en bas. Annoncé seulement en
+     haut, il donne l'impression d'un défilement bloqué. */
+  if(rows.length>LIM){
+    h+='<tfoot><tr><td class="dfin" colspan="'+t.cols.length+'">'
+      +'Fin des '+LIM+' premières lignes affichées — il y en a '+nf(rows.length)
+      +' au total. Cherchez ci-dessus (nom, domaine, identifiant…) pour atteindre les autres, '
+      +'ou cliquez un en-tête pour trier l’ensemble.</td></tr></tfoot>';
+  }
   document.getElementById("dtable").innerHTML=h;
   var nadd=0;
-  for(var c3=0;c3<t.cols.length;c3++) if(og.indexOf(t.cols[c3])<0) nadd++;
+  for(var c3=0;c3<t.cols.length;c3++) if(ajoutee(t.cols[c3])) nadd++;
   document.getElementById("dcount").textContent =
      nf(rows.length)+" "+(TLABEL[TCUR]||"lignes")+(rows.length>LIM?" — "+LIM+" affichées":"")
-     + (og.length ? " · "+nadd+" colonnes produites sur "+t.cols.length
+     + (tout    ? " · "+t.cols.length+" colonnes, toutes d’origine"
+      : og.length ? " · "+nadd+" colonnes produites sur "+t.cols.length
                   : " · "+t.cols.length+" colonnes, toutes produites");
   /* la légende suit la table : elle doit décrire ce qu'on voit, pas un cas général */
   var L=LEGENDE[TCUR]||LEGENDE.accounts, lg=document.getElementById("dlegend");
+  var src = (TCUR==="events") ? "events.csv (le fichier brut)" : "dashboard_data/";
   if(lg) lg.innerHTML =
       (L[0] ? '<span><i class="og"></i>'+esc(L[0])+'</span>' : '')
-    + '<span><i class="ad"></i>'+esc(L[1])+'</span>'
-    + '<span style="margin-left:auto">source : <b>dashboard_data/</b> · branche <b>cleanup-pipeline</b></span>';
+    + (L[1] ? '<span><i class="ad"></i>'+esc(L[1])+'</span>' : '')
+    + '<span style="margin-left:auto">source : <b>'+src+'</b> · branche <b>cleanup-pipeline</b></span>';
 }
 function initData(){
   document.getElementById("dtabs").onclick=function(e){

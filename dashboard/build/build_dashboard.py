@@ -5,8 +5,12 @@ LE TABLEAU DE BORD SE RECONSTRUIT ENTIÈREMENT DEPUIS CE DÉPÔT.
 
     python3 dashboard/build/build_dashboard.py
 
-Produit tout ce que dashboard/index.html consomme :
+Produit un dossier publiable COMPLET — l'écran et ses données, jamais l'un
+sans l'autre :
 
+    dashboard/dist/index.html        l'écran (copié, jamais modifié)
+    dashboard/dist/_headers
+    dashboard/dist/_redirects
     dashboard/dist/wtc.json          les vues Macro, Logique et Ops
     dashboard/dist/tables/*.json     l'explorateur de données
 
@@ -27,12 +31,16 @@ Ce que le script lit :
   dashboard_data/dashboard_data.json              le détail, les gardes, le graphe
   dashboard/build/steps_all.json                  les 12 étapes du nettoyage
 """
-import csv, json, os, re, sys
+import csv, json, os, re, shutil, sys
 from collections import defaultdict, Counter
 from datetime import date, timedelta
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import verifie_ecran as VE          # l'interdit d'écran est un contrôle du build
+
 RACINE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DD     = os.path.join(RACINE, "dashboard_data")
+SRC    = os.path.join(RACINE, "dashboard")
 DIST   = os.path.join(RACINE, "dashboard", "dist")
 os.makedirs(os.path.join(DIST, "tables"), exist_ok=True)
 
@@ -215,6 +223,11 @@ bon &= ck("chaque cascade tombe juste à l'écran",
 bon &= ck("aucun compte affiché sous le seuil de son tier",
           not [d for d in detail.values()
                if d["porte"] != "comite" and d["tier"] == "T2" and d["brut"] < SEUIL_T2])
+fautes_ecran = VE.controle(os.path.join(SRC, "index.html"))
+bon &= ck("l'interdit d'écran tient", not fautes_ecran,
+          "%d violation(s)" % len(fautes_ecran))
+for f in fautes_ecran:
+    print("          !! " + f)
 if not bon:
     print("\nL'écran ne dirait pas la même chose que le moteur. Rien n'est écrit.")
     sys.exit(1)
@@ -237,15 +250,32 @@ CTC = ["contact_id","account_id","entity_id","entity_source","is_orphan",
        "opted_out","is_bot","person_primary","duplicate_of",
        "created_date","created_date_parsed","created_date_format","created_date_flag"]
 
+# events.csv est publié TEL QUEL — c'est le troisième fichier reçu, et c'est
+# celui qui produit le score. Aucune colonne retirée, aucune ligne filtrée :
+# en retirer une reviendrait à montrer notre lecture du fichier plutôt que le
+# fichier. Les colonnes sont donc lues sur place, jamais listées ici.
+EVT = list(ev[0].keys()) if ev else []
+
+
 def table(rows, cols=None):
     c2 = cols or list(rows[0].keys())
     return {"cols": c2, "rows": [[(r.get(k) or "") for k in c2] for r in rows]}
 
 for nom, t in (("companies", table(comp)), ("accounts", table(acc, ACC)),
-               ("contacts", table(ctc, CTC)), ("hot_list", table(hot))):
+               ("contacts", table(ctc, CTC)), ("events", table(ev, EVT)),
+               ("hot_list", table(hot))):
     p = os.path.join(DIST, "tables", nom + ".json")
     json.dump(t, open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("  %-10s %6d lignes · %2d colonnes · %.2f Mo"
           % (nom, len(t["rows"]), len(t["cols"]), os.path.getsize(p) / 1e6))
+
+# ══════════════════════════════════════════════════ 9. l'écran part avec ses données
+# Sans cette copie, dist/ ne contient que du JSON : publier dist/ depuis un clone
+# nu servirait un dossier sans écran — ou, pire, l'écran d'un build précédent
+# laissé là à la main. C'est exactement la passe manuelle qu'on a supprimée.
+for f in ("index.html", "_headers", "_redirects"):
+    shutil.copyfile(os.path.join(SRC, f), os.path.join(DIST, f))
+    print("  %-12s copié tel quel · %.0f Ko"
+          % (f, os.path.getsize(os.path.join(DIST, f)) / 1e3))
 
 print("\nLe tableau de bord est reconstruit. dashboard/dist/ est prêt à être publié.")
