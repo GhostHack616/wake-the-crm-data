@@ -101,7 +101,10 @@ for r in comp:
                  r.get("employee_range", ""), r.get("lifecycle_consolidated", ""),
                  arr, round(float(st.get("score") or 0), 1),
                  n_ev.get(e, 0), n_ctc.get(e, 0), int(r.get("n_records") or 1),
-                 K.get(st.get("tier"), 0)])
+                 K.get(st.get("tier"), 0),
+                 # la liste d'appel : le tier dit la température, elle dit la
+                 # conversation. Les deux se filtrent séparément à l'écran.
+                 st.get("liste", "")])
 
 # ══════════════════════════════════════════════════ 4. le rejeu, jour par jour
 # Poids d'animation seulement : l'intensité d'un scintillement, pas un score.
@@ -140,6 +143,8 @@ for c in eng["hot_list"]:
         "name": nom_de[c["entity_id"]], "score": round(c["score"], 1),
         "brut": round(c["score_brut"], 1), "tier": c["tier"], "porte": c.get("porte", ""),
         "play": c.get("play", ""), "segment": c.get("segment", ""), "fit": c.get("fit", ""),
+        "liste": c.get("liste", ""), "ajuste": c.get("play_ajuste_par", ""),
+        "playseg": c.get("play_segment", ""),
         "qui": c.get("qui_appeler", ""), "titre": c.get("son_titre", ""),
         "canal": c.get("canal", ""), "preuve": c.get("preuve", ""),
         "comite": str(c.get("comite_personnes_14j", "")), "sponsor": c.get("sponsor_decideur", ""),
@@ -290,6 +295,11 @@ EVT = list(ev[0].keys()) if ev else []
 def table(rows, cols=None):
     c2 = cols or list(rows[0].keys())
     return {"cols": c2, "rows": [[(r.get(k) or "") for k in c2] for r in rows]}
+
+# La liste d'appel vit dans le fichier du moteur : on la recopie sur la table
+# des entreprises pour qu'elle soit filtrable dans l'explorateur.
+for r in comp:
+    r["liste"] = etat.get(r["entity_id"], {}).get("liste", "")
 
 for nom, t in (("companies", table(comp)), ("accounts", table(acc, ACC)),
                ("contacts", table(ctc, CTC)), ("events", table(ev, EVT)),

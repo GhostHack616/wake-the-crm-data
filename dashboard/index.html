@@ -158,6 +158,22 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .mk-date{font-family:var(--display);font-size:26px;font-weight:600;color:#fff;letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;line-height:1.15}
 .mk-sub{font-size:12px;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums;margin-top:1px}
+/* Le menu des listes : le tier dit la température, la liste dit la conversation.
+   Rien n'est sélectionné par défaut, la sphère reste pleine. */
+.mlist{position:absolute;left:22px;top:112px;z-index:4;display:flex;flex-direction:column;
+  gap:5px;width:196px}
+.ml-h{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.42);
+  margin-bottom:3px}
+.mlist button{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:7px 11px;border-radius:9px;font-size:12px;font-weight:600;text-align:left;
+  color:rgba(255,255,255,.62);background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.07);transition:.15s var(--e)}
+.mlist button:hover{color:#fff;background:rgba(255,255,255,.1)}
+.mlist button b{font-weight:700;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.4)}
+.mlist button.on{color:#0d0f14;background:#e9e6ff;border-color:#e9e6ff}
+.mlist button.on b{color:#0d0f14}
+.ml-n{font-size:10px;color:rgba(255,255,255,.3);margin-top:4px;line-height:1.4}
+@media(max-width:900px){ .mlist{display:none} }
 .mstats{position:absolute;top:20px;right:22px;display:flex;flex-direction:column;gap:9px;z-index:3;
   align-items:flex-end;pointer-events:none}
 .mstat{display:flex;align-items:baseline;gap:9px}
@@ -165,16 +181,16 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
   font-variant-numeric:tabular-nums;letter-spacing:-.01em;min-width:64px;text-align:right}
 .mstat span{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
   color:rgba(255,255,255,.38);font-weight:600;min-width:96px}
-.mstat.hot b{color:#a99bff}
+.mstat.hot b{color:#e3a648}
 .mstat.risk b{color:#e8685c}
-.mstat.warm b{color:#e3a648}
+.mstat.warm b{color:#a99bff}
 .ticker{position:absolute;left:22px;bottom:18px;width:min(370px,42vw);z-index:3;pointer-events:none;
   display:flex;flex-direction:column-reverse;gap:5px;max-height:190px;overflow:hidden;
   -webkit-mask-image:linear-gradient(to top,#000 62%,transparent);mask-image:linear-gradient(to top,#000 62%,transparent)}
 .tk{display:flex;align-items:center;gap:8px;font-size:11.5px;color:rgba(255,255,255,.6);
   animation:tkIn .4s var(--e);white-space:nowrap;overflow:hidden}
 .tk i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3);flex:0 0 auto}
-.tk.hot i{background:#a99bff;box-shadow:0 0 8px 1px rgba(169,155,255,.6)}
+.tk.hot i{background:#e3a648;box-shadow:0 0 8px 1px rgba(227,166,72,.6)}
 .tk.hot{color:rgba(255,255,255,.92);font-weight:600}
 .tk.risk i{background:#e8685c;box-shadow:0 0 8px 1px rgba(232,104,92,.5)}
 .tk b{color:#fff;font-weight:600}
@@ -340,6 +356,20 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .drmr{display:flex;gap:11px;padding:9px 0;border-top:1px solid var(--line-2);font-size:var(--fs-xs)}
 .drmr b{flex:0 0 44%;font-weight:600;color:var(--text)}
 .drmr span{flex:1;color:var(--text-2)}
+/* second rang de filtres : la liste d'appel, plus discret que le tier */
+.lf2{margin-bottom:6px}
+.lf2 button{font-size:11px;padding:4px 9px;opacity:.78}
+.lf2 button.on{opacity:1}
+/* le tag de liste sur la fiche : la conversation, pas la température */
+.tagl{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;
+  letter-spacing:.02em;background:var(--soft-2);color:var(--text)}
+.tagl.lretention{background:rgba(232,104,92,.14);color:var(--danger)}
+.tagl.lexpansion{background:rgba(79,208,138,.16);color:var(--ok)}
+.tagl.lacquisition{background:var(--violet-soft);color:var(--violet)}
+.tagl.lreconquete{background:rgba(227,166,72,.16);color:var(--warn)}
+/* quand l'étiquette du CRM et l'activité ne disent pas la même chose, on montre
+   les deux : le conflit est une information, pas une gêne */
+.conflit{display:block;margin-top:5px;font-size:11px;color:var(--text-3);font-style:italic}
 .dataw{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
 .dbar{flex:0 0 auto;display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
 .dtabs{display:flex;align-items:center;flex-wrap:wrap;gap:3px;background:var(--soft);padding:3px;border-radius:var(--r-pill)}
@@ -691,11 +721,19 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
             <div class="mstat warm"><b id="sWarm">0</b><span>tier 2 : à travailler</span></div>
             <div class="mstat risk"><b id="sRisk">0</b><span>perdus : canal mort</span></div>
           </div>
+          <div class="mlist" id="mlist">
+            <div class="ml-h">les quatre listes d'appel</div>
+            <button data-l="acquisition">Acquisition<b></b></button>
+            <button data-l="expansion">Expansion<b></b></button>
+            <button data-l="retention">Rétention<b></b></button>
+            <button data-l="reconquete">Reconquête<b></b></button>
+            <div class="ml-n">rien de sélectionné : on voit tout</div>
+          </div>
           <div class="ticker" id="ticker"></div>
           <div class="legend">
-            <div class="lg"><i style="background:#9a8dff;box-shadow:0 0 8px 1px rgba(154,141,255,.6)"></i>tier 1 : ils ont levé la main</div>
-            <div class="lg"><i style="background:#e8685c"></i>ils s'en vont : rétention</div>
-            <div class="lg"><i style="background:#e3a648"></i>tier 2 : ça chauffe</div>
+            <div class="lg"><i style="background:#e3a648;box-shadow:0 0 8px 1px rgba(227,166,72,.6)"></i>tier 1 : ils ont levé la main</div>
+            <div class="lg"><i style="background:#e8685c;box-shadow:0 0 10px 2px rgba(232,104,92,.75)"></i>il part : à rappeler en premier</div>
+            <div class="lg"><i style="background:#9a8dff"></i>tier 2 : ça chauffe</div>
             <div class="lg"><i style="background:none;border:1.5px solid #6d737f"></i>perdu : canal mort</div>
           </div>
           <div class="gtip" id="gtip"></div>
@@ -726,6 +764,12 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
         <aside class="llist">
           <div class="lsearch">
             <input id="q" type="search" placeholder="Rechercher un compte, un domaine…" autocomplete="off">
+            <div class="lfilters lf2" id="flistes">
+              <button data-g="acquisition">Acquisition</button>
+              <button data-g="expansion">Expansion</button>
+              <button data-g="retention">Rétention</button>
+              <button data-g="reconquete">Reconquête</button>
+            </div>
             <div class="lfilters" id="filters">
               <button data-f="hot" class="on">Tier 1</button>
               <button data-f="warm">Tier 2</button>
@@ -928,7 +972,10 @@ var G=(function(){
   var NODES=[],NODEI={},day=0,playing=false,speed=3,acc=0;
   var awake=0,nHot=0,nWarm=0,nRisk=0;
   var ax=-0.34,ay=0.55,tax=-0.34,tay=0.55,spin=0.0015,drag=null,SEL=null;
-  var COL={froid:[0,0,0],t1:[154,141,255],risque:[232,104,92],t2:[227,166,72],perdu:[109,115,127]};
+  /* Le rouge est une URGENCE, pas une température : il marque ceux qui partent.
+     Récupérer un client coûte plus cher que d'en garder un, donc il passe avant
+     les comptes chauds. Le Tier 1 prend l'orange, le Tier 2 le violet. */
+  var COL={froid:[0,0,0],t1:[227,166,72],risque:[232,104,92],t2:[154,141,255],perdu:[109,115,127]};
   var PERSONA={buyer:"#9a8dff",champion:"#4fd08a","utilisateur":"#a6abb6",bruit:"#4a4f5a"};
 
   function semer(n){
@@ -959,6 +1006,28 @@ var G=(function(){
       if(b2>=0) E.push(ia,b2);
     }
     MESH=new Int32Array(E);
+  }
+  /* Le menu des listes n'enlève aucun point de la sphère : il éteint le halo de
+     ceux qui ne sont pas dans la liste choisie. La masse fait la profondeur,
+     c'est la lumière qui se déplace. */
+  var LISTE="";
+  function dansListe(o){ return !LISTE || o.liste===LISTE; }
+  function poserListe(l){
+    LISTE = (LISTE===l) ? "" : l;
+    var m=document.getElementById("mlist");
+    if(m){
+      m.querySelectorAll("button").forEach(function(b2){
+        b2.classList.toggle("on", b2.dataset.l===LISTE);
+      });
+      var n=m.querySelector(".ml-n");
+      if(n){
+        var LC2=(D.counts&&D.counts.listes)||{}, tot=LC2[LISTE];
+        n.textContent = LISTE
+          ? NODES.filter(dansListe).length+" assez chaud(s) pour être allumé(s)"
+            + (tot? " sur "+String(tot).replace(/\B(?=(\d{3})+(?!\d))/g," ")+" dans la liste" : "")
+          : "rien de sélectionné : on voit tout";
+      }
+    }
   }
   function couleur(i){
     var k=kind[i];
@@ -1046,6 +1115,9 @@ var G=(function(){
     for(var v=0;v<vis.length;v++){
       var o2=vis[v], c2=o2.col, prof2=(o2.z+1)*0.5;
       var poids=o2.k===2?1:(o2.k===1?0.62:0.5);
+      /* hors de la liste choisie, le point reste là mais s'éteint presque :
+         on garde la masse, on déplace la lumière */
+      if(!dansListe(o2)) poids *= 0.09;
       var al2=(0.35+prof2*0.65)*o2.on*poids;
       var rad=(3.2+Math.sqrt(o2.score)*0.72)*o2.d;
       var css="rgba("+c2[0]+","+c2[1]+","+c2[2]+",";
@@ -1245,7 +1317,8 @@ var G=(function(){
       });
       NODEI[j]=NODES.length;
       NODES.push({ i:j, nom:d.name, k:kind[j], col:couleur(j), score:Math.max(1,d.score),
-                   comite:parseInt(d.comite,10)||0, pp:pp, on:0, pulse:0, rang:99 });
+                   comite:parseInt(d.comite,10)||0, pp:pp, on:0, pulse:0, rang:99,
+                   liste:(D.ents[j]&&D.ents[j][11])||"" });
     });
     NODES.filter(function(o){return o.k===2;}).sort(function(a,b){return b.score-a.score;})
          .forEach(function(o,r){ o.rang=r; });
@@ -1314,6 +1387,19 @@ var G=(function(){
       var i=+g.dataset.i; fermerPop(); SEL=i; openLogic(i);
     };
 
+    var ml=document.getElementById("mlist");
+    if(ml){
+      /* les compteurs viennent du moteur, jamais écrits en dur */
+      var LC=(D.counts&&D.counts.listes)||{};
+      ml.querySelectorAll("button").forEach(function(b3){
+        var v=LC[b3.dataset.l];
+        b3.querySelector("b").textContent = (v==null? "" : String(v).replace(/\B(?=(\d{3})+(?!\d))/g," "));
+      });
+      ml.onclick=function(e){
+        var b4=e.target.closest("button[data-l]"); if(!b4) return;
+        poserListe(b4.dataset.l);
+      };
+    }
     reset(); paintHud();
     raf=requestAnimationFrame(loop);
     setTimeout(function(){ setPlay(true); },600);
@@ -1335,7 +1421,10 @@ var PERSOFR={buyer:'décideur',champion:'champion',utilisateur:'utilisateur',san
 function persoFr(p){ return PERSOFR[p] || p; }
 function vf(v){ return String(v).replace('.', ','); }
 function nf(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," "); }
-var FILT="hot", SEL=null;
+/* Deux filtres qui se croisent : le tier dit la température, la liste dit la
+   conversation. « Tier 1 » seul mélange 22 prospections, 1 upsell, 1 sauvetage
+   et 2 reconquêtes ; c'est le croisement qui rend la liste utilisable. */
+var FILT="hot", GRP="", SEL=null;
 
 function listIdx(){
   var q=(document.getElementById("q").value||"").trim().toLowerCase();
@@ -1347,7 +1436,8 @@ function listIdx(){
     }
     return out;
   }
-  function byScore(a){ return a.sort(function(x,y){ return D.ents[y][6]-D.ents[x][6]; }); }
+  function grp(a){ return GRP ? a.filter(function(i2){ return D.ents[i2][11]===GRP; }) : a; }
+  function byScore(a){ return grp(a).sort(function(x,y){ return D.ents[y][6]-D.ents[x][6]; }); }
   if(FILT==="hot")  return byScore(D.top.slice());
   if(FILT==="trap") return byScore((D.perdus||D.suspects||[]).slice());
   if(FILT==="warm"){ for(var j=0;j<D.ents.length;j++) if(D.ents[j][10]===1) out.push(j); return byScore(out).slice(0,200); }
@@ -1379,12 +1469,18 @@ function renderDetail(i){
     return;
   }
   var col = d.tier==="T1" ? "violet" : "warn";
+  var LISTEFR={acquisition:"acquisition",expansion:"expansion",
+               retention:"à sauver",reconquete:"reconquête",nurture:"nurturing"};
   var PLAY={new_business:"🎯 nouvelle affaire",retention:"📈 rétention",win_back:"🔄 reconquête",
             risque:"⚠️ risque",reactivation:"⚡ réactivation",nurture:"🌱 nurturing"};
   var h='<div class="dh"><div class="dh-t">'
     +'<h2>'+esc(d.name)+'</h2>'
     +'<div class="dh-sub">'+esc(d.segment)+' · fit '+esc(d.fit)+' · '
-    +esc(d.porte ? (PLAY[d.play]||d.play) : 'hors file : canal mort')+'</div></div>'
+    +(d.porte ? '<b class="tagl l'+esc(d.liste||'')+'">'+esc(LISTEFR[d.liste]||d.liste||PLAY[d.play]||d.play)+'</b>'
+              : 'hors file : canal mort')
+    +(d.ajuste ? '<span class="conflit">le CRM disait '+esc(PLAY[d.playseg]||d.playseg)
+                 +' · l\'activité dit départ en cours</span>' : '')
+    +'</div></div>'
     +'<div class="verdict"><div class="n" style="color:var(--'+col+')">'+vf(d.score)+'</div>'
     +'<div class="l" style="color:var(--'+col+')">'+esc(d.tier)
     +(d.brut&&d.brut>d.score+0.05?' · brut '+vf(d.brut.toFixed(1)):'')+'</div></div></div>';
@@ -1898,7 +1994,7 @@ var PROC=[
  r:"Parce qu'une moyenne punit les comptes où beaucoup de monde est inscrit mais où une seule personne bouge. Or c'est souvent celle-là qui compte. La somme récompense l'activité réelle ; le nombre de personnes actives est traité séparément, par la porte du comité."
 },
 {
- p:"5 · Scorer", t:"La deuxième porte", h:"Zéro point, et pourtant le plus urgent", court:true, vue:"logic",
+ p:"5 · Scorer", t:"La deuxième porte", h:"Zéro point, et pourtant le plus urgent", court:true, vue:"logic", compte:"Sylvasolfinance Group",
  say:"Cette boîte est dans ma liste, mais pas comme prospect. Mon système a vu que c'était un départ en cours, et il dit appel de rétention, pas de vente. Je n'ai pas ignoré le piège, je l'ai transformé en action utile.",
  pb:"Un ex-client dont quatre personnes visitent les pages « résilier mon abonnement » et « exporter mes données » sur quatorze jours. Ses visites négatives le plombent à moins 76 avant plancher. Un filtre sur le score ne le verra jamais, et un scoring naïf le classe chaud : un commercial appelle pour VENDRE à une boîte qui PART.",
  bareme:[
@@ -2457,9 +2553,15 @@ function procShow(i){
     Q.forEach(function(z){
       h+='<div class="sask"><div class="aq">🎤 '+esc(z[0])+'</div><div class="ar">'+z[1]+'</div></div>';
     });
-    if(x.vue)  h+='<button class="sgo" data-go="'+x.vue+'">Le montrer dans le tableau de bord →</button>';
     h+='</div></div>';
   }
+  /* Le bouton reste HORS du repli : il doit se cliquer sans rien déplier ni
+     défiler. Une carte peut pointer un compte précis, et le bouton l'ouvre
+     directement : sur ce fichier, taper « Sylvasol » dans la recherche sort 21
+     comptes, chercher à la main devant quelqu'un est un piège. */
+  if(x.vue)  h+='<button class="sgo" data-go="'+x.vue+'"'
+               +(x.compte?' data-compte="'+esc(x.compte)+'"':'')
+               +'>'+(x.compte?'Ouvrir '+esc(x.compte)+' →':'Le montrer dans le tableau de bord →')+'</button>';
   document.getElementById("pBody").innerHTML=h;
   document.getElementById("sScroll").scrollTop=0;
   document.getElementById("pPrev").disabled=PI===0;
@@ -2482,7 +2584,15 @@ function initProc(){
     var d=e.target.closest("i[data-i]"); if(d) procShow(+d.dataset.i);
   };
   document.getElementById("pBody").onclick=function(e){
-    var g=e.target.closest("[data-go]"); if(g) showView(g.dataset.go);
+    var g=e.target.closest("[data-go]"); if(!g) return;
+    if(g.dataset.compte){
+      var cible=null;
+      Object.keys(D.detail).forEach(function(k){
+        if(D.detail[k].name===g.dataset.compte) cible=+k;
+      });
+      if(cible!==null){ openLogic(cible); return; }
+    }
+    showView(g.dataset.go);
   };
   var menu=document.getElementById("pMenu");
   document.getElementById("pPlan").onclick=function(){ menu.classList.add("on"); };
@@ -2849,6 +2959,13 @@ function boot(){
     var b=e.target.closest("button[data-f]"); if(!b) return;
     FILT=b.dataset.f;
     this.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x===b); });
+    renderRows();
+  };
+  /* un second clic sur la même liste la désélectionne : par défaut on voit tout */
+  document.getElementById("flistes").onclick=function(e){
+    var b=e.target.closest("button[data-g]"); if(!b) return;
+    GRP = (GRP===b.dataset.g) ? "" : b.dataset.g;
+    this.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x.dataset.g===GRP); });
     renderRows();
   };
   document.getElementById("rows").onclick=function(e){
