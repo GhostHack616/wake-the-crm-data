@@ -471,6 +471,31 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
   .loop .lh{display:none} .loop .lv{display:block}
 }
 
+/* ── le schéma de l'agent : une entrée, un serveur, une porte, des outils ──
+   Volontairement la même grammaire que le schéma ci-dessus : les boîtes et les
+   flux réutilisent .lbox / .lnom / .lrole / .lflux / .lpuce, donc les mêmes
+   variables de thème. Deux schémas dans le même déroulé ne doivent pas parler
+   deux langages graphiques.
+   Ce qui est propre à celui-ci : la colonne de connecteurs à droite, et la
+   porte de validation. */
+.becca{margin:34px auto 0;max-width:680px}
+.becca svg{width:100%;height:auto;display:block;overflow:visible}
+.becca .bh{display:block} .becca .bv{display:none}
+/* la porte est encadrée en violet, pas en gris : en gris elle se lirait comme
+   une étape de plus, alors que c'est le verrou du dispositif */
+.bgate{fill:var(--violet-soft);stroke:var(--violet);stroke-width:1.5}
+/* un connecteur est un outil tiers, pas une brique que je possède : puce basse
+   et fond discret, jamais la même boîte que l'orchestrateur */
+.bchip{fill:var(--soft);stroke:var(--line);stroke-width:1}
+.bctxt{font-size:11px;font-weight:600;fill:var(--text-2)}
+/* les libellés de flux donnent le sens de lecture ; à 8 px ils restent en
+   retrait au lieu de concurrencer les noms des boîtes */
+.blab{font-size:8px;letter-spacing:.13em;text-transform:uppercase;fill:var(--text-3)}
+@media(max-width:600px){
+  .becca{max-width:240px;margin-top:26px}
+  .becca .bh{display:none} .becca .bv{display:block}
+}
+
 /* les types de carte : un déroulé de 26 temps sur un seul gabarit endort */
 .sphase{text-align:center}
 .sphase .pn{font-family:var(--display);font-size:clamp(64px,13vw,150px);font-weight:600;
@@ -1946,6 +1971,124 @@ var PROC=[
  body:"Chaque ligne porte qui appeler, son titre, la preuve datée, le canal, le nombre de personnes actives et le sponsor. Les comptes à signaux négatifs partent avec la mention <b>appel de rétention, pas de prospection</b> : un compte qui s'en va ne s'appelle pas comme un compte qui arrive. Et un garde-fou refuse d'écrire le mot « comité » quand il n'y a pas trois personnes derrière.",
  q:"Pourquoi Slack et pas le CRM ?",
  r:"Parce que le CRM est l'endroit où l'information dort : c'est le problème qu'on vient de résoudre, pas la solution. Le message arrive là où l'équipe est déjà, avec un bouton vers le tableau de bord pour ceux qui veulent creuser. Ce qui ne se voit pas ne se travaille pas."
+},
+{
+ p:"7 · Becca", phase:"7", t:"· Becca ·", h:"Becca",
+ say:"Deuxième partie : quelque chose que j'ai construit. Un agent qui tourne depuis avril, 24 h sur 24, sur mon serveur, et qui a livré de vraies campagnes."
+},
+{
+ p:"7 · Becca", t:"Le problème", h:"Le goulot d'étranglement, c'était moi", court:true,
+ say:"Je suis seul sur mon agence, avec plusieurs clients en même temps. Chaque opération passait par mes mains, dans le bon outil, au bon moment.",
+ kpi:[["5","outils pour une seule opération : Notion, Drive, Apify, Lemlist, n8n"],
+      ["1","point d'entrée voulu à la place, qui connaît mes clients"],
+      ["24 h/24","le besoin réel : que ça bosse quand je ne bosse pas"]],
+ pb:"Les opérations sont éclatées partout : les tâches dans Notion, les fichiers dans Drive, le scraping dans Apify, les campagnes dans Lemlist, les automatisations dans n8n. Aucun de ces outils ne parle aux autres, et le lien entre les étapes, c'est moi.",
+ body:"Ce que je voulais : <b>un seul point d'entrée</b>, qui connaît mes clients, et qui bosse quand je ne bosse pas.",
+ q:"Pourquoi construire, plutôt que prendre un outil qui fait déjà ça ?",
+ r:"Parce que je veux pouvoir tout casser et tout reconstruire. Un VPS à quelques euros par mois, le code dans mon dépôt, les fiches clients versionnées avec lui. <b>Rien de loué.</b>"
+},
+{
+ p:"7 · Becca", t:"Mes choix", h:"Mon serveur, mon code, rien de loué", court:true,
+ say:"Un VPS à quelques euros par mois, le code dans mon dépôt. Rien de loué : je peux tout casser et tout reconstruire.",
+ bareme:[
+  ["Quatre choix, et le pourquoi de chacun"],
+  ["Mon serveur, mon code", "rien de loué",
+   "un VPS à quelques euros par mois, le code dans mon dépôt privé. Je peux tout casser et tout reconstruire"],
+  ["Telegram comme interface", "zéro app en plus",
+   "je suis déjà dessus toute la journée. Pas de nouvelle app, pas de tableau de bord de plus"],
+  ["Un seul agent, simple", "pas de microservices",
+   "un orchestrateur avec des connecteurs vers mes outils, pas une usine à gaz"],
+  ["Il propose, je valide, il exécute", "la règle d'or",
+   "aucune écriture sans mon OK. Un agent qui envoie un email tout seul chez un client, c'est fini pour moi"]],
+ pb:"Un agent qui écrit dans les outils d'un client peut faire des dégâts qu'aucun correctif ne rattrape. Un email parti est parti.",
+ body:"L'orchestrateur tourne sur le VPS, relancé automatiquement au démarrage et après un plantage. Les connecteurs vers Notion, Drive, Apify, n8n et Lemlist sont branchés dessus, et ils ne se chargent que si le message en a besoin. Le profil de l'agent, ses règles et les fiches clients vivent dans le dépôt, versionnés avec le code.",
+ q:"Un seul agent, ce n'est pas un peu court ?",
+ r:"C'est un choix de taille de problème : je suis seul, avec une poignée de clients et des opérations qui reviennent. Un orchestrateur et des connecteurs suffisent, et rien ne part sans que je puisse le relire. Pas de microservices, pas d'usine à gaz."
+},
+{
+ p:"7 · Becca", t:"Le cas réel, bout en bout", h:"Un message Telegram, 176 contacts propres", court:true,
+ say:"Je lui écris sur Telegram : trouve-moi les wedding planners d'Île-de-France pour un client événementiel. Il scrape via Apify, filtre, enrichit, et sort un CSV prêt pour Lemlist. Je valide, la campagne part.",
+ geant:["176","contacts propres en sortie, depuis 300 fiches scrapées. Et ce pipeline a tourné <b>le lendemain de la mise en production</b>."],
+ kpi:[["48 %","d'ouverture sur la campagne"],
+      ["3,8 %","de réponse"],
+      ["2 centimes","le coût d'un échange avec l'agent"]],
+ bareme:[
+  ["Trois optimisations dont je suis content"],
+  ["Le profil de l'agent est mis en cache", "90 % de coût en moins",
+   "dès le deuxième message. Un échange me coûte environ 2 centimes"],
+  ["Il ne charge que les outils dont le message a besoin", "chargement à la demande",
+   "au-delà de 5 ou 6 connecteurs actifs, il hésite dans ses choix"],
+  ["Le modèle cher ne se déclenche que sur la rédaction", "cold email, propale",
+   "le reste tourne sur le modèle standard"]],
+ pb:"Cette opération, avant, c'était ma journée : ouvrir l'outil de scraping, récupérer le fichier brut, garder les colonnes utiles, vérifier les emails, préparer l'import. Rien de difficile, et rien qui avance pendant que je dors.",
+ body:"La chaîne réelle : le scraping part sur Apify, le fichier brut atterrit dans le Drive du client, le filtrage des colonnes utiles passe par un workflow n8n, la tâche correspondante est mise à jour dans Notion. Je vois le résultat dans Telegram, je valide, la campagne part.",
+ q:"Qu'est-ce qui est automatique, et qu'est-ce qui reste à toi ?",
+ r:"Il scrape, il filtre, il enrichit, il livre le fichier. Le départ de la campagne, c'est moi. <b>Il propose, je valide, il exécute</b> : aucune écriture chez un client ne part sans mon OK."
+},
+{
+ p:"7 · Becca", t:"La chaîne, en un schéma", h:"Il propose, je valide, il exécute", court:true,
+ say:"Telegram en entrée, l'orchestrateur sur mon serveur, les connecteurs vers mes outils. Et une porte de validation avant toute écriture.",
+ becca:true,
+ pb:"Un agent qui écrit tout seul dans les outils d'un client, personne ne peut le laisser tourner. Sans point d'arrêt, la première erreur part chez le client et ne revient pas.",
+ body:"Le point d'entrée est unique : tout arrive par Telegram, tout repart par Telegram. Entre les deux, l'orchestrateur choisit les connecteurs dont le message a besoin, prépare l'action, et me la présente. Ce qu'il exécute ensuite, je l'ai vu avant.",
+ q:"Et si un jour tu veux qu'il exécute sans toi ?",
+ r:"Pas sur une écriture chez un client. La règle ne bouge pas : <b>il propose, je valide, il exécute</b>. Un agent qui envoie un email tout seul chez un client, c'est fini pour moi.",
+ qs:[["Et les gros volumes de données, ils passent par où ?","Pas par l'agent. Au-delà de <b>100 lignes</b>, le transport passe par un workflow n8n : la source parle directement à la destination, l'agent ne fait que déclencher et rendre compte. Cette règle est née d'un incident, il est à l'écran juste après."]]
+},
+{
+ p:"7 · Becca", t:"Où ça casse", h:"Trois casses, trois règles", court:true,
+ say:"Un agent en production, ça casse. Je préfère vous dire où, et ce que chaque casse a produit comme règle.",
+ bareme:[
+  ["Ce qui a cassé, et la règle qui en est sortie"],
+  ["La boucle infernale", "plus de 100 lignes, ça passe par un workflow",
+   "il a aspiré 500 Ko de données scrapées dans sa mémoire de travail. Limite de débit atteinte, il réessaie, re-bloqué, en boucle. J'ai dû redémarrer le serveur à la main"],
+  ["La session perdue", "pas de redémarrage pendant un job",
+   "j'ai redéployé pendant qu'un pipeline tournait. Sa mémoire de session était en RAM : tout perdu, il ne savait plus ce qu'il faisait"],
+  ["L'email trop agressif", "une relecture avant toute rédaction",
+   "il a écrit à une mairie avec un lien de prise de rendez-vous direct et une recommandation surinterprétée. Sur du B2G, ça ne passe pas"]],
+ kpi:[["3","casses en production, toutes datées"],
+      ["3","règles nées de ces casses"],
+      ["500 Ko","les données qui ont déclenché la première"]],
+ pb:"L'email trop agressif n'est jamais parti : il a été attrapé à la relecture. C'est exactement ce que la règle d'or protège, et c'est la seule raison pour laquelle je peux raconter cet incident au lieu de le subir.",
+ body:"Ce que j'en retiens comme méthode : une casse ne se referme pas avec un correctif, elle se referme avec <b>une règle écrite</b>. Les trois règles ci-dessus vivent dans le profil de l'agent, versionnées avec le code. Et depuis l'incident de la mairie, chaque client a son cadre commercial écrit : le ton, le cadrage, et le type d'appel à l'action autorisé.",
+ q:"La session perdue, c'est corrigé ?",
+ r:"Non, et je le dis. La règle en place est provisoire : pas de redémarrage pendant un job. La vraie correction, c'est de persister les sessions au lieu de les garder en mémoire vive. <b>C'est une dette, et j'assume de la citer.</b>"
+},
+{
+ p:"7 · Becca", t:"Ce que je referais différemment", h:"Trois choses que je ferais dans l'autre ordre", court:true,
+ say:"Si je recommençais aujourd'hui, trois décisions changeraient de place dans le planning.",
+ bareme:[
+  ["Ce que je ferais autrement, et quand"],
+  ["Les sessions en base de données", "dès le jour 1", "pas en mémoire vive"],
+  ["La couche de résilience", "avant les premiers pipelines",
+   "pas après usage réel. Les deux premières casses viennent de là"],
+  ["La rotation des clés d'API", "dès le setup",
+   "j'en ai exposé dans le chat au début. C'est le genre d'erreur qu'on ne fait qu'une fois"]],
+ pb:"Les trois viennent du même réflexe : livrer la fonction d'abord, le cadre ensuite. Sur un agent qui écrit dans de vrais outils, l'ordre inverse coûte moins cher.",
+ body:"Aucune des trois n'est un choix de technologie, ce sont des choix d'ordre. La fonction marchait dès le premier jour ; c'est le cadre autour qui manquait, et il a fallu deux incidents pour l'écrire.",
+ q:"Et la rotation des clés, elle est faite ?",
+ r:"Pas encore, et c'est écrit dans mes dettes. Les clés vivent dans l'environnement du serveur, pas dans le dépôt, mais celles que j'ai exposées au début doivent changer. Je préfère le dire que vous laisser le trouver."
+},
+{
+ p:"7 · Becca", t:"Le mémo", h:"Chaque casse est devenue une règle", court:true,
+ say:"Becca tourne depuis avril, 24 h sur 24, sur mon serveur. Elle a livré de vraies campagnes pour de vrais clients. Et je peux vous citer les trois fois où elle a cassé, parce que chaque casse est devenue une règle.",
+ kpi:[["avril","en production depuis, 24 h sur 24, sur mon serveur"],
+      ["1 + 5","un point d'entrée, Telegram, et cinq outils branchés"],
+      ["176","contacts livrés sur le premier pipeline réel"],
+      ["48 % / 3,8 %","ouverture et réponse sur la campagne, pour 2 centimes par échange"]],
+ bareme:[
+  ["Les quatre phrases à retenir"],
+  ["Il propose, je valide, il exécute", "la règle d'or",
+   "aucune écriture chez un client sans mon OK"],
+  ["Mon serveur, mon code", "rien de loué",
+   "je peux tout casser et tout reconstruire"],
+  ["Plus de 100 lignes de données, ça passe par un workflow", "jamais par l'agent",
+   "la règle née de la boucle infernale"],
+  ["Une casse se referme avec une règle", "3 sur 3",
+   "pas avec un correctif. C'est ce qui rend l'agent utilisable sur du client"]],
+ body:"Ce que je retiens du chantier : la valeur n'est pas dans le modèle, elle est dans le cadre autour. Le point d'entrée unique, la porte de validation, la règle des 100 lignes, le cadre commercial par client. C'est ce qui sépare une démo d'un agent qui tourne depuis avril.",
+ q:"Qu'est-ce qui prouve que ça tourne vraiment, et pas seulement chez toi le jour de la démo ?",
+ r:"Le pipeline dont je vous ai parlé a tourné <b>le lendemain de la mise en production</b>, sur un vrai client, et la campagne est partie derrière. Depuis, l'agent est le point d'entrée de mes opérations tous les jours. Et les trois casses que je vous ai citées sont la preuve la plus solide qu'il tourne : un système qui n'a jamais cassé est un système qui n'a jamais servi."
 }
 ];
 
@@ -2005,6 +2148,72 @@ function loopSVG(){
     +'<div class="lrule">Les deux modèles ne se parlent jamais : <b>tout passe par une seule '
     +'personne</b>, qui compare et tranche. Dès que l\'un construisait, l\'autre reprenait '
     +'depuis les fichiers bruts.</div></div>';
+}
+
+function beccaSVG(){
+  /* La chaîne réelle de l'agent : un point d'entrée, l'orchestrateur sur mon
+     serveur, la porte de validation, puis les outils. Le sens de lecture est
+     écrit sur les flux : je demande, il propose, il exécute. Rien n'atteint un
+     outil sans passer par la porte : c'est le seul chemin dessiné. */
+  var OUTILS=["Notion","Drive","Apify","n8n","Lemlist"];
+  function boite(x,y,w,h,nom,role,type){
+    var mid=type==="mid", on=mid?" on":"";
+    var cls=(type==="gate")?"bgate":("lbox"+(mid?" mid":""));
+    return '<rect class="'+cls+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="10"/>'
+      +'<text class="lnom'+on+'" x="'+(x+w/2)+'" y="'+(y+h/2-3)
+      +'" text-anchor="middle">'+nom+'</text>'
+      +'<text class="lrole'+on+'" x="'+(x+w/2)+'" y="'+(y+h/2+16)
+      +'" text-anchor="middle">'+role+'</text>';
+  }
+  function puce(x,y,w,h,nom){
+    return '<rect class="bchip" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="7"/>'
+      +'<text class="bctxt" x="'+(x+w/2)+'" y="'+(y+h/2+4)+'" text-anchor="middle">'+nom+'</text>';
+  }
+  var ALT="Telegram en entrée, l'orchestrateur sur mon serveur, une validation obligatoire, "
+        + "puis les cinq outils branchés : Notion, Drive, Apify, n8n, Lemlist";
+  /* ── horizontal ── */
+  var H='<svg class="bh" viewBox="0 0 680 200" role="img" aria-label="'+ALT+'">';
+  H+=boite(0,67,114,66,"Telegram","moi");
+  H+=boite(172,67,146,66,"Orchestrateur","mon serveur","mid");
+  H+=boite(368,67,100,66,"Je valide","obligatoire","gate");
+  H+='<path class="lflux a" d="M118 89 H168"/><polygon class="lpuce" points="167,85 174,89 167,93"/>';
+  H+='<path class="lflux b" d="M168 111 H118"/><polygon class="lpuce" points="119,107 112,111 119,115"/>';
+  H+='<text class="blab" x="143" y="58" text-anchor="middle">je demande</text>';
+  H+='<text class="blab" x="143" y="152" text-anchor="middle">il propose</text>';
+  H+='<path class="lflux a" d="M322 100 H364"/><polygon class="lpuce" points="363,96 370,100 363,104"/>';
+  /* l'éventail : 62 px de course horizontale pour 60 px de dénivelé, sinon les
+     branches du haut et du bas arrivent à la verticale et la pointe ment */
+  OUTILS.forEach(function(n,k){
+    var haut=27+k*30, cy=haut+13;
+    H+=puce(538,haut,142,26,n);
+    H+='<path class="lflux a" d="M472 100 C503 100 503 '+cy+' 534 '+cy+'"/>';
+    H+='<polygon class="lpuce" points="533,'+(cy-4)+' 540,'+cy+' 533,'+(cy+4)+'"/>';
+  });
+  H+='<text class="blab" x="609" y="196" text-anchor="middle">il exécute</text>';
+  H+='</svg>';
+  /* ── vertical, pour les petits écrans : même chaîne, les outils sur une
+     colonne, reliés par une seule dorsale plutôt que cinq courbes ── */
+  var V='<svg class="bv" viewBox="0 0 240 470" role="img" aria-label="'+ALT+'">';
+  V+=boite(44,0,156,56,"Telegram","moi");
+  V+=boite(44,104,156,56,"Orchestrateur","mon serveur","mid");
+  V+=boite(44,208,156,52,"Je valide","obligatoire","gate");
+  V+='<path class="lflux a" d="M106 60 V100"/><polygon class="lpuce" points="102,99 106,106 110,99"/>';
+  V+='<path class="lflux b" d="M138 100 V60"/><polygon class="lpuce" points="134,61 138,54 142,61"/>';
+  V+='<path class="lflux a" d="M122 164 V204"/><polygon class="lpuce" points="118,203 122,210 126,203"/>';
+  /* une seule dorsale à gauche plutôt que cinq courbes : à 240 px de large,
+     l'éventail devient un nœud illisible */
+  V+='<path class="lflux a" d="M122 264 V282 H12 V441"/>';
+  OUTILS.forEach(function(n,k){
+    var haut=300+k*32, cy=haut+13;
+    V+=puce(44,haut,156,26,n);
+    V+='<path class="lflux a" d="M12 '+cy+' H40"/>';
+    V+='<polygon class="lpuce" points="39,'+(cy-4)+' 46,'+cy+' 39,'+(cy+4)+'"/>';
+  });
+  V+='</svg>';
+  return '<div class="becca">'+H+V
+    +'<div class="lrule">La règle d\'or : <b>il propose, je valide, il exécute</b>. '
+    +'Aucune écriture chez un client ne part sans mon OK. Et au-delà de 100 lignes '
+    +'de données, le transport passe par un workflow, jamais par l\'agent.</div></div>';
 }
 
 /* Une scène = un titre, une phrase, trois nombres. Tout le reste se déplie
@@ -2081,6 +2290,7 @@ function procShow(i){
   /* le schéma passe AVANT le grand chiffre : il illustre la phrase dite, le
      chiffre est la conclusion */
   if(x.loop) h+=loopSVG();
+  if(x.becca) h+=beccaSVG();
   if(x.geant) h+='<div class="sgeant'+(x.geant[0].length>9?" long":"")+'">'+esc(x.geant[0])
                 +'</div><div class="sgeant-l">'+x.geant[1]+'</div>';
   if(x.bareme) h+=baremeHTML(x.bareme);
