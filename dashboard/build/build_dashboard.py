@@ -232,9 +232,35 @@ if not bon:
     print("\nL'écran ne dirait pas la même chose que le moteur. Rien n'est écrit.")
     sys.exit(1)
 
+# ── mise en forme du texte venu du moteur, avant qu'il atteigne l'écran
+# Le moteur produit des libellés destinés à ses propres rapports. Deux familles
+# n'ont rien à faire sur un écran montré à un tiers, et c'est au rendu de les
+# traiter, pas au moteur de changer ses fichiers :
+#   1. le tiret cadratin, interdit dans tout le texte affiché ;
+#   2. les notes de chantier interne (« repérée par l'IA n°2 au montage du push »),
+#      qui sont du jargon d'équipe, pas une information sur le CRM.
+NOTES_INTERNES = re.compile(r"\s*[.·]?\s*Rep[ée]r[ée]e? par l'IA n\W?\s?°?\s?2[^.]*\.?", re.I)
+
+
+def propre(x):
+    if isinstance(x, str):
+        y = NOTES_INTERNES.sub("", x)
+        y = y.replace(" — ", ", ").replace("—", ",")
+        return y
+    if isinstance(x, dict):
+        return {k: propre(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [propre(v) for v in x]
+    return x
+
+
+out = propre(out)
 json.dump(out, open(os.path.join(DIST, "wtc.json"), "w", encoding="utf-8"),
           ensure_ascii=False, separators=(",", ":"))
-print("\nwtc.json : %.2f Mo" % (os.path.getsize(os.path.join(DIST, "wtc.json")) / 1e6))
+_txt = open(os.path.join(DIST, "wtc.json"), encoding="utf-8").read()
+print("\nwtc.json : %.2f Mo · tirets cadratins : %d · notes internes : %d"
+      % (os.path.getsize(os.path.join(DIST, "wtc.json")) / 1e6,
+         _txt.count("—"), len(NOTES_INTERNES.findall(_txt))))
 
 # ══════════════════════════════════════════════════ 8. l'explorateur de données
 ACC = ["account_id","account_name","name_norm","dup_marker","entity_id","is_master","merged_into",

@@ -543,7 +543,12 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
   align-items:center;padding:64px 40px 34px}
 .sinner{width:100%;max-width:820px;text-align:center;margin:auto}
 .skick{font-size:10px;letter-spacing:.19em;text-transform:uppercase;color:var(--violet);
-  font-weight:700;margin-bottom:16px}
+  font-weight:700;margin-bottom:16px;display:flex;align-items:center;justify-content:center;
+  flex-wrap:wrap;gap:0 8px;line-height:1.7}
+/* l'étape est le repère utile, la position est un repère de secours : plus discrète */
+.skick .kdot{font-style:normal;opacity:.45}
+.skick .kpos{font-style:normal;color:var(--text-3);letter-spacing:.12em;
+  padding-left:10px;margin-left:2px;border-left:1px solid var(--line)}
 .sh1{font-family:var(--display);font-size:clamp(28px,4.4vw,54px);font-weight:600;
   letter-spacing:-.028em;line-height:1.06}
 .ssay{font-size:clamp(15px,1.5vw,20px);line-height:1.55;color:var(--text-2);margin-top:20px;
@@ -1321,6 +1326,8 @@ var G=(function(){
    ══════════════════════════════════════════════════════════════ */
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+/* virgule decimale : l'ecran est en francais, le point est un tell technique */
+function vf(v){ return String(v).replace('.', ','); }
 function nf(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," "); }
 var FILT="hot", SEL=null;
 
@@ -1348,7 +1355,7 @@ function renderRows(){
     var tag = (dd&&dd.porte==="comite")
       ? '<em style="font-style:normal;color:var(--violet);font-weight:600"> · par le comité</em>' : '';
     h+='<div class="lrow'+(SEL===i?" on":"")+'" data-i="'+i+'">'
-      +'<div class="lrow-m"><b>'+esc(e[0])+'</b><span>'+esc(e[1]||"—")+(e[2]?" · "+esc(e[2]):"")+tag+'</span></div>'
+      +'<div class="lrow-m"><b>'+esc(e[0])+'</b><span>'+esc(e[1]||"·")+(e[2]?" · "+esc(e[2]):"")+tag+'</span></div>'
       +'<div class="sc k'+e[10]+'">'+e[6]+'</div></div>';
   });
   document.getElementById("rows").innerHTML=h||'<div class="empty" style="padding:30px">Aucun résultat.</div>';
@@ -1465,7 +1472,7 @@ var PROC=[
 {
  p:"1 · L'analyse", t:"Comment on a travaillé", court:true,
  h:"La preuve que c'est moi qui dirige",
- say:"J'ai fait travailler deux IA en parallèle, chacune vérifiant le travail de l'autre. Elles ont produit une vingtaine d'erreurs. Aucune n'a atteint le livrable, parce qu'elles se sont attrapées entre elles. Mais les décisions qui ont changé le résultat, c'est moi qui les ai prises.",
+ say:"J'ai fait travailler deux IA en parallèle, chacune reprenant le travail de l'autre depuis les fichiers bruts. Une vingtaine d'erreurs sont sorties, et plusieurs sont arrivées jusqu'à l'écran. Aucune n'y est restée, parce que celle qui n'avait pas écrit allait la chercher. Et les décisions qui ont changé le résultat, c'est moi qui les ai prises.",
  loop:true,
  geant:["10","fois où j'ai dit non. Je ne vous dis pas « j'ai tout relu » : tout le monde le prétend, personne ne peut le prouver. Je peux vous citer les dix décisions, avec ce que chacune a changé."],
  bareme:[
@@ -1499,7 +1506,7 @@ var PROC=[
       ["69,7 M€","d'ARR additionné qu'on ne pouvait pas défendre"]],
  body:"C'est cette liste qui a donné la structure du chantier : <b>réparer</b> ce qui est réparable, <b>reconstruire</b> la table qui manquait (celle des entreprises), puis <b>classer</b>. Trois phases, douze étapes, traitées une par une.",
  q:"Vous avez trouvé ça comment, exactement ?",
- r:"En comptant. Pas en ouvrant le fichier au hasard : en passant chaque colonne au crible et en comparant deux comptages indépendants. Tous les chiffres de cet écran se recalculent depuis les CSV d'origine."
+ r:"En comptant. Pas en ouvrant le fichier au hasard : en passant chaque colonne au crible et en comparant deux comptages indépendants. Tous les chiffres que le moteur produit se recalculent depuis les CSV d'origine, et le build refuse d'écrire si l'écran ne dit pas la même chose que le moteur."
 },
 {
  p:"1 · L'analyse", t:"La règle posée avant tout code", court:true,
@@ -1766,7 +1773,7 @@ var PROC=[
      ["Comment vous garantissez que vos règles sont vraiment appliquées, et pas seulement écrites ?","Chaque décision a une ligne dans une table : la règle, où elle est implémentée, et le contrôle qui prouve qu'elle tourne. Aujourd'hui les <b>28 règles sur 28</b> sont garanties par un contrôle automatique. La table est régénérée à chaque exécution : une règle qui perdrait son contrôle repasserait en rouge sans que personne ait à y penser.<br><br>Cette table est née d'un vrai bug : une règle actée, documentée, jamais implémentée, avec les 88 contrôles de l'époque tous au vert. Le code faisait exactement ce qui était écrit ; c'est ce qui était écrit qui ne disait pas ce qu'on avait décidé. D'où le verrou : <b>un statut ne se déclare pas, il se constate</b>."]]
 },
 {
- p:"5 · Scorer", phase:"5", t:"— Scorer —", h:"Scorer",
+ p:"5 · Scorer", phase:"5", t:"· Scorer ·", h:"Scorer",
  say:"Le CRM est propre. Maintenant il faut sortir les comptes qui valent un appel, et pouvoir expliquer chaque point."
 },
 {
@@ -1930,7 +1937,7 @@ var PROC=[
  r:"Aujourd'hui, non. C'est une protection, pas une entrée : si un jour un compte accumule assez de gestes pour dépasser trente sans jamais rien demander, il mérite un appel et la règle le sortira.<br><br>Sur ce fichier, l'accumulation pure n'atteint jamais le Tier 1 sans conversion. Le chemin existe pour un vrai CRM, ici il ne se déclenche pas. Une protection qui ne s'est jamais déclenchée, je préfère l'annoncer que la laisser découvrir dans le code."
 },
 {
- p:"6 · Le résultat", phase:"6", t:"— Le résultat —", h:"Le résultat",
+ p:"6 · Le résultat", phase:"6", t:"· Le résultat ·", h:"Le résultat",
  say:"Vingt mille cinq cent dix-neuf entreprises. Voilà où va chacune, et ce qu'on en fait."
 },
 {
@@ -2009,9 +2016,9 @@ var PROC=[
  p:"7 · Becca", t:"Le cas réel, bout en bout", h:"Un message Telegram, 176 contacts propres", court:true,
  say:"Je lui écris sur Telegram : trouve-moi les wedding planners d'Île-de-France pour un client événementiel. Il scrape via Apify, filtre, enrichit, et sort un CSV prêt pour Lemlist. Je valide, la campagne part.",
  geant:["176","contacts propres en sortie, depuis 300 fiches scrapées. Et ce pipeline a tourné <b>le lendemain de la mise en production</b>."],
- kpi:[["48 %","d'ouverture sur la campagne"],
-      ["3,8 %","de réponse"],
-      ["2 centimes","le coût d'un échange avec l'agent"]],
+ kpi:[["300 → 176","fiches scrapées, contacts exploitables en sortie"],
+      ["2 centimes","le coût d'un échange avec l'agent"],
+      ["1","validation humaine avant que quoi que ce soit sorte"]],
  bareme:[
   ["Trois optimisations dont je suis content"],
   ["Le profil de l'agent est mis en cache", "90 % de coût en moins",
@@ -2049,7 +2056,7 @@ var PROC=[
  kpi:[["3","casses en production, toutes datées"],
       ["3","règles nées de ces casses"],
       ["500 Ko","les données qui ont déclenché la première"]],
- pb:"L'email trop agressif n'est jamais parti : il a été attrapé à la relecture. C'est exactement ce que la règle d'or protège, et c'est la seule raison pour laquelle je peux raconter cet incident au lieu de le subir.",
+ pb:"L'email trop agressif, je l'ai vu au moment de valider. C'est exactement le rôle de la règle d'or : sans la porte de validation, il partait. Et la correction n'est pas « faire attention », c'est une passe de relecture systématique avant toute rédaction, plus un cadre commercial écrit par client.",
  body:"Ce que j'en retiens comme méthode : une casse ne se referme pas avec un correctif, elle se referme avec <b>une règle écrite</b>. Les trois règles ci-dessus vivent dans le profil de l'agent, versionnées avec le code. Et depuis l'incident de la mairie, chaque client a son cadre commercial écrit : le ton, le cadrage, et le type d'appel à l'action autorisé.",
  q:"La session perdue, c'est corrigé ?",
  r:"Non, et je le dis. La règle en place est provisoire : pas de redémarrage pendant un job. La vraie correction, c'est de persister les sessions au lieu de les garder en mémoire vive. <b>C'est une dette, et j'assume de la citer.</b>"
@@ -2075,7 +2082,7 @@ var PROC=[
  kpi:[["avril","en production depuis, 24 h sur 24, sur mon serveur"],
       ["1 + 5","un point d'entrée, Telegram, et cinq outils branchés"],
       ["176","contacts livrés sur le premier pipeline réel"],
-      ["48 % / 3,8 %","ouverture et réponse sur la campagne, pour 2 centimes par échange"]],
+      ["2 centimes","le coût d'un échange, profil en cache et escalade de modèle"]],
  bareme:[
   ["Les quatre phrases à retenir"],
   ["Il propose, je valide, il exécute", "la règle d'or",
@@ -2285,7 +2292,13 @@ function procShow(i){
     procDots(); procList(); majChemin();
     return;
   }
-  var h='<div class="skick">'+esc(x.p)+'</div><h1 class="sh1">'+esc(x.h)+'</h1>'
+  /* Le fil : la phase, PUIS l'étape, PUIS la position. Le titre de l'étape ne
+     vivait que dans le menu « Le plan » : sur la carte, on ne savait pas où on
+     en était. */
+  var h='<div class="skick">'+esc(x.p)
+       +(x.t ? '<i class="kdot">·</i>'+esc(x.t) : '')
+       +'<i class="kpos">'+(PI+1)+' / '+PROC.length+'</i></div>'
+       +'<h1 class="sh1">'+esc(x.h)+'</h1>'
        +'<div class="ssay">'+esc(x.say)+'</div>';
   /* le schéma passe AVANT le grand chiffre : il illustre la phrase dite, le
      chiffre est la conclusion */
@@ -2371,7 +2384,7 @@ function renderOps(){
     +'<div class="kpi hi"><b>'+D.counts.hot+'</b><span>comptes hot</span><em>seuil '+D.config.thresholds.hot+' pts</em></div>'
     +'<div class="kpi"><b>'+D.counts.warm+'</b><span>warm</span><em>seuil '+D.config.thresholds.warm+' pts</em></div>'
     +'<div class="kpi al"><b>'+nf(D.counts.risk)+'</b><span>perdus : canal mort</span><em>le score y est, le canal n\'y est plus</em></div>'
-    +'<div class="kpi"><b>'+done+' / '+S.length+'</b><span>étapes cleanup</span><em>phase '+(S[Math.min(done,S.length-1)].phase||"—")+'</em></div>'
+    +'<div class="kpi"><b>'+done+' / '+S.length+'</b><span>étapes cleanup</span><em>phase '+(S[Math.min(done,S.length-1)].phase||"·")+'</em></div>'
     +'<div class="kpi"><b>'+nf(D.counts.dormant)+'</b><span>entités muettes</span><em>0 event sur la fenêtre</em></div>'
     +'</div>';
 
@@ -2397,12 +2410,14 @@ function renderOps(){
       +'</svg><div class="curve-lg">'
       +'<span><i style="background:var(--violet)"></i>seuil hot <b>'+D.config.thresholds.hot+' pts</b></span>'
       +'<span><i style="background:var(--warn)"></i>seuil warm <b>'+D.config.thresholds.warm+' pts</b></span>'
-      +'<span>rang 20 <b>'+c[19]+'</b> → rang 40 <b>'+c[39]+'</b></span>'
-      +'<span>max <b>'+c[0]+'</b> · médiane base <b>6,2</b></span></div>'
+      +'<span>rang 20 <b>'+vf(c[19])+'</b> → rang 40 <b>'+vf(c[39])+'</b></span>'
+      +'<span>max <b>'+vf(c[0])+'</b> · médiane des comptes qui portent un signal <b>0,6</b> · <b>14 709</b> à zéro</span></div>'
       +'<div class="note" style="margin-top:14px">Le seuil n\'est pas une note sur 100 : le score est une somme de points non bornée. '
-      +'Il est posé <b>sur la rupture</b> : entre le 20<sup>e</sup> et le 40<sup>e</sup> compte le score s\'effondre de '+c[19]+' à '+c[39]+'. '
-      +'Couper à '+D.config.thresholds.hot+' revient à couper dans le vide : déplacer le seuil de ±20 points ne change quasiment pas la liste. '
-      +'C\'est ce qui le rend défendable : pas le chiffre, la falaise.</div>'
+      +'Il est posé <b>sur la rupture</b> : entre le 20<sup>e</sup> et le 40<sup>e</sup> compte le score s\'effondre de '+vf(c[19])+' à '+vf(c[39])+'. '
+      +'Et le seuil de points n\'est pas ce qui fait entrer en Tier 1 : ça, c\'est une porte, une demande explicite ou un comité actif. '
+      +'Le 30 est un garde-fou d\'accumulation qui ne s\'est jamais déclenché, le meilleur compte sans porte plafonne à <b>20,4</b>. '
+      +'Mesuré dans les deux sens : le monter à 50 ne change <b>rien</b>, le descendre à 10 ferait entrer <b>13 comptes de plus</b>. '
+      +'C\'est la falaise qui rend le seuil défendable, pas le chiffre.</div>'
       +'</div></div>';
   })();
 
@@ -2420,7 +2435,7 @@ function renderOps(){
       +(s.insight?'<div class="stp-ins">'+esc(s.insight)+'</div>':'');
     if((s.rules||[]).length){
       h+='<table class="mini"><tr><th>Règle appliquée</th><th class="num">Volume</th><th>Exemple</th></tr>';
-      s.rules.forEach(function(r){ h+='<tr><td>'+esc(r.rule)+'</td><td class="num">'+nf(r.volume)+'</td><td>'+esc(r.example||"—")+'</td></tr>'; });
+      s.rules.forEach(function(r){ h+='<tr><td>'+esc(r.rule)+'</td><td class="num">'+nf(r.volume)+'</td><td>'+esc(r.example||"·")+'</td></tr>'; });
       h+='</table>';
     }
     if(cs.length){
