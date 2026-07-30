@@ -949,7 +949,7 @@ function runSplash(done){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   MACRO — le CRM comme un globe endormi. Chaque point = une entité.
+   MACRO — le CRM comme un globe endormi. Chaque point est une entreprise.
    Le rejeu du stream d'events allume les points jour après jour.
    ══════════════════════════════════════════════════════════════ */
 var G=(function(){
@@ -1486,11 +1486,13 @@ function renderDetail(i){
     +(d.brut&&d.brut>d.score+0.05?' · brut '+vf(d.brut.toFixed(1)):'')+'</div></div></div>';
 
   h+='<div class="facts">'
-    +'<div class="fact">'+(d.porte==="conversion"?'entré par <b>une demande</b>':d.porte==="comite"?'entré par <b>le comité</b>':'<b>aucune porte</b> : sorti des files')+'</div>'
+    +'<div class="fact">'+(d.porte==="conversion"?'il a <b>demandé</b> : rendez-vous ou formulaire'
+        :d.porte==="comite"?'<b>'+esc(d.comite)+' personnes bougent ensemble</b>, dont un décideur'
+        :'personne ne bouge, aucun canal ouvert')+'</div>'
     +'<div class="fact"><b>'+esc(d.comite)+'</b> personne'+(+d.comite>1?'s actives':' active')+' / 14 j</div>'
     +'<div class="fact">sponsor décideur <b>'+esc(d.sponsor)+'</b></div>'
     +(e[9]>1?'<div class="fact"><b>'+e[9]+'</b> fiches fusionnées</div>':'')
-    +(e[5]?'<div class="fact">ARR <b>'+nf(e[5])+' €</b></div>':'')
+    +(e[5]?'<div class="fact">contrat annuel <b>'+nf(e[5])+' €</b></div>':'')
     +'</div>';
 
   /* la ligne d'action */
@@ -1541,7 +1543,7 @@ function renderDetail(i){
   /* décroissance */
   var HL=D.config.half_life_days, pts=[];
   for(var t=0;t<=90;t+=2) pts.push([t/90*100, 100-Math.pow(.5,t/HL)*100]);
-  h+='<div class="sec"><div class="sec-h"><h3>Décroissance appliquée</h3><em>gestes : demi-vie '+HL+' j · preuves : 30 j</em></div>'
+  h+='<div class="sec"><div class="sec-h"><h3>Ce que le temps a effacé</h3><em>un clic perd la moitié en '+HL+' jours, un rendez-vous en 30</em></div>'
     +'<div class="card decay"><svg viewBox="0 0 100 100" preserveAspectRatio="none">'
     +'<polyline points="'+pts.map(function(p){return p[0].toFixed(1)+","+p[1].toFixed(1);}).join(" ")+'" fill="none" stroke="var(--violet)" stroke-width="1.6" vector-effect="non-scaling-stroke"/>'
     +'<line x1="0" y1="50" x2="100" y2="50" stroke="var(--line)" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>'
@@ -1575,7 +1577,7 @@ var PROC=[
 {
  p:"1 · L'analyse", t:"Comment on a travaillé", court:true,
  h:"La preuve que c'est moi qui dirige",
- say:"J'ai joué mes deux IA l'une contre l'autre. Chacune amenait une amélioration à l'autre, en repartant des fichiers bruts, ou parfois de ce que l'autre avait déjà fait. Et ça passait toujours par moi, parce que c'est moi qui devais trancher.",
+ say:"J'ai joué mes deux IA l'une contre l'autre. Chacune amenait une amélioration à l'autre, en repartant des fichiers de départ, ou parfois de ce que l'autre avait déjà fait. Et ça passait toujours par moi, parce que c'est moi qui devais trancher.",
  loop:true,
  bareme:[
   ["Des décisions où j'ai dit non, et ce que chacune a changé"],
@@ -1583,7 +1585,7 @@ var PROC=[
    "« fermer un canal, ce n'est pas être fermé à l'offre »"],
   ["Consulter sa facture est un signal de départ", "7 events sur 14 retirés",
    "« ça m'arrive sur n8n et je ne pars pas »"],
-  ["La page carrières vaut zéro point", "683 candidats flagués",
+  ["La page carrières vaut zéro point", "683 candidats repérés",
    "« ce n'est même pas un lead, ce n'est pas la bonne personne »"],
   ["On appelle le décideur le mieux placé", "on appelle celui qui a levé la main",
    "« si tu appelles mon CIO, il te dit qu'il n'a pas le temps »"]],
@@ -1593,7 +1595,7 @@ var PROC=[
  pb:"Le brief le dit lui-même : « IA bienvenue, mais tu dois pouvoir défendre chaque ligne de logique comme si tu l'avais écrite. » Ce n'est pas une tolérance, c'est le test. Et un modèle qui relit son propre travail ne trouve que ce qu'il a pensé à chercher : il faut un contradicteur, pas un correcteur.",
  body:"Les deux modèles ne se parlent jamais. Je suis le seul canal et le seul à trancher. Quand les chiffres divergeaient, personne n'argumentait : chacun renvoyait <b>sa définition exécutable et son chiffre</b>, et je comparais. Aucune décision n'a été prise parce qu'un modèle était plus convaincant que l'autre.<br><br>Et j'ai appris une règle à mes frais. Une fois, j'ai laissé l'une des deux avancer seule sur un lot : elle a poussé des modifications que je n'avais pas validées. Depuis, <b>rien ne part sans mon accord explicite</b>, et un accord ne vaut que pour le lot qu'il décrit.",
  q:"Et la double lecture, elle a attrapé quoi ?",
- r:"Un exemple, et il est parlant. Quand deux fiches de la même entreprise fusionnent, on avait décidé qu'une case vide devait se remplir depuis la fiche jumelle. C'était écrit. Ça n'avait jamais été codé pour le commercial responsable.<br><br>Résultat : <b>1 407 entreprises</b> sortaient sans commercial alors que leur fiche jumelle en portait un. Un manager aurait dû les réattribuer à la main, pour rien.<br><br>Et personne ne l'avait vu, parce que les <b>contrôles automatiques</b> (des tests qui se rejouent à chaque exécution du pipeline et l'arrêtent si un compteur sort de ses bornes) étaient <b>tous au vert</b>. Ils vérifiaient ce qu'on avait pensé à vérifier. Ils ne pouvaient pas voir une règle qu'on avait oublié d'écrire. C'est l'autre implémentation qui l'a trouvée, en refaisant le calcul de son côté.<br><br>La limite, je l'assume : ce croisement est manuel. Sur un vrai pipeline, les deux implémentations tourneraient automatiquement et la construction s'arrêterait dès qu'elles divergent."
+ r:"Un exemple, et il est parlant. Quand deux fiches de la même entreprise fusionnent, on avait décidé qu'une case vide devait se remplir depuis la fiche jumelle. C'était écrit. Ça n'avait jamais été codé pour le commercial responsable.<br><br>Résultat : <b>1 407 entreprises</b> sortaient sans commercial alors que leur fiche jumelle en portait un. Un manager aurait dû les réattribuer à la main, pour rien.<br><br>Et personne ne l'avait vu, parce que les <b>contrôles automatiques</b> (des tests qui se rejouent à chaque exécution et arrêtent tout si un compteur sort de ses bornes) étaient <b>tous au vert</b>. Ils vérifiaient ce qu'on avait pensé à vérifier. Ils ne pouvaient pas voir une règle qu'on avait oublié d'écrire. C'est l'autre implémentation qui l'a trouvée, en refaisant le calcul de son côté.<br><br>La limite, je l'assume : ce croisement est manuel. Sur un vrai pipeline, les deux implémentations tourneraient automatiquement et la construction s'arrêterait dès qu'elles divergent."
 },
 {
  p:"1 · L'analyse", t:"Ce que cette double lecture a trouvé", court:true,
@@ -1606,7 +1608,7 @@ var PROC=[
       ["2 671","fiches sans aucun domaine"],
       ["1 544","adresses email cassées : @@ ou espaces"],
       ["4 000","événements sans personne rattachée"],
-      ["69,7 M€","d'ARR additionné qu'on ne pouvait pas défendre"]],
+      ["69,7 M€","de chiffre d'affaires additionné, qu'on ne pouvait pas défendre : les clients partis y comptaient encore"]],
  body:"C'est cette liste qui a donné la structure du chantier : <b>réparer</b> ce qui est réparable, <b>reconstruire</b> la table qui manquait (celle des entreprises), puis <b>classer</b>. Trois phases, douze étapes, traitées une par une.",
  q:"Vous avez trouvé ça comment, exactement ?",
  r:"En comptant. Pas en ouvrant le fichier au hasard : en passant chaque colonne au crible et en comparant deux comptages indépendants. Tous les chiffres que le moteur produit se recalculent depuis les CSV d'origine, et le build refuse d'écrire si l'écran ne dit pas la même chose que le moteur."
@@ -1694,7 +1696,7 @@ var PROC=[
  q:"Vous avez deviné 2 538 domaines ?",
  r:"Je ne les ai pas devinés, je les ai <b>déduits et tracés</b>. Et j'ai validé la méthode avant de l'appliquer : sur les <b>25 785</b> comptes qui ont à la fois un domaine déclaré et des emails professionnels de contacts, la racine du domaine correspond aux emails dans <b>100 % des cas</b>, zéro divergence.<br><br>Si la correspondance est parfaite quand les deux existent, alors déduire depuis les emails quand le domaine manque est fondé. Je ne déduis que si tous les contacts sont unanimes, et il y a zéro cas ambigu. Chaque déduction porte <b>domain_source=inferred_from_contacts</b> : je ne cache pas l'inférence, je la documente.",
  qs:[["Pourquoi retirer l'extension ? acme.fr et acme.com peuvent être deux sociétés différentes.","J'ai mesuré avant de trancher : <b>5 547 racines</b> existent en plusieurs extensions dans cette base, et <b>zéro cas</b> où la même racine porte des noms d'entreprise différents. Et par sécurité, la fusion exige <b>aussi</b> l'égalité du nom normalisé : la racine seule ne décide jamais.<br><br>Je l'ai vérifié deux fois par deux chemins qui ne partagent aucune hypothèse : par les noms d'entreprise après normalisation, zéro divergence, et par les emails des contacts rattachés, zéro divergence non plus. Dernier point : aucune racine ne fait moins de six caractères, donc le risque classique de collision sur racine courte ne s'applique pas ici."],
-     ["Et s'il y avait des URL complètes, des sous-domaines, des cas tordus ?","Vérifié, pas supposé : <b>zéro protocole http</b>, un seul préfixe possible (www.), et exactement <b>5 extensions</b>. Le pipeline est défensif : une extension inconnue sortirait dans le rapport au lieu d'être traitée en silence."]]
+     ["Et s'il y avait des URL complètes, des sous-domaines, des cas tordus ?","Vérifié, pas supposé : <b>zéro protocole http</b>, un seul préfixe possible (www.), et exactement <b>5 extensions</b>. La chaîne de traitement est défensive : une extension inconnue sortirait dans le rapport au lieu d'être traitée en silence."]]
 },
 {
  p:"2 · Réparer", t:"Étape 4 : les noms", h:"La deuxième clé, et son banc d'essai", vue:"data",
@@ -1733,7 +1735,7 @@ var PROC=[
   ["3. Extraire la racine de l'adresse", "email_domain_root", "c'est le témoin de rattachement à la fusion"],
   ["4 et 5. Repérer la même personne en double", "email_is_duplicate",
    "une adresse portée par plusieurs fiches contact, c'est UNE personne : interdit de la compter deux fois dans un comité d'achat"]],
- body:"Le détail que je garde pour la fin : la réparation a <b>révélé un doublon invisible avant</b>. Une adresse cassée qui, une fois réparée, devient identique à celle d'un autre contact. C'est pour ça que la déduplication des personnes vient <b>après</b> le nettoyage, jamais avant.",
+ body:"Le détail que je garde pour la fin : la réparation a <b>révélé un doublon invisible avant</b>. Une adresse cassée qui, une fois réparée, devient identique à celle d'un autre contact. C'est pour ça que le repérage des doublons de personnes vient <b>après</b> le nettoyage, jamais avant.",
  q:"À quoi ça sert de réparer des emails si ça ne change aucun score ?",
  r:"À trois choses.<br><br><b>Un, la joignabilité</b> : le jour où un commercial écrit à un compte, l'adresse doit marcher.<br><b>Deux, la fusion</b> : le domaine de l'email est mon témoin de rattachement.<br><b>Trois, le comité d'achat</b> : 783 adresses sont portées par plusieurs fiches contact. La même personne comptée deux fois fabrique un faux groupe de 4 contacts actifs qui n'en sont que 2.<br><br>Et je le dis franchement : cette étape n'a fait gagner <b>aucun compte chaud</b>. C'est de l'assainissement, pas de la récupération de rappel.",
  qs:[["Donc les comptes prioritaires sont tous joignables par email ?","Non, et c'est une nuance que je préfère donner moi-même. <b>3 des comptes prioritaires</b> restent injoignables par email : un sans adresse, deux en adresse personnelle. Ça ne change pas leur score, <b>ça change le canal</b> : téléphone ou LinkedIn.<br><br>Attention à ne pas confondre avec un autre chiffre que je donne plus loin : <b>4 comptes joignables uniquement par téléphone</b>. Celui-là compte en plus l'interdiction d'écrire à une personne désabonnée, dont l'adresse fonctionne pourtant. Deux définitions, deux chiffres, les deux vrais."]]
@@ -1756,7 +1758,7 @@ var PROC=[
   ["Comptes à dernière activité dans le futur", "3", "neutralisés aussi"]],
  body:"La distinction entre les 414 et les 20 n'était pas dans ma première version. Elle est née d'une question posée pendant la revue : <b>et si c'était juste de l'attribution rétroactive ?</b> J'ai vérifié sur les données, et la réponse dépend du type d'événement. C'est pour ça que les deux cas ne sont plus traités pareil.",
  q:"Des événements avant la création du contact, c'est peut-être juste de l'attribution rétroactive, non ?",
- r:"Exact, et pour les visites web c'est même plausible : l'outil rattache rétroactivement les visites anonymes après un formulaire. J'ai séparé ces cas, <b>20 contacts</b>, bénéfice du doute.<br><br>Mais <b>414 sur 434</b> ont <b>reçu des emails</b> avant leur date de création. On ne peut pas recevoir rétroactivement un email. Ceux-là, c'est de la date corrompue.<br><br>Et dans les deux cas, je ne déclasse que <b>la date</b>, jamais les événements : la récence du scoring vient des événements, pas de ce champ."
+ r:"Exact, et pour les visites web c'est même plausible : l'outil rattache rétroactivement les visites anonymes après un formulaire. J'ai séparé ces cas, <b>20 contacts</b>, bénéfice du doute.<br><br>Mais <b>414 sur 434</b> ont <b>reçu des emails</b> avant leur date de création. On ne peut pas recevoir rétroactivement un email. Ceux-là, c'est de la date corrompue.<br><br>Et dans les deux cas, je ne déclasse que <b>la date</b>, jamais les événements : la fraîcheur du signal vient des événements, pas de ce champ."
 },
 {
  p:"3 · Reconstruire", t:"Étape 7 : la fusion", court:true, h:"30 000 fiches, 20 519 entreprises", vue:"data",
@@ -1769,19 +1771,19 @@ var PROC=[
   ["Clé 3, le domaine des emails des contacts", "témoin", "le vivant contrôle le déclaratif"]],
  bareme2:[
   ["Égalité exigée", "exacte", "garde-fou réel : Roccaviaforge n'est pas Roccaviafood"],
-  ["Élire la fiche de référence : une cascade, dans cet ordre"],
+  ["Élire la fiche de référence : on tranche dans cet ordre"],
   ["1. Jamais une fiche étiquetée (old), - import ou « 2 »", "critère d'exclusion", "elle est écartée avant tout le reste"],
   ["2. Le statut le plus avancé", "client, ex-client, négo, prospect, lead, perdu", "dans cet ordre"],
   ["3. À égalité, celle qui porte le chiffre d'affaires", "", ""],
   ["4. Encore à égalité, la plus ancienne", "", ""]],
  kpi:[["20 519","entreprises réelles"],["9 481","fiches absorbées, aucune supprimée"],
-      ["52,0 M€","d'ARR actif, sur 3 246 clients"],["14,6 M€","d'ARR ex-client, sur 2 094 churnés"]],
+      ["52,0 M€","facturés chaque année aux 3 246 clients actifs"],["14,6 M€","que rapportaient les 2 094 partis : le potentiel de reconquête"]],
  body:"<b>Les conflits ne sont jamais tranchés en silence.</b> 5 947 sur le pays, 251 sur le chiffre d'affaires, 5 067 sur le commercial, 6 858 sur le statut : chacun porte un drapeau et part en revue. Les cases vides se complètent depuis les fiches jumelles, avec la provenance écrite dans une colonne.<br><br>Deux pièges vérifiés nommément dans la table. <b>Grimodormobility</b> : un client à 40 000 € qui se réveille, donc de l'expansion, plus jamais de la prospection à froid. <b>BelfonexMedia</b> : trois fiches recollées, dont celle étiquetée « perdue » qui portait le formulaire.",
  q:"Comment vous savez que vous n'avez pas fusionné deux entreprises différentes ?",
- r:"Pas parce que ma clé est bonne. Parce que <b>deux clés indépendantes donnent la même partition, fiche par fiche, zéro écart sur 20 519 groupes</b>. L'une part du nom normalisé, l'autre du domaine et des emails des contacts : elles ne partagent aucune hypothèse.<br><br>Derrière, quatre contrôles :<br>• aucun groupe au-dessus de <b>4 fiches</b><br>• chaque fiche dans exactement <b>une</b> entité<br>• un équilibre arithmétique qui surveille la seule dépendance cachée de la clé : <b>20 753 moins 234 égale 20 519</b><br>• une corroboration : chaque fusion déclenchée par une étiquette de doublon a une seconde preuve indépendante, <b>234 sur 234</b><br><br>Et tout est réversible : chaque doublon garde un lien vers sa fiche de référence, rien n'est supprimé.",
+ r:"Pas parce que ma clé est bonne. Parce que <b>deux clés indépendantes donnent la même partition, fiche par fiche, zéro écart sur 20 519 groupes</b>. L'une part du nom normalisé, l'autre du domaine et des emails des contacts : elles ne partagent aucune hypothèse.<br><br>Derrière, quatre contrôles :<br>• aucun groupe au-dessus de <b>4 fiches</b><br>• chaque fiche dans exactement <b>une</b> entreprise<br>• un équilibre arithmétique qui surveille la seule dépendance cachée de la clé : <b>20 753 moins 234 égale 20 519</b><br>• une corroboration : chaque fusion déclenchée par une étiquette de doublon a une seconde preuve indépendante, <b>234 sur 234</b><br><br>Et tout est réversible : chaque doublon garde un lien vers sa fiche de référence, rien n'est supprimé.",
  qs:[["Et les fusions en chaîne ? A ressemble à B, B ressemble à C, et vous fusionnez A avec C sans preuve directe.","Structurellement absentes avec ma clé, parce que l'égalité exigée est exacte, pas approchante. Et ça a été stress-testé indépendamment par la seconde implémentation : <b>zéro faux positif</b>. La seule dépendance qui existe, le retrait des étiquettes de doublon, est sous contrôle automatique."],
      ["Un ex-client élu fiche de référence alors qu'une négociation est en cours, vous enterrez le deal.","L'étiquette ne décide de rien. Le routage lit <b>deux colonnes de faits</b>, a-t-il été client et y a-t-il un deal en cours, jamais le statut affiché. Et les <b>80 cas exacts</b> où ça se produit partent dans une liste d'arbitrage dédiée. Sur un champ que votre propre brief déclare peu fiable, je neutralise le problème au lieu de le trancher en silence."],
-     ["Votre chiffre d'affaires consolidé, il vaut combien ?","À l'euro près, et je le publie en <b>deux lignes</b> : <b>52,0 M€ d'ARR actif</b> sur 3 246 clients, et <b>14,6 M€ d'ARR ex-client</b> sur 2 094 churnés, qui dimensionne le pool de reconquête et ne se facture pas.<br><br>Les additionner, c'est le piège que j'ai trouvé dans la base de départ : <b>100 % des churnés y gardent leur chiffre d'affaires</b>, donc 21,9 % du total est fantôme. La séparation est verrouillée par trois contrôles, pas seulement documentée. Et la vérité comptable ne vit pas dans le CRM : elle vit dans la facturation, synchronisée en lecture seule."]]
+     ["Votre chiffre d'affaires consolidé, il vaut combien ?","À l'euro près, et je le publie en <b>deux lignes</b> : <b>52,0 M€ facturés chaque année</b> aux 3 246 clients actifs, et <b>14,6 M€</b> que rapportaient les 2 094 partis, qui mesurent ce qu'il y a à reconquérir mais qui ne rentrent plus.<br><br>Les additionner, c'est le piège que j'ai trouvé dans la base de départ : <b>100 % des clients partis y gardent leur chiffre d'affaires comme s'ils payaient encore</b>, donc 21,9 % du total est fantôme. La séparation est verrouillée par trois contrôles, pas seulement documentée. Et la vérité comptable ne vit pas dans le CRM : elle vit dans la facturation, synchronisée en lecture seule."]]
 },
 {
  p:"3 · Reconstruire", t:"Étape 8 : le ré-attachement", h:"Fusionner sans ré-attacher ne sert à rien", vue:"data",
@@ -1796,13 +1798,13 @@ var PROC=[
   ["Contacts rattachés par leur compte", "76 599", ""],
   ["Contacts orphelins récupérés par le domaine de leur email", "547", "même geste et même prudence qu'à l'étape 3 : unanimité exigée"],
   ["Vrais inconnus, mis de côté", "53", "aucun événement : ils partent dans une liste de comptes à créer, pas rangés au hasard"]],
- body:"<b>Le moment qui prouve que la surveillance sert à quelque chose.</b> J'attendais 97 doublons de personnes. Le pipeline en a trouvé 99, et c'est une alarme du filet de contrôles qui a signalé l'écart, pas moi. Explication : <b>le ré-attachement lui-même a révélé 2 doublons</b> qui étaient invisibles avant, parce que les deux fiches ne vivaient pas encore dans la même entreprise. L'écart a été expliqué, puis verrouillé.<br><br>Au passage, 11 contacts ont récupéré un titre depuis leur copie, dont un directeur des ressources humaines qui était sans fonction connue. Il repasse de multiplicateur 0,5 à multiplicateur 1 dans le comité d'achat.",
+ body:"<b>Le moment qui prouve que la surveillance sert à quelque chose.</b> J'attendais 97 doublons de personnes. La chaîne en a trouvé 99, et c'est une alarme du filet de contrôles qui a signalé l'écart, pas moi. Explication : <b>le ré-attachement lui-même a révélé 2 doublons</b> qui étaient invisibles avant, parce que les deux fiches ne vivaient pas encore dans la même entreprise. L'écart a été expliqué, puis verrouillé.<br><br>Au passage, 11 contacts ont récupéré un titre depuis leur copie, dont un directeur des ressources humaines qui était sans fonction connue. Ses gestes comptent désormais à 100 % au lieu de 50 %.",
  q:"32 % des événements changent de compte, ça ne vous inquiète pas ?",
  r:"Au contraire, c'est exactement ce que j'allais mesurer. Ces <b>29 184</b> événements étaient rattachés à des fiches doublons : ils existaient, mais ils comptaient pour une entreprise qui n'existe pas. Les recoller, c'est la moitié du travail de détection.<br><br>Et rien n'a été perdu : <b>90 838 rattachés plus 4 000 anonymes conservés font 94 838</b>, le compte exact du fichier de départ."
 },
 {
  p:"4 · Assainir et classer", t:"Étape 9 : les doublons d'événements", h:"Trois ouvertures du même email ne font pas trois signaux", vue:"ops",
- say:"Sans cette étape, les comptes les plus arrosés par le marketing paraissent les plus engagés. Et je flague, je ne supprime pas.",
+ say:"Sans cette étape, les comptes les plus arrosés par le marketing paraissent les plus engagés. Et je le signale, je ne le supprime pas.",
  pb:"Un même envoi ouvert trois fois dans la journée gonfle le score d'un compte qui n'a rien fait de plus qu'un autre. C'est du bruit de pixel de tracking, pas de l'intérêt.",
  bareme:[
   ["Le résultat"],
@@ -1824,7 +1826,7 @@ var PROC=[
 },
 {
  p:"4 · Assainir et classer", t:"Étape 10 : le robot", court:true, h:"Ce n'est pas le volume qui trahit, c'est le chronomètre", vue:"data",
- say:"C'est une horloge, pas un humain. Et je le flague, je ne le supprime pas : un scanner de sécurité est une information sur le compte.",
+ say:"C'est une horloge, pas un humain. Et je le signale, je ne le supprime pas : un scanner de sécurité est une information sur le compte.",
  pb:"Un contact porte 420 événements. C'est le contact le plus actif de toute la base, et n'importe quel scoring naïf met son compte en tête de la liste d'appels. Un commercial aurait passé le coup de fil.",
  bareme:[
   ["Ce qui trahit la machine"],
@@ -1834,20 +1836,20 @@ var PROC=[
   ["Événements neutralisés", "420", "signalés from_bot, pas supprimés"]],
  bareme2:[
   ["Deux précisions de méthode qui comptent"],
-  ["La détection tourne sur le flux BRUT", "avant la dédup",
-   "la déduplication efface justement le motif mécanique : trois ouvertures plus trois clics deviennent un plus un"],
+  ["La détection tourne sur le flux d'origine", "avant le retrait des doublons",
+   "retirer les doublons efface justement le motif mécanique : trois ouvertures plus trois clics deviennent un plus un"],
   ["La définition est verrouillée", "médiane ≤ 60 s",
    "délai entre une ouverture et le dernier envoi antérieur de la même campagne"]],
  body:"<b>La leçon que je raconte volontiers.</b> Trois façons différentes d'apparier les envois et les ouvertures donnaient trois chiffres pour le même humain témoin : 3,9 heures, 23,4 heures, 64,8 heures. Aucun n'était faux, ils ne mesuraient pas la même chose. Une métrique sans sa définition n'est pas un chiffre : c'est pour ça que la définition est écrite dans la configuration, à côté du seuil.",
  q:"Et si un humain très réactif se faisait attraper ?",
- r:"Il faudrait qu'il ouvre en moins d'une minute, en médiane, sur au moins cinq emails. Sur cette base, le contact humain le plus actif est à <b>23,4 heures</b>. L'écart n'est pas serré, il y a un facteur <b>21 000</b> entre les deux.<br><br>Et même si ça arrivait : je flague, je ne supprime pas. La ligne reste dans le fichier, le drapeau se retire en une exécution."
+ r:"Il faudrait qu'il ouvre en moins d'une minute, en médiane, sur au moins cinq emails. Sur cette base, le contact humain le plus actif est à <b>23,4 heures</b>. L'écart n'est pas serré, il y a un facteur <b>21 000</b> entre les deux.<br><br>Et même si ça arrivait : je le signale, je ne le supprime pas. La ligne reste dans le fichier, le drapeau se retire en une exécution."
 },
 {
  p:"4 · Assainir et classer", t:"Étape 11 : la segmentation", h:"On ne prospecte pas un client, on ne relance pas un mort", vue:"data",
  say:"Avant de scorer, je sais qui est quoi. Et ma liste d'appels traverse les segments : c'est le play qui change, pas la liste.",
  pb:"Un client actif et un prospect froid peuvent porter le même score d'engagement. Ce n'est pas le même appel, pas le même interlocuteur, pas la même séquence. Scorer avant de savoir à qui on parle produit des appels absurdes.",
  bareme:[
-  ["Onze états factuels, partition complète 20 519 sur 20 519"],
+  ["Onze états, et le compte tombe juste : 20 519 sur 20 519"],
   ["Clients actifs", "3 037", "fidélisation"],
   ["Prospects chauds", "22", "le cœur de la liste d'appels"],
   ["Prospects tièdes", "5 232", "à travailler"],
@@ -1861,7 +1863,7 @@ var PROC=[
  body:"Ces onze états se traduisent en <b>9 plays</b>, qui sont des actions commerciales, pas des étiquettes. Le champ « mort » déclaré dans le CRM n'est utilisé qu'en dernier recours, et chaque ligne dans ce cas porte la mention <b>segment_evidence=declared_field</b> : le champ est disqualifié, son usage est assumé et visible.",
  q:"Pourquoi une seule liste d'appels et pas une par segment ?",
  r:"Parce que la mesure m'a montré le contraire de ce que j'avais prévu. Il y a bien <b>22 prospects chauds</b>, mais aussi <b>3 entreprises tout aussi chaudes qui vivent chez les clients actifs et les ex-clients réactifs</b>. Une liste par segment les aurait laissées de côté.<br><br>Donc la liste est <b>unique, tous segments confondus</b>, avec une colonne play. Le segment ne décide pas de l'entrée dans la liste, il décide de <b>ce qu'on dit</b> en appelant. Les files par segment existent, mais ce sont des vues.",
- qs:[["Deux de vos pièges disparaissent tout seuls avec cette étape, non ?","Oui, et c'est voulu. Le robot tombe en « email seulement » parce qu'il ne lui reste que 3 événements humains. Et un ex-client résilié ne peut jamais devenir prospect chaud, par construction de la cascade.<br><br>Je signale quand même la fragilité : cette deuxième garantie devient <b>paramétrique</b>, elle dépend des poids négatifs. Elle est donc surveillée sur le paramètre, parce que 14 événements sur 94 838 font une dérive statistiquement invisible."]]
+ qs:[["Deux de vos pièges disparaissent tout seuls avec cette étape, non ?","Oui, et c'est voulu. Le robot tombe en « email seulement » parce qu'il ne lui reste que 3 événements humains. Et un ex-client résilié ne peut jamais devenir prospect chaud, par construction de cet ordre.<br><br>Je signale quand même la fragilité : cette deuxième garantie devient <b>paramétrique</b>, elle dépend des poids négatifs. Elle est donc surveillée sur le paramètre, parce que 14 événements sur 94 838 font une dérive statistiquement invisible."]]
 },
 {
  p:"4 · Assainir et classer", t:"Étape 12 : l'audit", h:"Ce que je remonte de moi-même", vue:"ops",
@@ -1885,7 +1887,7 @@ var PROC=[
  body:"Le rapport ouvre sur un <b>avant et après</b> : 30 000 fiches devenues 20 519 entreprises, le chiffre d'affaires en deux lignes, les segments, les pièges neutralisés. Puis chaque règle avec son volume touché, ses exemples, et ce qu'elle n'a pas résolu. <b>Zéro ligne supprimée</b> sur les trois fichiers reçus.",
  q:"Personne ne vous demandait de chercher des problèmes de conformité.",
  r:"Non. Mais quelqu'un qui nettoie un CRM, qui voit <b>2 015</b> emails partis vers des gens ayant demandé à ne plus être contactés, et qui ne le dit pas, a mal fait son travail. Ce n'est pas dans la grille de notation de l'exercice, c'est dans celle du métier.",
- qs:[["Comment vous savez que votre nettoyage n'a rien cassé ailleurs ?","<b>95 contrôles</b> tournent à chaque exécution : conservation des lignes, cohérence, bornes de sanité, non-régression sur les pièges. Toutes les familles sont armées. Un seul au rouge et le pipeline refuse de continuer. Si une règle casse quelque chose à l'autre bout de la base, je le sais avant même de regarder la liste d'appels."],
+ qs:[["Comment vous savez que votre nettoyage n'a rien cassé ailleurs ?","<b>95 contrôles</b> tournent à chaque exécution : conservation des lignes, cohérence, bornes de sanité, non-régression sur les pièges. Toutes les familles sont armées. Un seul au rouge et la chaîne de traitement s'arrête. Si une règle casse quelque chose à l'autre bout de la base, je le sais avant même de regarder la liste d'appels."],
      ["Comment vous garantissez que vos règles sont vraiment appliquées, et pas seulement écrites ?","Chaque décision a une ligne dans une table : la règle, où elle est implémentée, et le contrôle qui prouve qu'elle tourne. Aujourd'hui les <b>28 règles sur 28</b> sont garanties par un contrôle automatique. La table est régénérée à chaque exécution : une règle qui perdrait son contrôle repasserait en rouge sans que personne ait à y penser.<br><br>Cette table est née d'un vrai bug : une règle actée, documentée, jamais implémentée, avec les 88 contrôles de l'époque tous au vert. Le code faisait exactement ce qui était écrit ; c'est ce qui était écrit qui ne disait pas ce qu'on avait décidé. D'où le verrou : <b>un statut ne se déclare pas, il se constate</b>."]]
 },
 {
@@ -1906,7 +1908,7 @@ var PROC=[
  pb:"Un classement par points rate le compte où trois personnes s'agitent sans jamais remplir un formulaire. Et il fait passer devant un compte qui a beaucoup cliqué sans intention. Le volume et l'intention ne sont pas la même chose.",
  body:"Pourquoi des portes et pas un seuil, en deux raisons.<br><br><b>Un</b> : bougez tous mes poids de plus ou moins 30 %, la liste Tier 1 ne change pas. Elle n'est pas faite de points, elle est faite de faits.<br><b>Deux</b> : chaque compte de la liste s'explique en une phrase à un commercial. Pas « il a 42 points », mais « le 17 juillet, cette personne a réservé une démo ».<br><br>Une décision B2B est collective : 3 personnes en 2 semaines, c'est un comité qui bouge ; 3 personnes en 3 ans, c'est du hasard. C'est pour ça que la fenêtre du comité est courte et ancrée.",
  q:"Pourquoi pas simplement un seuil de points ?",
- r:"Parce qu'un seuil de points ne sait pas faire la différence entre l'intention et le volume. Les deux portes sont <b>sémantiques</b> : elles décrivent ce qui s'est passé, pas combien ça pèse.<br><br>Et je l'ai mesuré au lieu de l'affirmer. <b>38 variations</b> : chaque poids et chaque demi-vie secoués de plus ou moins 30 %, un calcul complet à chaque fois. <b>Le Tier 1 est identique dans les 38 cas</b>, y compris au pire. Le Tier 2, lui, respire : <b>29 % de recouvrement au pire cas</b>. C'est normal, et je le dis plutôt que de le taire : une file de travail est bornée par un seuil de points, donc ses bords bougent quand les points bougent. Le Tier 1 ne bouge pas parce qu'il n'est pas fait de points.<br><br>Le test se rejoue en une commande : <b>run_scoring.py --robustesse</b>."
+ r:"Parce qu'un seuil de points ne sait pas faire la différence entre l'intention et le volume. Les deux portes sont <b>sémantiques</b> : elles décrivent ce qui s'est passé, pas combien ça pèse.<br><br>Et je l'ai mesuré au lieu de l'affirmer. <b>38 variations</b> : chaque poids et chaque durée secoués de plus ou moins 30 %, un calcul complet à chaque fois. <b>Le Tier 1 est identique dans les 38 cas</b>, y compris au pire. Le Tier 2, lui, respire : <b>29 % de recouvrement au pire cas</b>. C'est normal, et je le dis plutôt que de le taire : une file de travail est bornée par un seuil de points, donc ses bords bougent quand les points bougent. Le Tier 1 ne bouge pas parce qu'il n'est pas fait de points.<br><br>Le test se rejoue en une commande : <b>run_scoring.py --robustesse</b>."
 },
 {
  p:"5 · Scorer", t:"Le barème", h:"Ce qui monte, ce qui descend", court:true,
@@ -1937,14 +1939,14 @@ var PROC=[
  p:"5 · Scorer", t:"Qui fait le geste", h:"Les 9 rendez-vous ont tous été pris par un non-décideur", court:true,
  say:"Un geste ne vaut pas la même chose selon qui le fait. Mais une preuve, si, et c'est ce qui m'a évité de me tirer une balle dans le pied.",
  bareme:[
-  ["Le multiplicateur, sur les GESTES uniquement"],
+  ["Ce que le geste vaut selon qui le fait, sur les GESTES uniquement"],
   ["Décideur", "×1,0", "celui qui achète le module"],
   ["Champion", "×0,8", "celui qui peut porter le sujet en interne"],
   ["Utilisateur", "×0,6", "celui qui s'en servira"],
   ["Sans titre connu", "×0,5", "on ne punit pas un trou de données"],
   ["Bruit", "×0", "stagiaire, candidat, assistant de direction"]],
  bareme2:[
-  ["Les preuves ne sont JAMAIS pondérées"],
+  ["Un rendez-vous ou un formulaire compte PLEIN, quel que soit son auteur"],
   ["Rendez-vous et formulaire", "×1,0", "plein poids, quel que soit celui qui l'a fait, et un contrôle le vérifie à chaque exécution"],
   ["Mon périmètre de décideurs suit le PRODUIT, pas l'ancienneté"],
   ["Module recrutement", "Head of Talent Acquisition", "c'est lui qui achète un logiciel de recrutement"],
@@ -1959,30 +1961,30 @@ var PROC=[
       ["16 562","décideurs · 19 705 champions · 25 576 utilisateurs · 10 802 bruit · 4 554 sans titre"]],
  pb:"Si le multiplicateur s'appliquait aux preuves, je décotais cent pour cent des rendez-vous de l'exercice. Le décideur déclare l'intention, l'opérationnel organise la logistique.",
  q:"Donc un stagiaire qui réserve un rendez-vous compte moins ?",
- r:"Non. <b>Un rendez-vous pris est un rendez-vous pris</b> : c'est un fait, pas une opinion pondérée. L'entreprise a engagé du temps commercial, peu importe qui a cliqué sur le créneau.<br><br>Le multiplicateur ne touche que les <b>gestes</b> : un clic, une visite, un like. Et la mesure renforce l'argument au lieu de l'affaiblir : sur les 16 formulaires, <b>13 sont remplis par des décideurs</b>. Sur les 9 rendez-vous, <b>zéro décideur</b>. Le décideur déclare, l'opérationnel prend le créneau. Pondérer les preuves aurait effacé la totalité des rendez-vous.",
+ r:"Non. <b>Un rendez-vous pris est un rendez-vous pris</b> : c'est un fait, pas une opinion pondérée. L'entreprise a engagé du temps commercial, peu importe qui a cliqué sur le créneau.<br><br>Ce coefficient ne touche que les <b>gestes</b> : un clic, une visite, un like. Et la mesure renforce l'argument au lieu de l'affaiblir : sur les 16 formulaires, <b>13 sont remplis par des décideurs</b>. Sur les 9 rendez-vous, <b>zéro décideur</b>. Le décideur déclare, l'opérationnel prend le créneau. Pondérer les preuves aurait effacé la totalité des rendez-vous.",
  qs:[["Pourquoi ce périmètre de décideurs et pas un autre ?","Parce qu'il suit le <b>produit</b>, pas la séniorité. Cette entreprise vend trois modules, et chaque acheteur a une raison : le recrutement s'achète par un responsable acquisition de talents, la performance par un CHRO ou un responsable des ressources humaines, la paie et le SIRH par une direction RH ou un responsable des opérations RH, parce que c'est lui qui possède les systèmes.<br><br>Un directeur financier est un décideur dans l'absolu ; il n'achète aucun de ces trois modules. Chaque titre inclus a une raison produit, chaque titre exclu aussi. Et le périmètre vit en configuration : le jour où la gamme change, il change en une ligne."],
      ["Et un Head of Communication, par exemple ?","Il n'existe pas dans cette base, je l'ai vérifié. Et même s'il existait, il n'achète aucun des trois modules. Ce n'est pas un oubli, c'est une exclusion motivée."]]
 },
 {
  p:"5 · Scorer", t:"Le temps efface", h:"Un clic d'il y a deux mois n'est pas un clic d'hier", courbe:true,
  say:"Un geste s'évapore, une preuve se travaille. Une démo, ça ne meurt pas tout seul.",
- pb:"Sans décroissance, un compte actif il y a trois mois reste devant un compte actif hier. Un dirigeant peut parcourir tout le site un soir et ne plus rien faire : sans décroissance, il reste en tête de liste pour toujours.",
+ pb:"Sans décroissance, un compte actif il y a trois mois reste devant un compte actif hier. Un dirigeant peut parcourir tout le site un soir et ne plus rien faire : sans cet effacement, il reste en tête de liste pour toujours.",
  bareme:[
   ["Deux vitesses, parce que deux choses différentes"],
-  ["Un geste : clic, visite, like, commentaire", "demi-vie 10 jours",
+  ["Un clic, une visite, un like", "la moitié en 10 jours",
    "une intention non relancée retombe en deux semaines"],
-  ["Une preuve : rendez-vous, formulaire", "demi-vie 30 jours",
+  ["Un rendez-vous, un formulaire", "la moitié en 30 jours",
    "une démo se travaille, elle ne s'éteint pas comme un clic"],
-  ["Le plancher", "25 % pendant 21 jours",
+  ["Le minimum garanti", "25 % pendant 21 jours",
    "rien ne descend sous le quart avant trois semaines"]],
  bareme2:[
   ["Le calcul, en clair, sur un cas réel"],
   ["Un clic dans un email", "8 points", "le poids de base du geste"],
-  ["Fait par un champion", "×0,8", "le multiplicateur du porteur"],
-  ["Il y a 10 jours, soit une demi-vie", "×0,5", "la décroissance"],
+  ["Fait par un champion", "×0,8", "ce que vaut le geste selon qui le fait"],
+  ["Il y a 10 jours, donc la moitié est partie", "×0,5", "la décroissance"],
   ["Ce que la ligne pèse aujourd'hui", "3,2 points", "8 × 0,8 × 0,5 : le calcul se refait de tête, ligne par ligne, dans la vue Logique"]],
  body:"Conséquence directe, et c'est voulu : <b>un Tier 1 silencieux redescend tout seul</b>. Personne n'a besoin de nettoyer la liste à la main, elle se vide d'elle-même si le compte cesse de bouger.",
- q:"Vous avez choisi ces demi-vies comment ?",
+ q:"Ces durées, vous les avez choisies comment ?",
  r:"À la main, et je l'assume : ce sont des valeurs <b>argumentées</b>, pas optimisées. Dix jours pour un geste parce qu'une intention non relancée retombe en deux semaines. Trente pour une preuve parce qu'une demande de démo se travaille pendant un mois.<br><br>Je n'ai pas pu les apprendre : il n'y a dans ce CRM ni table d'opportunités, ni historique de statut, donc <b>aucun deal gagné sur lequel calibrer</b>. Tout poids ici est raisonné, aucun n'est appris. Je préfère le dire avant qu'on me le demande. Et elles se changent dans un fichier de configuration si l'expérience les dément."
 },
 {
@@ -2142,7 +2144,7 @@ var PROC=[
   ["Une mesure, une seule fois", "à la fin",
    "quand le barème et les seuils étaient déjà fixés et poussés dans le dépôt"],
   ["Jamais une règle", "aucun poids ne la regarde",
-   "le tri se fait sur les pages visitées, les personnes qui bougent, la récence, les signaux de départ"],
+   "le tri se fait sur les pages visitées, les personnes qui bougent, la fraîcheur des signaux, les signes de départ"],
   ["Jamais un réglage", "on ne rattrape pas un compte",
    "ajuster les poids jusqu'à tomber juste, c'est apprendre par cœur un fichier qu'on ne reverra pas"],
   ["Ce qu'elle voit de la base", "82 comptes sur 20 519",
@@ -2156,7 +2158,7 @@ var PROC=[
  p:"6 · Le résultat", t:"Ce que je ne fais pas", h:"Six protections qui ne se sont jamais déclenchées", vue:"ops",
  say:"Un moteur qui ne montre que ce qui marche cache ce qu'il ne sait pas faire. Voilà ce qui n'a jamais servi.",
  kpi:[["6","règles qui n'ont produit aucun cas"],["1","dont je peux démontrer qu'elle est mathématiquement inatteignable"],["@gardes","contrôles automatiques sur le scoring, tous verts"]],
- body:"Le cap anti-abus, la priorité du rendez-vous sur les pages négatives, l'invalidation des clics robots, l'alerte sur notre propre silence, le libellé de repli, et le plancher de décroissance appliqué aux preuves. Ce dernier ne peut <b>pas</b> se déclencher : à vingt-et-un jours, une demi-vie de trente jours vaut encore 0,616, bien au-dessus du plancher de 0,25.",
+ body:"Le cap anti-abus, la priorité du rendez-vous sur les pages négatives, l'invalidation des clics robots, l'alerte sur notre propre silence, le libellé de repli, et le minimum garanti appliqué aux rendez-vous et aux formulaires. Ce dernier ne peut <b>pas</b> se déclencher : à vingt-et-un jours, un rendez-vous vaut encore 62 % de sa valeur, bien au-dessus du minimum de 25 %.",
  q:"Pourquoi montrer des règles qui ne servent à rien ?",
  r:"Parce qu'une protection qu'on n'annonce pas est une protection qu'on cache. Si vous les découvrez vous-même dans le code, vous vous demandez ce que je cache d'autre. Et pour l'une d'elles, je sais démontrer pourquoi elle ne peut pas servir : ce qui vaut mieux que de la présenter comme active."
 },
@@ -2230,7 +2232,7 @@ var PROC=[
 {
  p:"7 · Becca", t:"Le cas réel, bout en bout", h:"Un message Telegram, 176 contacts propres", court:true,
  say:"Je lui écris sur Telegram : trouve-moi les wedding planners d'Île-de-France pour un client événementiel. Il scrape via Apify, filtre, enrichit, et sort un CSV prêt pour Lemlist. Je valide, la campagne part.",
- geant:["176","contacts propres en sortie, depuis 300 fiches scrapées. Et ce pipeline a tourné <b>le lendemain de la mise en production</b>."],
+ geant:["176","contacts propres en sortie, depuis 300 fiches scrapées. Et cette chaîne a tourné <b>le lendemain de la mise en production</b>."],
  kpi:[["300 → 176","fiches scrapées, contacts exploitables en sortie"],
       ["2 centimes","le coût d'un échange avec l'agent"],
       ["1","validation humaine avant que quoi que ce soit sorte"]],
@@ -2369,7 +2371,7 @@ function loopSVG(){
   return '<div class="loop">'+H+V
     +'<div class="lrule">Les deux modèles ne se parlent jamais : <b>tout passe par une seule '
     +'personne</b>, qui compare et tranche. Dès que l\'un construisait, l\'autre reprenait '
-    +'depuis les fichiers bruts.</div></div>';
+    +'depuis les fichiers de départ.</div></div>';
 }
 
 function beccaSVG(){
@@ -2479,8 +2481,8 @@ function courbeHTML(){
     +'<polyline points="'+ligne(10)+'" fill="none" stroke="var(--warn)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
     +'</svg><div class="lg2">'
     +'<span><i style="background:var(--violet)"></i>une preuve : demi-vie <b>30 j</b></span>'
-    +'<span><i style="background:var(--warn)"></i>un geste : demi-vie <b>10 j</b></span>'
-    +'<span>plancher <b>25 %</b> jusqu\'à J21</span></div></div>';
+    +'<span><i style="background:var(--warn)"></i>un clic perd la moitié en <b>10 jours</b></span>'
+    +'<span>jamais sous <b>25 %</b> avant 21 jours</span></div></div>';
 }
 /* le chemin court : les temps qu'on joue vraiment devant quelqu'un */
 function majChemin(){
@@ -2618,19 +2620,19 @@ function renderOps(){
   var S=D.steps, done=S.filter(function(s){return s.status==="done";}).length;
   var allC=[], fails=[];
   S.forEach(function(s){ (s.controls||[]).forEach(function(c){ if(s.status==="done"){ allC.push(c); if(c.pass===false) fails.push([s,c]); } }); });
-  var h='<div class="oph"><h2>Statut du pipeline</h2>'
+  var h='<div class="oph"><h2>État de la chaîne de traitement</h2>'
     +'<div class="st" style="'+(fails.length?"background:var(--danger-soft);color:var(--danger)":"")+'"><i></i>'
     +(fails.length? fails.length+' contrôle(s) en échec' : 'dernier run OK · '+allC.length+' contrôles verts')+'</div></div>';
 
   h+='<div class="kpis">'
-    +'<div class="kpi"><b>'+nf(D.counts.accounts)+'</b><span>records bruts</span><em>3 CSV, 8 ans d\'historique</em></div>'
-    +'<div class="kpi"><b>'+nf(D.counts.entities)+'</b><span>entités réelles</span><em>−'+nf(D.counts.merged)+' doublons fusionnés</em></div>'
-    +'<div class="kpi"><b>'+nf(D.counts.events)+'</b><span>events / 90 j</span><em>'+nf(D.counts.anon_events)+' non rattachables</em></div>'
+    +'<div class="kpi"><b>'+nf(D.counts.accounts)+'</b><span>fiches reçues</span><em>3 CSV, 8 ans d\'historique</em></div>'
+    +'<div class="kpi"><b>'+nf(D.counts.entities)+'</b><span>entreprises réelles</span><em>−'+nf(D.counts.merged)+' doublons fusionnés</em></div>'
+    +'<div class="kpi"><b>'+nf(D.counts.events)+'</b><span>événements sur 90 jours</span><em>dont '+nf(D.counts.anon_events)+' sans personne identifiée</em></div>'
     +'<div class="kpi hi"><b>'+D.counts.hot+'</b><span>tier 1 : à appeler</span><em>deux portes, pas un seuil de points</em></div>'
     +'<div class="kpi"><b>'+D.counts.warm+'</b><span>tier 2 : à travailler</span><em>à partir de '+D.config.thresholds.warm+' points</em></div>'
     +'<div class="kpi al"><b>'+nf(D.counts.risk)+'</b><span>perdus : canal mort</span><em>le score y est, le canal n\'y est plus</em></div>'
     +'<div class="kpi"><b>'+done+' / '+S.length+'</b><span>étapes cleanup</span><em>phase '+(S[Math.min(done,S.length-1)].phase||"·")+'</em></div>'
-    +'<div class="kpi"><b>'+nf(D.counts.dormant)+'</b><span>entités muettes</span><em>0 event sur la fenêtre</em></div>'
+    +'<div class="kpi"><b>'+nf(D.counts.dormant)+'</b><span>entreprises muettes</span><em>aucun signe de vie en 90 jours</em></div>'
     +'</div>';
 
   if(fails.length){
@@ -2645,7 +2647,7 @@ function renderOps(){
     var pts=c.map(function(v,i){ return (i/(n-1)*100).toFixed(2)+","+((1-lg(v))*100).toFixed(2); }).join(" ");
     var hy=(1-lg(D.config.thresholds.hot))*100, wy=(1-lg(D.config.thresholds.warm))*100;
     var hx=0; for(var i=0;i<n;i++){ if(c[i]<D.config.thresholds.hot){ hx=i/(n-1)*100; break; } }
-    h+='<div class="sec" style="margin-bottom:20px"><div class="sec-h"><h3>Pourquoi le seuil est à '+D.config.thresholds.hot+'</h3>'
+    h+='<div class="sec" style="margin-bottom:20px"><div class="sec-h"><h3>Pourquoi le seuil de travail est à '+D.config.thresholds.warm+' points</h3>'
       +'<em>400 premiers comptes, échelle log</em></div><div class="card curve">'
       +'<svg viewBox="0 0 100 100" preserveAspectRatio="none">'
       +'<line x1="0" y1="'+hy.toFixed(2)+'" x2="100" y2="'+hy.toFixed(2)+'" stroke="var(--violet)" stroke-width="1" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>'
@@ -2699,7 +2701,7 @@ function renderOps(){
   /* les gardes du moteur de scoring — greffées depuis dashboard_data.json */
   if(D.sops){
     var S2=D.sops, ko2=S2.gardes.filter(function(g){return !g.ok;});
-    h+='<div class="sec" style="margin-top:24px"><div class="sec-h"><h3>Les gardes du scoring</h3>'
+    h+='<div class="sec" style="margin-top:24px"><div class="sec-h"><h3>Les contrôles automatiques du scoring</h3>'
       +'<em>'+esc(S2.gardes_vertes)+' · run du '+esc((S2.genere_le||"").slice(0,10))
       +' · fenêtre ancrée au '+esc(S2.reference_date)+'</em></div>'
       +'<div class="card"><div class="grd">';
@@ -2890,7 +2892,7 @@ function renderTable(){
                  : " · "+t.cols.length+" colonnes, toutes produites");
   /* la légende suit la table : elle doit décrire ce qu'on voit, pas un cas général */
   var L=LEGENDE[TCUR]||LEGENDE.accounts, lg=document.getElementById("dlegend");
-  var src = (TCUR==="events") ? "events.csv (le fichier brut)" : "dashboard_data/";
+  var src = (TCUR==="events") ? "events.csv, le fichier que vous nous avez donné" : "dashboard_data/";
   if(lg) lg.innerHTML =
       (L[0] ? '<span><i class="og"></i>'+esc(L[0])+'</span>' : '')
     + (L[1] ? '<span><i class="ad"></i>'+esc(L[1])+'</span>' : '')
@@ -2982,7 +2984,7 @@ fetch("wtc.json").then(function(r){ return r.json(); }).then(function(j){
   D=j;
   document.getElementById("spInfo").innerHTML=
     '<b>'+nf(j.counts.accounts)+'</b> comptes · <b>'+nf(j.counts.contacts)+'</b> contacts · <b>'+nf(j.counts.events)+'</b> events'
-    +'<br>'+nf(j.counts.entities)+' entités réelles après dédoublonnage';
+    +'<br>'+nf(j.counts.entities)+' entreprises réelles une fois les doublons fusionnés';
   runSplash(boot);
 }).catch(function(err){
   document.getElementById("spInfo").textContent="Erreur de chargement : "+err;
