@@ -434,6 +434,33 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 @media(max-width:900px){.llist{width:250px}.ldetail{padding:18px}.ops{padding:18px}}
 
 
+
+/* ── le schéma du dispositif : deux modèles, une personne au milieu ────────
+   Le style avait disparu dans une réécriture du bloc Process : le schéma
+   s'affichait en texte nu. Il est maintenant en SVG, avec les flux animés. */
+.loop{margin:34px auto 0;max-width:640px}
+.loop svg{width:100%;height:auto;display:block;overflow:visible}
+.loop .lh{display:block} .loop .lv{display:none}
+.lnom{font-family:var(--display);font-size:15px;font-weight:600;fill:var(--text)}
+.lrole{font-size:9px;letter-spacing:.15em;text-transform:uppercase;fill:var(--text-3)}
+.lbox{fill:var(--panel);stroke:var(--line);stroke-width:1}
+.lbox.mid{fill:var(--ink);stroke:var(--ink)}
+.lnom.on{fill:var(--on-ink)} .lrole.on{fill:var(--on-ink);opacity:.55}
+.lflux{stroke:var(--violet);stroke-width:2;stroke-linecap:round;fill:none;
+  stroke-dasharray:6 10;opacity:.8}
+.lflux.a{animation:fluxA 1.15s linear infinite}
+.lflux.b{animation:fluxB 1.15s linear infinite}
+@keyframes fluxA{to{stroke-dashoffset:-16}}
+@keyframes fluxB{to{stroke-dashoffset:16}}
+.lpuce{fill:var(--violet)}
+.lrule{text-align:center;margin-top:20px;font-size:var(--fs-sm);color:var(--text-2);line-height:1.6}
+.lrule b{color:var(--text);font-weight:600}
+@media(prefers-reduced-motion:reduce){ .lflux.a,.lflux.b{animation:none} }
+@media(max-width:600px){
+  .loop{max-width:230px;margin-top:26px}
+  .loop .lh{display:none} .loop .lv{display:block}
+}
+
 /* les types de carte : un déroulé de 26 temps sur un seul gabarit endort */
 .sphase{text-align:center}
 .sphase .pn{font-family:var(--display);font-size:clamp(64px,13vw,150px);font-weight:600;
@@ -470,7 +497,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .slide{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;
   background:radial-gradient(120% 90% at 50% 22%, var(--soft) 0%, var(--bg) 62%)}
 .sscroll{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;padding:64px 40px 34px}
+  align-items:center;padding:64px 40px 34px}
 .sinner{width:100%;max-width:820px;text-align:center;margin:auto}
 .skick{font-size:10px;letter-spacing:.19em;text-transform:uppercase;color:var(--violet);
   font-weight:700;margin-bottom:16px}
@@ -535,7 +562,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .pitem.on b{color:var(--text);font-weight:600}
 
 @media(max-width:680px){
-  .sscroll{padding:44px 18px 26px}
+  .sscroll{padding:66px 18px 26px}
   .ssay{font-size:15px} .snum{gap:10px} .snum div{min-width:0;flex:1 1 44%;padding:13px}
   .snum b{font-size:21px} .splan{top:12px;right:14px}
   .sdots{max-width:40vw}
@@ -695,7 +722,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
           <input id="dq" type="search" placeholder="Rechercher…" autocomplete="off">
           <span class="dcount" id="dcount">—</span>
         </div>
-        <div class="dlegend">
+        <div class="dlegend" id="dlegend">
           <span><i class="og"></i>colonnes d'origine (jamais modifiées)</span>
           <span><i class="ad"></i>colonnes ajoutées par le nettoyage</span>
           <span style="margin-left:auto">source : <b>dashboard_data/</b> · branche <b>cleanup-pipeline</b></span>
@@ -1434,12 +1461,16 @@ var PROC=[
  p:"2 · Réparer", t:"Étape 1 — les dates", court:true,
  h:"Trois formats dans le même champ",
  vue:"ops",
- say:"Puis j'ai commencé. Trois formats de dates cohabitaient dans les mêmes colonnes, à peu près un tiers chacun.",
+ say:"Puis j'ai commencé par les dates. Quatre colonnes en portent, sur les deux fichiers — et trois écritures différentes s'y partagent le contenu à parts presque égales.",
+ geant:["134 818","dates à décoder — <b>ce ne sont pas des lignes</b> : 30 000 comptes × 3 colonnes de date, plus 77 199 contacts × 1 colonne, font <b>167 199 emplacements</b>, dont 32 381 sont vides."],
+ bareme:[
+  ["Les trois écritures qui cohabitaient"],
+  ["ISO — 2022-12-13", "44 848", "33,3 % des dates écrites"],
+  ["Américain — 05/19/24, le mois d'abord", "45 057", "33,4 %"],
+  ["Français — 21/03/2022, le jour d'abord", "44 913", "33,3 %"],
+  ["Illisible", "0", "aucune date perdue, aucune devinée"]],
  pb:"Se tromper de format n'affiche aucune erreur. Ça produit des dates fausses en silence — et toutes les fenêtres de temps derrière sont décalées : « actif ces 14 jours », « renouvellement dans 90 jours », tout devient faux.",
- kpi:[["44 848","au format ISO — 2022-12-13"],
-      ["45 057","à l'américaine — 05/19/24, mois d'abord"],
-      ["44 913","à la française — 21/03/2022, jour d'abord"]],
- body:"La règle appliquée : <b>année à 2 chiffres = américain, année à 4 chiffres = français</b>. Et surtout : aucune date devinée. Illisible, c'est vide plus un drapeau <b>error</b> — jamais une valeur inventée.",
+ body:"Les trois nombres ferment : <b>44 848 + 45 057 + 44 913 = 134 818</b> — aucune date n'est oubliée ni comptée deux fois. La règle appliquée : <b>année à 2 chiffres = américain, année à 4 chiffres = français</b>. Et aucune date devinée : illisible, c'est vide plus un drapeau <b>error</b>, jamais une valeur inventée.",
  q:"Comment vous pouvez deviner le mois et le jour ?",
  r:"Je ne devine pas, je démontre. Sur <b>54 419</b> dates, un des deux nombres dépasse 12 : la règle y est vérifiable, et il y a <b>zéro contre-exemple</b>. C'est seulement après cette démonstration que je l'applique aux <b>35 551</b> dates ambiguës — 39,5 % des dates en barres. Sans ça, ces 35 551 dates étaient un pile ou face. <br><br>Au total <b>134 818</b> dates converties, <b>0 échec</b>. Les 94 838 horodatages d'événements étaient déjà en ISO : hors périmètre."
 },
@@ -1543,7 +1574,8 @@ var PROC=[
  kpi:[["2 015","emails partis vers des gens qui avaient demandé à ne plus être contactés"],["2 367","emails partis vers des adresses incapables de les recevoir, dont 1 607 vers le néant"],["0","ligne supprimée sur les trois fichiers"]],
  body:"Ces deux chiffres ne faisaient pas partie de l'exercice. Ce sont des faits que le nettoyage a fait apparaître et qui engagent l'entreprise, pas seulement la performance commerciale — alors ils sont dans le rapport.",
  q:"Personne ne vous demandait ça.",
- r:"Non. Mais quelqu'un qui nettoie un CRM et qui voit <b>2 015</b> emails partis vers des gens qui ont demandé à ne plus être contactés, et qui ne le dit pas, a mal fait son travail. Le reste du rapport se recalcule à chaque exécution — il ne peut pas mentir sur un état ancien."
+ r:"Non. Mais quelqu'un qui nettoie un CRM et qui voit <b>2 015</b> emails partis vers des gens qui ont demandé à ne plus être contactés, et qui ne le dit pas, a mal fait son travail. Le reste du rapport se recalcule à chaque exécution — il ne peut pas mentir sur un état ancien.",
+ qs:[["Comment vous savez que votre nettoyage n'a rien cassé ailleurs ?","<b>95 contrôles</b> tournent à chaque exécution : conservation des lignes, cohérence, bornes de sanité, non-régression. Un seul au rouge et le pipeline refuse de continuer. Si une règle casse quelque chose à l'autre bout de la base, je le sais avant même de regarder la liste d'appels."],["Comment vous garantissez que vos règles sont vraiment appliquées, et pas seulement écrites ?","Chaque décision a une ligne dans une table : la règle, où elle est implémentée, et le contrôle qui prouve qu'elle tourne. <b>Une ligne ne passe au vert que si son contrôle est vert au moment où le rapport se génère</b> — pas parce qu'un fichier de configuration l'affirme. Cette table est née d'un vrai problème : des règles actées puis jamais implémentées. Elle a ensuite produit l'erreur inverse, dix règles implémentées mais toujours affichées comme à venir. C'est ce qui a conduit à ce verrou : un statut ne se déclare pas, il se constate."]]
 },
 {
  p:"5 · Scorer", phase:"5", t:"— Scorer —", h:"Scorer",
@@ -1696,14 +1728,45 @@ function procDots(){
   document.getElementById("pDots").innerHTML=h;
 }
 function loopSVG(){
-  return '<div class="loop">'
-    +'<div class="lnode"><b>Fable 5</b><span>modèle</span></div>'
-    +'<div class="larr"><i class="a">▸</i><i class="b">◂</i></div>'
-    +'<div class="lnode mid"><b>Romain</b><span>décide</span></div>'
-    +'<div class="larr"><i class="a">▸</i><i class="b">◂</i></div>'
-    +'<div class="lnode"><b>Opus 5</b><span>modèle</span></div>'
-    +'<div class="lrule">Dès que l\'un construisait, <b>l\'autre regardait</b>. Jamais son propre travail.</div>'
-    +'</div>';
+  /* Un canal = deux voies : ce qui monte vers la personne, ce qui en repart.
+     Rien ne passe d'un modèle à l'autre — il n'y a pas de trait entre eux. */
+  function boite(x,y,w,h,nom,role,mid){
+    return '<rect class="lbox'+(mid?" mid":"")+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h
+      +'" rx="10"/><text class="lnom'+(mid?" on":"")+'" x="'+(x+w/2)+'" y="'+(y+h/2-3)
+      +'" text-anchor="middle">'+nom+'</text>'
+      +'<text class="lrole'+(mid?" on":"")+'" x="'+(x+w/2)+'" y="'+(y+h/2+16)
+      +'" text-anchor="middle">'+role+'</text>';
+  }
+  /* ── horizontal ── */
+  var H='<svg class="lh" viewBox="0 0 620 150" role="img" aria-label="Fable 5 et Opus 5 envoient chacun leur travail à Romain, qui décide">';
+  H+=boite(4,42,150,66,"Fable 5","modèle");
+  H+=boite(235,42,150,66,"Romain","décide",1);
+  H+=boite(466,42,150,66,"Opus 5","modèle");
+  [[158,231],[389,462]].forEach(function(c,k){
+    var x1=c[0], x2=c[1];
+    H+='<path class="lflux a" d="M'+x1+' 64 H'+x2+'"/>';
+    H+='<path class="lflux b" d="M'+x2+' 86 H'+x1+'"/>';
+    H+='<polygon class="lpuce" points="'+(x2-1)+',60 '+(x2+6)+',64 '+(x2-1)+',68"/>';
+    H+='<polygon class="lpuce" points="'+(x1+1)+',82 '+(x1-6)+',86 '+(x1+1)+',90"/>';
+  });
+  H+='</svg>';
+  /* ── vertical, pour les petits écrans ── */
+  var V='<svg class="lv" viewBox="0 0 230 380" role="img" aria-label="Fable 5 et Opus 5 envoient chacun leur travail à Romain, qui décide">';
+  V+=boite(40,4,150,66,"Fable 5","modèle");
+  V+=boite(40,157,150,66,"Romain","décide",1);
+  V+=boite(40,310,150,66,"Opus 5","modèle");
+  [[74,153],[227,306]].forEach(function(c){
+    var y1=c[0], y2=c[1];
+    V+='<path class="lflux a" d="M100 '+y1+' V'+y2+'"/>';
+    V+='<path class="lflux b" d="M130 '+y2+' V'+y1+'"/>';
+    V+='<polygon class="lpuce" points="96,'+(y2-1)+' 100,'+(y2+6)+' 104,'+(y2-1)+'"/>';
+    V+='<polygon class="lpuce" points="126,'+(y1+1)+' 130,'+(y1-6)+' 134,'+(y1+1)+'"/>';
+  });
+  V+='</svg>';
+  return '<div class="loop">'+H+V
+    +'<div class="lrule">Les deux modèles ne se parlent jamais : <b>tout passe par une seule '
+    +'personne</b>, qui compare et tranche. Dès que l\'un construisait, l\'autre reprenait '
+    +'depuis les fichiers bruts.</div></div>';
 }
 
 /* Une scène = un titre, une phrase, trois nombres. Tout le reste se déplie
@@ -1963,12 +2026,22 @@ function renderOps(){
 var T={}, TCUR="companies", TSORT=null, TDESC=false, TBUSY={};
 /* colonnes d'ORIGINE (celles de Gab) — tout le reste a été ajouté par le nettoyage.
    companies et hot_list n'existaient pas : ces deux tables sont 100 % produites. */
+/* Chaque table a sa propre dichotomie, et sa propre légende. Mettre « colonnes
+   d'origine, jamais modifiées » sur la table des entreprises serait faux : cette
+   table n'existait pas, et les 8 champs qui viennent des fiches y sont consolidés
+   (élection de la fiche de référence, vote majoritaire) — repris, pas intacts. */
 var ORIG={
- companies:null,
+ companies:["name","domain","country","industry","employee_range","arr_eur","renewal_date","owner"],
  accounts:["account_id","account_name","domain","industry","employee_range","country",
            "lifecycle_stage","created_date","last_activity_date","owner","arr_eur","renewal_date"],
  contacts:["contact_id","account_id","first_name","last_name","email","job_title","opted_out","created_date"],
- hot_list:null
+ hot_list:[]
+};
+var LEGENDE={
+ companies:["champ repris de vos fiches, consolidé","champ produit par le nettoyage"],
+ accounts :["colonnes d'origine, jamais modifiées","colonnes ajoutées par le nettoyage"],
+ contacts :["colonnes d'origine, jamais modifiées","colonnes ajoutées par le nettoyage"],
+ hot_list :[null,"table entièrement produite — elle n'existait pas"]
 };
 var TLABEL={companies:"entreprises",accounts:"fiches CRM",contacts:"contacts",hot_list:"lignes"};
 
@@ -2007,10 +2080,10 @@ function renderTable(){
     });
   }
   var LIM=400, show=rows.slice(0,LIM);
-  var og=ORIG[TCUR];
+  var og=ORIG[TCUR]||[];
   var h='<thead><tr>';
   for(var c=0;c<t.cols.length;c++){
-    var add = og ? og.indexOf(t.cols[c])<0 : false;
+    var add = og.indexOf(t.cols[c])<0;
     var ar = (TSORT===c) ? '<span class="ar">'+(TDESC?"▾":"▴")+'</span>' : '';
     h+='<th class="'+(add?"add":"")+'" data-c="'+c+'">'+esc(t.cols[c])+ar+'</th>';
   }
@@ -2018,7 +2091,7 @@ function renderTable(){
   for(var i=0;i<show.length;i++){
     h+='<tr>';
     for(var c2=0;c2<t.cols.length;c2++){
-      var v=show[i][c2], add2 = og ? og.indexOf(t.cols[c2])<0 : false;
+      var v=show[i][c2], add2 = og.indexOf(t.cols[c2])<0;
       var num = v!=="" && !isNaN(parseFloat(v)) && String(v).length<12;
       h+='<td class="'+(add2?"add ":"")+(num?"num":"")+'" title="'+esc(v)+'">'+esc(v)+'</td>';
     }
@@ -2027,11 +2100,17 @@ function renderTable(){
   h+='</tbody>';
   document.getElementById("dtable").innerHTML=h;
   var nadd=0;
-  if(og) for(var c3=0;c3<t.cols.length;c3++) if(og.indexOf(t.cols[c3])<0) nadd++;
+  for(var c3=0;c3<t.cols.length;c3++) if(og.indexOf(t.cols[c3])<0) nadd++;
   document.getElementById("dcount").textContent =
      nf(rows.length)+" "+(TLABEL[TCUR]||"lignes")+(rows.length>LIM?" — "+LIM+" affichées":"")
-     + (og ? " · "+nadd+" colonnes ajoutées sur "+t.cols.length
-           : " · table créée par le nettoyage — "+t.cols.length+" colonnes");
+     + (og.length ? " · "+nadd+" colonnes produites sur "+t.cols.length
+                  : " · "+t.cols.length+" colonnes, toutes produites");
+  /* la légende suit la table : elle doit décrire ce qu'on voit, pas un cas général */
+  var L=LEGENDE[TCUR]||LEGENDE.accounts, lg=document.getElementById("dlegend");
+  if(lg) lg.innerHTML =
+      (L[0] ? '<span><i class="og"></i>'+esc(L[0])+'</span>' : '')
+    + '<span><i class="ad"></i>'+esc(L[1])+'</span>'
+    + '<span style="margin-left:auto">source : <b>dashboard_data/</b> · branche <b>cleanup-pipeline</b></span>';
 }
 function initData(){
   document.getElementById("dtabs").onclick=function(e){
@@ -2109,5 +2188,4 @@ fetch("wtc.json").then(function(r){ return r.json(); }).then(function(j){
 });
 </script>
 </body>
-</html>,
- qs:[["Comment vous savez que votre nettoyage n'a rien cassé ailleurs ?","<b>95 contrôles</b> tournent à chaque exécution : conservation des lignes, cohérence, bornes de sanité, non-régression. Un seul au rouge et le pipeline refuse de continuer. Si une règle casse quelque chose à l'autre bout de la base, je le sais avant même de regarder la liste d'appels."],["Comment vous garantissez que vos règles sont vraiment appliquées, et pas seulement écrites ?","Chaque décision a une ligne dans une table : la règle, où elle est implémentée, et le contrôle qui prouve qu'elle tourne. <b>Une ligne ne passe au vert que si son contrôle est vert au moment où le rapport se génère</b> — pas parce qu'un fichier de configuration l'affirme. Cette table est née d'un vrai problème : des règles actées puis jamais implémentées. Elle a ensuite produit l'erreur inverse, dix règles implémentées mais toujours affichées comme à venir. C'est ce qui a conduit à ce verrou : un statut ne se déclare pas, il se constate."]]
+</html>
