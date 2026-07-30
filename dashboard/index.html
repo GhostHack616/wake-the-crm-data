@@ -1472,11 +1472,10 @@ var PROC=[
 {
  p:"1 · L'analyse", t:"Comment on a travaillé", court:true,
  h:"La preuve que c'est moi qui dirige",
- say:"J'ai fait travailler deux IA en parallèle, chacune reprenant le travail de l'autre depuis les fichiers bruts. Une vingtaine d'erreurs sont sorties, et plusieurs sont arrivées jusqu'à l'écran. Aucune n'y est restée, parce que celle qui n'avait pas écrit allait la chercher. Et les décisions qui ont changé le résultat, c'est moi qui les ai prises.",
+ say:"J'ai joué mes deux IA l'une contre l'autre. Chacune amenait une amélioration à l'autre, en repartant des fichiers bruts, ou parfois de ce que l'autre avait déjà fait. Et ça passait toujours par moi, parce que c'est moi qui devais trancher.",
  loop:true,
- geant:["10","fois où j'ai dit non. Je ne vous dis pas « j'ai tout relu » : tout le monde le prétend, personne ne peut le prouver. Je peux vous citer les dix décisions, avec ce que chacune a changé."],
  bareme:[
-  ["Ce que l'IA proposait, ce que j'ai imposé, ce que ça a changé"],
+  ["Des décisions où j'ai dit non, et ce que chacune a changé"],
   ["Le désabonnement retire 20 points", "règle supprimée",
    "« fermer un canal, ce n'est pas être fermé à l'offre ». Un des rendez-vous de la base a été pris par une personne désinscrite : cette règle décotait le compte le plus évident du fichier"],
   ["Consulter sa facture est un signal de départ", "7 events sur 14 retirés",
@@ -1487,10 +1486,10 @@ var PROC=[
    "« si tu appelles mon CIO, il te dit qu'il n'a pas le temps ». Le décideur devient le contexte de l'appel, pas la cible"],
   ["435 comptes sont injoignables", "le chiffre était faux",
    "« vous avez checké l'opt-out ? ». Il mélangeait les désabonnés et les contacts sans adresse, deux problèmes différents"]],
- pb:"Le brief le dit lui-même : « IA bienvenue, mais tu dois pouvoir défendre chaque ligne de logique comme si tu l'avais écrite. » Ce n'est pas une tolérance, c'est le test. Et un modèle qui relit son propre travail ne trouve que ce qu'il a pensé à chercher.",
- body:"Les deux modèles ne se parlent jamais. Je suis le seul canal et le seul à trancher. Quand les chiffres divergeaient, personne n'argumentait : chacun renvoyait <b>sa définition exécutable et son chiffre</b>, et je comparais. Aucune décision n'a été prise parce qu'un modèle était plus convaincant que l'autre.",
+ pb:"Le brief le dit lui-même : « IA bienvenue, mais tu dois pouvoir défendre chaque ligne de logique comme si tu l'avais écrite. » Ce n'est pas une tolérance, c'est le test. Et un modèle qui relit son propre travail ne trouve que ce qu'il a pensé à chercher : il faut un contradicteur, pas un correcteur.",
+ body:"Les deux modèles ne se parlent jamais. Je suis le seul canal et le seul à trancher. Quand les chiffres divergeaient, personne n'argumentait : chacun renvoyait <b>sa définition exécutable et son chiffre</b>, et je comparais. Aucune décision n'a été prise parce qu'un modèle était plus convaincant que l'autre.<br><br>Et j'ai appris une règle à mes frais. Une fois, j'ai laissé l'une des deux avancer seule sur un lot : elle a poussé des modifications que je n'avais pas validées. Depuis, <b>rien ne part sans mon accord explicite</b>, et un accord ne vaut que pour le lot qu'il décrit.",
  q:"Et la double lecture, elle a attrapé quoi ?",
- r:"Un exemple parmi la vingtaine : un champ commercial qui ne s'héritait jamais entre fiches fusionnées, soit <b>1 407 comptes</b> récupérables. Le filet comptait 88 contrôles à ce moment-là, tous au vert. Il en compte 95 aujourd'hui, le correctif en a ajouté 7. Un test vérifie ce qu'on a pensé à tester. Une seconde implémentation vérifie ce qu'on n'a pas pensé.<br><br>La limite, je l'assume : la vérification croisée est manuelle. Sur un vrai pipeline, les deux implémentations tourneraient en intégration continue et le build casserait sur divergence."
+ r:"Un exemple, et il est parlant. Quand deux fiches de la même entreprise fusionnent, on avait décidé qu'une case vide devait se remplir depuis la fiche jumelle. C'était écrit. Ça n'avait jamais été codé pour le commercial responsable.<br><br>Résultat : <b>1 407 entreprises</b> sortaient sans commercial alors que leur fiche jumelle en portait un. Un manager aurait dû les réattribuer à la main, pour rien.<br><br>Et personne ne l'avait vu, parce que les <b>contrôles automatiques</b> (des tests qui se rejouent à chaque exécution du pipeline et l'arrêtent si un compteur sort de ses bornes) étaient <b>tous au vert</b>. Ils vérifiaient ce qu'on avait pensé à vérifier. Ils ne pouvaient pas voir une règle qu'on avait oublié d'écrire. C'est l'autre implémentation qui l'a trouvée, en refaisant le calcul de son côté.<br><br>La limite, je l'assume : ce croisement est manuel. Sur un vrai pipeline, les deux implémentations tourneraient automatiquement et la construction s'arrêterait dès qu'elles divergent."
 },
 {
  p:"1 · L'analyse", t:"Ce que cette double lecture a trouvé", court:true,
@@ -1992,15 +1991,15 @@ var PROC=[
  pb:"Les opérations sont éclatées partout : les tâches dans Notion, les fichiers dans Drive, le scraping dans Apify, les campagnes dans Lemlist, les automatisations dans n8n. Aucun de ces outils ne parle aux autres, et le lien entre les étapes, c'est moi.",
  body:"Ce que je voulais : <b>un seul point d'entrée</b>, qui connaît mes clients, et qui bosse quand je ne bosse pas.",
  q:"Pourquoi construire, plutôt que prendre un outil qui fait déjà ça ?",
- r:"Parce que je veux pouvoir tout casser et tout reconstruire. Un VPS à quelques euros par mois, le code dans mon dépôt, les fiches clients versionnées avec lui. <b>Rien de loué.</b>"
+ r:"Parce que je veux pouvoir tout casser et tout reconstruire. Le serveur, je le loue, quelques euros par mois, et il se remplace. Ce qui ne se remplace pas, c'est le code, la configuration et les fiches clients : ils vivent dans mon dépôt. <b>C'est ça que je possède.</b>"
 },
 {
- p:"7 · Becca", t:"Mes choix", h:"Mon serveur, mon code, rien de loué", court:true,
- say:"Un VPS à quelques euros par mois, le code dans mon dépôt. Rien de loué : je peux tout casser et tout reconstruire.",
+ p:"7 · Becca", t:"Mes choix", h:"Rien qui m'enferme", court:true,
+ say:"Le serveur, je le loue, quelques euros par mois. Ce qui n'est pas loué, c'est ce qui compte : le code, la configuration et les données sont dans mon dépôt. Je change d'hébergeur ce soir, je réinstalle tout demain matin.",
  bareme:[
   ["Quatre choix, et le pourquoi de chacun"],
-  ["Mon serveur, mon code", "rien de loué",
-   "un VPS à quelques euros par mois, le code dans mon dépôt privé. Je peux tout casser et tout reconstruire"],
+  ["Le serveur est louable, le système ne l'est pas", "portable",
+   "le VPS coûte quelques euros par mois et se remplace. Le code, la configuration et les fiches clients vivent dans mon dépôt : c'est ça que je possède"],
   ["Telegram comme interface", "zéro app en plus",
    "je suis déjà dessus toute la journée. Pas de nouvelle app, pas de tableau de bord de plus"],
   ["Un seul agent, simple", "pas de microservices",
@@ -2010,7 +2009,7 @@ var PROC=[
  pb:"Un agent qui écrit dans les outils d'un client peut faire des dégâts qu'aucun correctif ne rattrape. Un email parti est parti.",
  body:"L'orchestrateur tourne sur le VPS, relancé automatiquement au démarrage et après un plantage. Les connecteurs vers Notion, Drive, Apify, n8n et Lemlist sont branchés dessus, et ils ne se chargent que si le message en a besoin. Le profil de l'agent, ses règles et les fiches clients vivent dans le dépôt, versionnés avec le code.",
  q:"Un seul agent, ce n'est pas un peu court ?",
- r:"C'est un choix de taille de problème : je suis seul, avec une poignée de clients et des opérations qui reviennent. Un orchestrateur et des connecteurs suffisent, et rien ne part sans que je puisse le relire. Pas de microservices, pas d'usine à gaz."
+ r:"C'est un choix de taille de problème : je suis seul, avec une poignée de clients et des opérations qui reviennent. Un orchestrateur et des connecteurs suffisent, et rien ne part sans que je puisse le relire. Pas de microservices, pas d'usine à gaz.<br><br>Et je ne prétends pas ne rien louer : je loue un serveur, comme tout le monde. La différence est ailleurs : aucun de mes automatismes ne vit à l'intérieur d'un outil que je ne contrôle pas. Le jour où un fournisseur change ses prix ou ferme, je perds une facture, pas mon système."
 },
 {
  p:"7 · Becca", t:"Le cas réel, bout en bout", h:"Un message Telegram, 176 contacts propres", court:true,
@@ -2087,8 +2086,8 @@ var PROC=[
   ["Les quatre phrases à retenir"],
   ["Il propose, je valide, il exécute", "la règle d'or",
    "aucune écriture chez un client sans mon OK"],
-  ["Mon serveur, mon code", "rien de loué",
-   "je peux tout casser et tout reconstruire"],
+  ["Le code et la configuration sont à moi", "portable",
+   "le serveur est louable et remplaçable, le système ne l'est pas"],
   ["Plus de 100 lignes de données, ça passe par un workflow", "jamais par l'agent",
    "la règle née de la boucle infernale"],
   ["Une casse se referme avec une règle", "3 sur 3",
