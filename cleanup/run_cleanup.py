@@ -1183,7 +1183,10 @@ def step11_segment(tables, report):
             seg = "DORMANT"
             evidence = "declared_field"      # le champ disqualifié décide — assumé
         c["segment"] = seg
-        c["play"] = cfg["play"][seg]
+        # play_segment (renommé 30/07) : le play dérivé du SEGMENT, avant toute
+        # lecture d'activité. Le play final vit dans le scoring — deux colonnes
+        # jumelles nommées pareil ont produit la divergence muette ENT-16714.
+        c["play_segment"] = cfg["play"][seg]
         c["segment_evidence"] = evidence
         counts[seg] += 1
 

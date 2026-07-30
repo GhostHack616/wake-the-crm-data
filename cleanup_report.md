@@ -1,6 +1,6 @@
 # Rapport d'audit du cleanup — Wake the CRM
 
-Généré par `cleanup/run_cleanup.py` le 2026-07-29 (référence temporelle du dataset : 2026-07-22).
+Généré par `cleanup/run_cleanup.py` le 2026-07-30 (référence temporelle du dataset : 2026-07-22).
 
 Principe : rien n'est supprimé — réparations en colonnes neuves, originaux intacts.
 
@@ -316,4 +316,6 @@ Armées par le scoring V1.1 — chaque promesse cite sa garde, vérifiée verte 
 | Chaque event/contact rattaché à exactement une entité (anonymes/inconnus tracés) | étape 8 | R1-R8 | 🟢 garantie |
 | Mapping persona produit, partition complète double sens | config personas | P1-P7 | 🟢 garantie |
 | Plancher conversions : form_fill/meeting_booked à poids plein quel que soit le porteur | scoring V1.1 (moteur) | SC23 | 🟢 garantie (garde verte, scoring V1.1) |
+| 4 listes d'appel actées 30/07 : l'entrée est un FAIT, préséance gravée, une entité = une liste | scoring V1.1 (listes) | SC25, SC26, SC27 | 🟢 garantie (garde verte, scoring V1.1) |
+| Le play final lit l'activité ; toute divergence avec l'étiquette de segment est motivée, jamais muette | scoring V1.1 (moteur) | SC28 | 🟢 garantie (garde verte, scoring V1.1) |
 

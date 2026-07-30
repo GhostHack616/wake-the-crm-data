@@ -154,6 +154,33 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
     fiche = {c["entity_id"]: c for c in companies}
     VALIDE = ("ok", "repaired")
 
+    # ---- les 4 listes d'appel (actées 30/07) -------------------------
+    # L'entrée dans une liste est un FAIT (signaux de départ, échéance de
+    # contrat, porte, signe de vie) ; le score n'y fait que l'ordre.
+    # Préséance gravée : perdus > rétention > expansion > acquisition >
+    # reconquête > nurture — une entité, UNE liste (SC27).
+    CLIENTS = ("CLIENT_ACTIF", "CLIENT_RENEWAL_ECHUE", "CHURN_CONTRADICTOIRE")
+    ref_l = jour(cfg["reference_date"])
+    fen_echeance = cfg["listes"]["fenetre_echeance_jours"]
+
+    def liste_de(f, tier, negatif, perdu):
+        if perdu:
+            return "perdus"
+        client = f["segment"] in CLIENTS
+        if negatif < 0:
+            return "retention"                 # signaux de départ, toute famille
+        if client and f["renewal_date"]:
+            d_ren = jour(f["renewal_date"])
+            if d_ren < ref_l or (d_ren - ref_l).days <= fen_echeance:
+                return "retention"             # contrat échu ou à échéance
+        if client and tier in ("T1", "T2"):
+            return "expansion"
+        if tier in ("T1", "T2") and f["a_ete_client"] == "0":
+            return "acquisition"
+        if f["segment"] == "EX_CLIENT_REACTIF":
+            return "reconquete"
+        return "nurture"
+
     def joignable(cid):
         i = infos[cid]
         return (i["opted_out"].strip().lower() not in ("true", "1")
@@ -228,9 +255,12 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
         else:
             canal = ""
 
-        play = f["play"]
+        play, play_ajuste = f["play_segment"], ""
         if d["porte"] == "comite" and d["negatif"] < 0:
-            play = "risque"      # un comité actif qui regarde la porte de sortie = à sauver
+            # un comité actif qui regarde la porte de sortie = à sauver.
+            # La divergence avec l'étiquette de segment est MOTIVÉE et portée
+            # par play_ajuste_par — jamais muette (SC28, revue croisée 30/07).
+            play, play_ajuste = "risque", "signaux_negatifs"
 
         if perdu:
             # Un perdu n'a ni personne à appeler ni preuve : le dire, pas l'inventer.
@@ -244,7 +274,9 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
             "fit": fit, "comite_personnes_14j": d["comite_n"],
             "sponsor_decideur": "oui" if d["sponsor"] else "non",
             "qui_appeler": nom, "son_titre": i.get("job_title", ""), "preuve": quoi,
-            "canal": canal, "play": play, "segment": f["segment"],
+            "canal": canal, "play": play, "play_segment": f["play_segment"],
+            "play_ajuste_par": play_ajuste,
+            "liste": liste_de(f, tier, d["negatif"], perdu), "segment": f["segment"],
             "n_records": f["n_records"], "signaux_negatifs": d["negatif"],
             "perdu_canal_mort": "1" if perdu else "0", "perte": perte,
             "silence": "",
@@ -270,7 +302,9 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
             "score": 0.0, "score_brut": 0.0, "tier": "T3", "porte": "",
             "fit": fit, "comite_personnes_14j": 0, "sponsor_decideur": "non",
             "qui_appeler": "", "son_titre": "", "preuve": "",
-            "canal": "", "play": f["play"], "segment": f["segment"],
+            "canal": "", "play": f["play_segment"], "play_segment": f["play_segment"],
+            "play_ajuste_par": "", "liste": liste_de(f, "T3", 0.0, False),
+            "segment": f["segment"],
             "n_records": f["n_records"], "signaux_negatifs": 0.0,
             "perdu_canal_mort": "0", "perte": "",
             "silence": "sans_signal" if ent in avec_event else "aucun_evenement",
@@ -363,6 +397,18 @@ def invariants(cfg, lignes, score_p, comptes, alarmes, events_p):
         ("SC24", "score >= seuil T1 => Tier 1, porte ou pas (hors canal mort)", 0,
          sum(1 for r in lignes
              if r["score_brut"] >= cfg["seuils"]["tier1"] and r["tier"] not in ("T1", "PERDU"))),
+        # SC25-SC28 (30/07) : les 4 listes d'appel + la fin des divergences
+        # muettes — nées du trou Sylvasolfinance (le compte tombait entre les
+        # listes) et du double play cleanup/scoring.
+        ("SC25", "liste rétention (à sauver) : signaux de départ + clients à échéance",
+         exp["liste_retention"], len([r for r in lignes if r["liste"] == "retention"])),
+        ("SC26", "aucun client dans la liste acquisition", 0,
+         len([r for r in lignes if r["liste"] == "acquisition"
+              and r["segment"] in ("CLIENT_ACTIF", "CLIENT_RENEWAL_ECHUE", "CHURN_CONTRADICTOIRE")])),
+        ("SC27", "partition des listes : chaque entité dans exactement une liste",
+         exp["partition_totale"], len([r for r in lignes if r["liste"]])),
+        ("SC28", "divergence play_segment -> play toujours motivée (jamais muette)", 0,
+         len([r for r in lignes if r["play"] != r["play_segment"] and not r["play_ajuste_par"]])),
     ]
     verts = sum(1 for _, _, att, obt in checks if att == obt)
     for cid, lib, att, obt in checks:
@@ -485,7 +531,10 @@ def main():
                                                                  if x["silence"] == "sans_signal"]),
                           "silencieuses_aucun_evenement": len([x for x in lignes
                                                                if x["silence"] == "aucun_evenement"]),
-                          "partition_totale": len(lignes)},
+                          "partition_totale": len(lignes),
+                          "listes": {k: len([x for x in lignes if x["liste"] == k])
+                                     for k in ("acquisition", "expansion", "retention",
+                                               "reconquete", "nurture", "perdus")}},
             "ops": ops,
             "graphe": graphe,
             "hot_list": detail,

@@ -410,3 +410,5 @@ tracabilite:
   - {regle: "Chaque event/contact rattaché à exactement une entité (anonymes/inconnus tracés)", ou: "étape 8", invariants: "R1-R8"}
   - {regle: "Mapping persona produit, partition complète double sens",           ou: "config personas",     invariants: "P1-P7"}
   - {regle: "Plancher conversions : form_fill/meeting_booked à poids plein quel que soit le porteur", ou: "scoring V1.1 (moteur)", invariants: "SC23"}
+  - {regle: "4 listes d'appel actées 30/07 : l'entrée est un FAIT, préséance gravée, une entité = une liste", ou: "scoring V1.1 (listes)", invariants: "SC25, SC26, SC27"}
+  - {regle: "Le play final lit l'activité ; toute divergence avec l'étiquette de segment est motivée, jamais muette", ou: "scoring V1.1 (moteur)", invariants: "SC28"}
