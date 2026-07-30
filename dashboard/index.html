@@ -359,7 +359,12 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .dlegend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:-1px}
 .dlegend i.og{background:var(--soft-2)} .dlegend i.ad{background:var(--violet)}
 .dscroll{flex:1;overflow:auto;position:relative}
-.dtable{border-collapse:separate;border-spacing:0;font-size:var(--fs-xs);width:max-content;min-width:100%}
+/* table-layout:fixed est imposé par le défilement virtuel : les largeurs sont
+   calculées une fois sur TOUTE la table (colgroup en px), sinon elles sauteraient
+   à chaque tranche dessinée. */
+.dtable{border-collapse:separate;border-spacing:0;font-size:var(--fs-xs);table-layout:fixed;min-width:100%}
+.dtable tr.dcale td{padding:0;border:0;background:transparent}
+.dtable tr.dcale:hover td{background:transparent}
 .dtable th{position:sticky;top:0;z-index:2;background:var(--panel);text-align:left;padding:9px 11px;
   border-bottom:1px solid var(--line);white-space:nowrap;font-size:10px;letter-spacing:.05em;
   text-transform:uppercase;font-weight:700;color:var(--text-3);cursor:pointer;user-select:none}
@@ -373,9 +378,6 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .dtable tr:hover td.add{background:var(--violet-soft);filter:brightness(.97)}
 .dtable td.num{text-align:right;font-variant-numeric:tabular-nums}
 .dload{padding:60px;text-align:center;color:var(--text-3);font-size:var(--fs-sm)}
-/* Une table qui s'arrête sans le dire donne l'impression d'être bloquée. */
-.dtable tfoot td.dfin{position:sticky;left:0;padding:20px 14px;text-align:center;background:var(--soft);
-  color:var(--text-3);font-size:var(--fs-xs);white-space:normal;border-bottom:0}
 @media(max-width:680px){
   .dbar{flex-wrap:wrap;gap:8px;padding:10px 12px}
   .dbar input{max-width:none;width:100%;order:3}
@@ -2074,16 +2076,81 @@ function loadTables(){
     document.getElementById("dtable").innerHTML='<tr><td class="dload">Erreur : '+e+'</td></tr>';
   });
 }
+/* ─────────────────────────────────────────────────────────────────────────
+   TOUTES LES LIGNES, VRAIMENT.
+
+   Il n'y a plus de plafond d'affichage. 94 838 lignes × 8 colonnes feraient
+   758 000 cellules dans la page : aucun navigateur ne tient. On dessine donc
+   uniquement la tranche visible, et on remplace le reste par deux cales de la
+   bonne hauteur. La barre de défilement fait la hauteur des 94 838 lignes,
+   le défilement va jusqu'à la dernière, et la page ne contient jamais plus
+   d'une centaine de lignes.
+
+   Conséquence : les largeurs de colonnes ne peuvent plus être déduites du
+   contenu affiché — elles changeraient à chaque défilement. Elles sont donc
+   calculées UNE FOIS sur l'intégralité de la table, puis figées.
+   ───────────────────────────────────────────────────────────────────────── */
+var VROWS=[], TADD=[], VH=31, VMARGE=12, VD=-1, VF=-1, VMES=0;
+/* VH : hauteur d'une ligne. Posée à 31 px, puis MESURÉE au premier rendu et
+   corrigée si le navigateur en décide autrement — une hauteur supposée fait
+   dériver la position de défilement sur 94 838 lignes. */
+
+function peindre(force){
+  var tb=document.getElementById("dbody"), sc=document.getElementById("dscroll");
+  if(!tb||!sc) return;
+  var n=VROWS.length, nc=TADD.length;
+  var vis=Math.ceil((sc.clientHeight||620)/VH)+VMARGE*2;
+  var d=Math.max(0, Math.floor(sc.scrollTop/VH)-VMARGE), f=Math.min(n, d+vis);
+  if(!force && d===VD && f===VF) return;
+  VD=d; VF=f;
+  var h='';
+  if(d>0) h+='<tr class="dcale"><td colspan="'+nc+'" style="height:'+(d*VH)+'px"></td></tr>';
+  for(var i=d;i<f;i++){
+    var r=VROWS[i];
+    h+='<tr>';
+    for(var c=0;c<nc;c++){
+      var v=r[c]===undefined?"":r[c];
+      var num = v!=="" && !isNaN(parseFloat(v)) && String(v).length<12;
+      h+='<td class="'+(TADD[c]?"add ":"")+(num?"num":"")+'" title="'+esc(v)+'">'+esc(v)+'</td>';
+    }
+    h+='</tr>';
+  }
+  if(f<n) h+='<tr class="dcale"><td colspan="'+nc+'" style="height:'+((n-f)*VH)+'px"></td></tr>';
+  tb.innerHTML=h;
+  if(!VMES && f>d){
+    var tr=tb.querySelector("tr:not(.dcale)");
+    if(tr){
+      VMES=1;
+      var mesure=tr.offsetHeight;
+      if(mesure && Math.abs(mesure-VH)>0.5){ VH=mesure; peindre(true); }
+    }
+  }
+}
+
+function largeurs(t){
+  if(t.w) return t.w;
+  var w=[];
+  for(var c=0;c<t.cols.length;c++) w.push(t.cols[c].length+2);
+  for(var i=0;i<t.rows.length;i++){
+    var r=t.rows[i];
+    for(var c2=0;c2<r.length;c2++){ var n=String(r[c2]).length; if(n>w[c2]) w[c2]=n; }
+  }
+  /* 6,6 px par caractère + les marges internes, borné comme l'était le CSS */
+  t.w=w.map(function(n){ return Math.max(74, Math.min(292, Math.round(n*6.6)+24)); });
+  return t.w;
+}
+
 function renderTable(){
   var t=T[TCUR]; if(!t) return;
   var q=(document.getElementById("dq").value||"").trim().toLowerCase();
   var rows=t.rows;
   if(q){
+    /* plus de plafond de résultats non plus : la recherche voit tout le fichier */
     rows=[];
     for(var i=0;i<t.rows.length;i++){
       var r=t.rows[i], hit=false;
       for(var c=0;c<r.length;c++){ if(String(r[c]).toLowerCase().indexOf(q)>=0){hit=true;break;} }
-      if(hit){ rows.push(r); if(rows.length>=3000) break; }
+      if(hit) rows.push(r);
     }
   }
   if(TSORT!==null){
@@ -2094,40 +2161,31 @@ function renderTable(){
       return String(x).localeCompare(String(y))*sg;
     });
   }
-  var LIM=400, show=rows.slice(0,LIM);
+  VROWS=rows;
   var og=ORIG[TCUR]||[], tout=(og==="*");
   /* tout===true : la table est le fichier reçu, aucune colonne n'est de nous */
-  function ajoutee(nom){ return tout ? false : og.indexOf(nom)<0; }
-  var h='<thead><tr>';
-  for(var c=0;c<t.cols.length;c++){
-    var add = ajoutee(t.cols[c]);
-    var ar = (TSORT===c) ? '<span class="ar">'+(TDESC?"▾":"▴")+'</span>' : '';
-    h+='<th class="'+(add?"add":"")+'" data-c="'+c+'">'+esc(t.cols[c])+ar+'</th>';
+  TADD=[];
+  for(var c3=0;c3<t.cols.length;c3++)
+    TADD.push(tout ? false : og.indexOf(t.cols[c3])<0);
+  var w=largeurs(t), tot=0;
+  var h='<colgroup>';
+  for(var c4=0;c4<w.length;c4++){ tot+=w[c4]; h+='<col style="width:'+w[c4]+'px">'; }
+  h+='</colgroup><thead><tr>';
+  for(var c5=0;c5<t.cols.length;c5++){
+    var ar = (TSORT===c5) ? '<span class="ar">'+(TDESC?"▾":"▴")+'</span>' : '';
+    h+='<th class="'+(TADD[c5]?"add":"")+'" data-c="'+c5+'">'+esc(t.cols[c5])+ar+'</th>';
   }
-  h+='</tr></thead><tbody>';
-  for(var i=0;i<show.length;i++){
-    h+='<tr>';
-    for(var c2=0;c2<t.cols.length;c2++){
-      var v=show[i][c2], add2 = ajoutee(t.cols[c2]);
-      var num = v!=="" && !isNaN(parseFloat(v)) && String(v).length<12;
-      h+='<td class="'+(add2?"add ":"")+(num?"num":"")+'" title="'+esc(v)+'">'+esc(v)+'</td>';
-    }
-    h+='</tr>';
-  }
-  h+='</tbody>';
-  /* Le plafond est annoncé LÀ OÙ on le rencontre — en bas. Annoncé seulement en
-     haut, il donne l'impression d'un défilement bloqué. */
-  if(rows.length>LIM){
-    h+='<tfoot><tr><td class="dfin" colspan="'+t.cols.length+'">'
-      +'Fin des '+LIM+' premières lignes affichées — il y en a '+nf(rows.length)
-      +' au total. Cherchez ci-dessus (nom, domaine, identifiant…) pour atteindre les autres, '
-      +'ou cliquez un en-tête pour trier l’ensemble.</td></tr></tfoot>';
-  }
-  document.getElementById("dtable").innerHTML=h;
+  h+='</tr></thead><tbody id="dbody"></tbody>';
+  var tb=document.getElementById("dtable");
+  tb.style.width=tot+"px";
+  tb.innerHTML=h;
+  document.getElementById("dscroll").scrollTop=0;
+  peindre(true);
   var nadd=0;
-  for(var c3=0;c3<t.cols.length;c3++) if(ajoutee(t.cols[c3])) nadd++;
+  for(var c6=0;c6<TADD.length;c6++) if(TADD[c6]) nadd++;
   document.getElementById("dcount").textContent =
-     nf(rows.length)+" "+(TLABEL[TCUR]||"lignes")+(rows.length>LIM?" — "+LIM+" affichées":"")
+     nf(rows.length)+" "+(TLABEL[TCUR]||"lignes")
+     + (q ? " sur "+nf(t.rows.length) : "")
      + (tout    ? " · "+t.cols.length+" colonnes, toutes d’origine"
       : og.length ? " · "+nadd+" colonnes produites sur "+t.cols.length
                   : " · "+t.cols.length+" colonnes, toutes produites");
@@ -2147,13 +2205,23 @@ function initData(){
     document.getElementById("dscroll").scrollTop=0;
     document.getElementById("dq").value=""; loadTables();
   };
-  document.getElementById("dq").oninput=function(){ TSORT=null; renderTable(); };
+  /* la recherche balaie les 94 838 lignes : on attend la fin de la frappe */
+  var minuteur=null;
+  document.getElementById("dq").oninput=function(){
+    clearTimeout(minuteur);
+    minuteur=setTimeout(function(){ TSORT=null; renderTable(); }, 140);
+  };
   document.getElementById("dtable").onclick=function(e){
     var th=e.target.closest("th[data-c]"); if(!th) return;
     var c=+th.dataset.c;
     if(TSORT===c) TDESC=!TDESC; else { TSORT=c; TDESC=false; }
     renderTable();
   };
+  /* le défilement virtuel : on redessine la tranche visible, jamais toute la table */
+  document.getElementById("dscroll").addEventListener("scroll", function(){
+    peindre(false);
+  }, {passive:true});
+  window.addEventListener("resize", function(){ if(VROWS.length) peindre(true); });
 }
 
 /* ══════════════════════════════════════════════════════════════ */
