@@ -493,6 +493,34 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 @keyframes fluxA{to{stroke-dashoffset:-16}}
 @keyframes fluxB{to{stroke-dashoffset:16}}
 .lpuce{fill:var(--violet)}
+/* ── le schéma de la chaîne : cinq étages, de la personne à l'appel.
+   Même grammaire que les deux autres schémas : boîtes sobres, flux animés. */
+.chaine{margin:30px auto 0;max-width:980px}
+.chaine .ch{width:100%;height:auto;display:block} .chaine .cv{display:none}
+.cnom{font-family:var(--display);font-size:12.5px;font-weight:600;fill:var(--text);letter-spacing:.04em}
+.crole{font-size:9.5px;fill:var(--text-3)}
+.cdet{font-size:9.5px;fill:var(--text-3);opacity:.85}
+.ctit{font-size:9px;letter-spacing:.16em;fill:var(--text-3);font-weight:700}
+.cbox{fill:var(--panel);stroke:var(--line);stroke-width:1}
+.cbox.t1{fill:rgba(227,166,72,.13);stroke:rgba(227,166,72,.5)}
+.cbox.t2{fill:var(--violet-soft);stroke:rgba(154,141,255,.45)}
+.cbox.t3{fill:var(--soft);stroke:var(--line-2)}
+.cbox.act{fill:var(--ink);stroke:var(--ink)}
+/* ce qui est écarté avant le calcul : barré, jamais caché */
+.cbox.out{fill:transparent;stroke:var(--line-2);stroke-dasharray:4 4}
+.cflux.out{stroke:var(--text-3);opacity:.4;animation:none;stroke-dasharray:3 5}
+.cbox.act ~ .cnom{fill:var(--on-ink)}
+.cflux{stroke:var(--violet);stroke-width:1.8;stroke-linecap:round;fill:none;
+  stroke-dasharray:5 9;opacity:.75;animation:fluxA 1.15s linear infinite}
+.cflux.b{opacity:.5}
+.cpuce{fill:var(--violet)}
+/* le croisement se voit : chaque température peut tomber dans chaque relation */
+.ccroix{font-size:19px;font-weight:700;fill:var(--text-3);opacity:.5}
+@media(prefers-reduced-motion:reduce){ .cflux{animation:none} }
+@media(max-width:760px){
+  .chaine{max-width:260px}
+  .chaine .ch{display:none} .chaine .cv{display:block}
+}
 .lrule{text-align:center;margin-top:20px;font-size:var(--fs-sm);color:var(--text-2);line-height:1.6}
 .lrule b{color:var(--text);font-weight:600}
 @media(prefers-reduced-motion:reduce){ .lflux.a,.lflux.b{animation:none} }
@@ -1895,20 +1923,29 @@ var PROC=[
  say:"Le CRM est propre. Maintenant il faut sortir les comptes qui valent un appel, et pouvoir expliquer chaque point."
 },
 {
+ p:"5 · Scorer", t:"La chaîne, en un schéma", h:"De ce qu'une personne a fait, jusqu'au coup de fil", court:true,
+ say:"Cinq étages. Une personne fait quelque chose, son entreprise en hérite, l'entreprise reçoit une température, sa relation avec nous dit la conversation, et le commercial obtient une phrase à dire.",
+ chaine:true,
+ pb:"Un scoring qui sort une note et rien d'autre laisse le commercial devant un chiffre. Il ne sait ni qui appeler, ni quoi lui dire, ni pourquoi lui plutôt qu'un autre.",
+ body:"Les deux étages du milieu sont indépendants, et c'est tout l'argument. <b>La température</b> dit s'il se passe quelque chose : elle se calcule pareil pour tout le monde. <b>La relation</b> dit ce qu'on en fait : elle est posée avant le calcul, et elle ne bouge pas.<br><br>Résultat : mes 26 comptes les plus chauds, ce ne sont pas 26 prospections. Ce sont <b>22 prospections, 1 vente additionnelle, 1 sauvetage et 2 reconquêtes</b>. Un classement par points les aurait alignés sur la même ligne, et le commercial aurait ouvert les 26 avec la même phrase.",
+ q:"Pourquoi ne pas faire une seule note qui dit tout ?",
+ r:"Parce qu'une note ne peut pas répondre à deux questions différentes.<br><br>« Est-ce qu'il se passe quelque chose » se mesure avec les mêmes règles chez tout le monde : un clic vaut un clic, une démo vaut une démo.<br><br>« Qu'est-ce qu'on en fait » ne se mesure pas, ça se sait : un client qui bouge, c'est une vente additionnelle. Un ancien client qui bouge, c'est une reconquête. Un inconnu qui bouge, c'est une prospection. Le même geste, trois conversations.<br><br>Compresser les deux dans un seul chiffre, c'est perdre la moitié de l'information au moment précis où le commercial en a besoin."
+},
+{
  p:"5 · Scorer", t:"Ce que « chaud » veut dire", h:"On n'entre pas en Tier 1 aux points, on y entre par une preuve", court:true,
  say:"La note dit qui appeler en premier. La porte dit pourquoi il est dans la liste. Ce ne sont pas les mêmes objets, et c'est toute la différence avec un classement.",
  bareme:[
-  ["Deux portes, et il n'en existe pas de troisième"],
-  ["Porte 1, une demande explicite", "25 comptes",
-   "un rendez-vous ou un formulaire dans les 45 derniers jours. Aucun calcul nécessaire : 45 jours sans qu'on l'ait rappelé, ça n'arrive pas"],
-  ["Porte 2, un comité qui s'agite", "1 compte",
-   "au moins 3 personnes distinctes actives sur 14 jours, dont un décideur, sans aucune demande"],
-  ["Porte 3, l'accumulation de points", "0 compte",
-   "elle existe en garde-fou, elle ne se déclenche jamais sur ce fichier. Je le dis plutôt que de le cacher"]],
+  ["Deux façons d'entrer, et il n'en existe pas de troisième"],
+  ["Il a demandé quelque chose", "25 comptes",
+   "un rendez-vous ou un formulaire dans les 45 derniers jours. Aucun calcul : 45 jours sans qu'on l'ait rappelé, ça n'arrive pas"],
+  ["Plusieurs personnes bougent ensemble", "1 compte",
+   "au moins 3 personnes différentes de la même entreprise, actives sur 14 jours, dont un décideur, alors qu'aucune n'a rien demandé"],
+  ["Par accumulation de points", "0 compte",
+   "la protection existe si un compte accumule énormément sans jamais rien demander. Elle ne s'est jamais déclenchée ici, et je le dis plutôt que de le cacher"]],
  pb:"Un classement par points rate le compte où trois personnes s'agitent sans jamais remplir un formulaire. Et il fait passer devant un compte qui a beaucoup cliqué sans intention. Le volume et l'intention ne sont pas la même chose.",
- body:"Pourquoi des portes et pas un seuil, en deux raisons.<br><br><b>Un</b> : bougez tous mes poids de plus ou moins 30 %, la liste Tier 1 ne change pas. Elle n'est pas faite de points, elle est faite de faits.<br><b>Deux</b> : chaque compte de la liste s'explique en une phrase à un commercial. Pas « il a 42 points », mais « le 17 juillet, cette personne a réservé une démo ».<br><br>Une décision B2B est collective : 3 personnes en 2 semaines, c'est un comité qui bouge ; 3 personnes en 3 ans, c'est du hasard. C'est pour ça que la fenêtre du comité est courte et ancrée.",
+ body:"Pourquoi des faits et pas un seuil, en deux raisons.<br><br><b>Un</b> : bougez tous mes poids de plus ou moins 30 %, la liste ne change pas. Elle n'est pas faite de points, elle est faite de faits.<br><b>Deux</b> : chaque compte s'explique en une phrase à un commercial. Pas « il a 42 points », mais « le 17 juillet, cette personne a réservé une démo ».<br><br>Une décision d'achat en entreprise est collective : 3 personnes en 2 semaines, c'est un sujet qui circule en interne ; 3 personnes en 3 ans, c'est du hasard. C'est pour ça que la fenêtre est courte et qu'elle compte à partir d'aujourd'hui.",
  q:"Pourquoi pas simplement un seuil de points ?",
- r:"Parce qu'un seuil de points ne sait pas faire la différence entre l'intention et le volume. Les deux portes sont <b>sémantiques</b> : elles décrivent ce qui s'est passé, pas combien ça pèse.<br><br>Et je l'ai mesuré au lieu de l'affirmer. <b>38 variations</b> : chaque poids et chaque durée secoués de plus ou moins 30 %, un calcul complet à chaque fois. <b>Le Tier 1 est identique dans les 38 cas</b>, y compris au pire. Le Tier 2, lui, respire : <b>29 % de recouvrement au pire cas</b>. C'est normal, et je le dis plutôt que de le taire : une file de travail est bornée par un seuil de points, donc ses bords bougent quand les points bougent. Le Tier 1 ne bouge pas parce qu'il n'est pas fait de points.<br><br>Le test se rejoue en une commande : <b>run_scoring.py --robustesse</b>."
+ r:"Parce qu'un seuil de points ne sait pas faire la différence entre l'intention et le volume. Les deux façons d'entrer décrivent <b>ce qui s'est passé</b>, pas combien ça pèse.<br><br>Et je l'ai mesuré au lieu de l'affirmer. <b>38 variations</b> : chaque poids et chaque durée secoués de plus ou moins 30 %, un calcul complet à chaque fois. <b>Le Tier 1 est identique dans les 38 cas</b>, y compris au pire. Le Tier 2, lui, respire : <b>29 % de recouvrement au pire cas</b>. C'est normal, et je le dis plutôt que de le taire : une file de travail est bornée par un nombre de points, donc ses bords bougent quand les points bougent. Le Tier 1 ne bouge pas parce qu'il n'est pas fait de points.<br><br>Le test se rejoue en une commande : <b>run_scoring.py --robustesse</b>."
 },
 {
  p:"5 · Scorer", t:"Le barème", h:"Ce qui monte, ce qui descend", court:true,
@@ -2332,6 +2369,86 @@ function procDots(){
     h+='<i class="'+(k===PI?"on":(k<PI?"done":""))+'" data-i="'+k+'" title="'+esc(PROC[k].t)+'"></i>';
   document.getElementById("pDots").innerHTML=h;
 }
+/* ── LA CHAÎNE DU SCORING, en un schéma.
+   Cinq étages, lus de gauche à droite : ce qu'une personne a fait, ce que
+   l'entreprise vaut, à quelle température elle est, dans quelle conversation
+   elle tombe, et ce que le commercial en fait.
+   Le point du dossier : les deux derniers étages ne se déduisent pas l'un de
+   l'autre. Le tier dit la température, la relation dit la conversation. */
+function chaineSVG(){
+  function etage(x,y,w,h,t1,t2,cl){
+    return '<rect class="cbox'+(cl?" "+cl:"")+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="11"/>'
+      +'<text class="cnom" x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle">'+t1+'</text>'
+      +'<text class="crole" x="'+(x+w/2)+'" y="'+(y+40)+'" text-anchor="middle">'+t2+'</text>';
+  }
+  function puce(x,y){ return '<polygon class="cpuce" points="'+x+','+(y-4)+' '+(x+7)+','+y+' '+x+','+(y+4)+'"/>'; }
+  function fleche(x1,x2,y){ return '<path class="cflux" d="M'+x1+' '+y+' H'+x2+'"/>'+puce(x2-2,y); }
+
+  var S='<svg class="ch" viewBox="0 0 980 300" role="img" aria-label="Ce qui entre, puis de la personne à l\'action">';
+  /* 0. ce qui n'entre jamais : le moteur ne lit qu'un flux propre */
+  S+='<text class="ctit" x="176" y="248" text-anchor="middle">CE QUI N\'ENTRE JAMAIS DANS LE CALCUL</text>';
+  S+=etage(2,258,110,38,"LE ROBOT","420 événements","out");
+  S+=etage(122,258,110,38,"LES DOUBLONS","1 988 événements","out");
+  S+=etage(242,258,110,38,"LES ANONYMES","4 000 visites","out");
+  S+='<path class="cflux out" d="M77 152 V254"/><path class="cflux out" d="M275 152 V254"/>';
+  /* 1. la personne */
+  S+=etage(2,92,150,56,"UNE PERSONNE","ce qu'elle a fait");
+  S+='<text class="cdet" x="77" y="168" text-anchor="middle">8 points le clic</text>';
+  S+='<text class="cdet" x="77" y="182" text-anchor="middle">× qui elle est</text>';
+  S+='<text class="cdet" x="77" y="196" text-anchor="middle">× depuis quand</text>';
+  /* 2. l'entreprise */
+  S+=etage(200,92,150,56,"SON ENTREPRISE","la somme de ses gens");
+  S+='<text class="cdet" x="275" y="168" text-anchor="middle">jamais une moyenne</text>';
+  S+='<text class="cdet" x="275" y="182" text-anchor="middle">4 tièdes n\'effacent</text>';
+  S+='<text class="cdet" x="275" y="196" text-anchor="middle">pas 1 personne chaude</text>';
+  /* 3. les tiers */
+  S+='<text class="ctit" x="472" y="34" text-anchor="middle">LA TEMPÉRATURE</text>';
+  S+=etage(398,48,148,40,"TIER 1","elle a demandé, ou 3 bougent","t1");
+  S+=etage(398,100,148,40,"TIER 2","8 points, ça chauffe","t2");
+  S+=etage(398,152,148,40,"TIER 3","rien, newsletter","t3");
+  /* 4. les familles et les listes */
+  S+='<text class="ctit" x="700" y="34" text-anchor="middle">LA RELATION</text>';
+  S+=etage(626,48,148,40,"JAMAIS CLIENT","acquisition");
+  S+=etage(626,100,148,40,"CLIENT","expansion, ou à sauver");
+  S+=etage(626,152,148,40,"EX-CLIENT","reconquête");
+  /* 5. l'action */
+  S+=etage(826,92,150,56,"L'APPEL","qui, et pour dire quoi","act");
+  S+='<text class="cdet" x="901" y="168" text-anchor="middle">la personne qui a</text>';
+  S+='<text class="cdet" x="901" y="182" text-anchor="middle">levé la main, son canal,</text>';
+  S+='<text class="cdet" x="901" y="196" text-anchor="middle">sa preuve datée</text>';
+  /* les flux */
+  S+=fleche(156,196,120);
+  S+=fleche(354,394,120);
+  /* Surtout PAS trois flèches parallèles : elles laisseraient croire que Tier 1
+     égale « jamais client ». Les deux colonnes se CROISENT, chaque température
+     peut tomber dans chaque relation. On dessine le croisement. */
+  S+='<path class="cflux" d="M550 68 C586 68 586 172 622 172"/>';
+  S+='<path class="cflux" d="M550 172 C586 172 586 68 622 68"/>';
+  S+='<path class="cflux" d="M550 120 H622"/>';
+  S+=puce(620,68); S+=puce(620,120); S+=puce(620,172);
+  S+='<text class="ccroix" x="586" y="126" text-anchor="middle">×</text>';
+  [68,120,172].forEach(function(y){ S+='<path class="cflux b" d="M778 '+y+' H822 V120"/>'; });
+  S+=puce(824,120);
+  S+='</svg>';
+
+  /* vertical, pour les écrans étroits */
+  var V='<svg class="cv" viewBox="0 0 260 560" role="img" aria-label="De la personne à l\'action : cinq étages">';
+  var lb=[["UNE PERSONNE","ce qu'elle a fait",""],["SON ENTREPRISE","la somme de ses gens",""],
+          ["LA TEMPÉRATURE","tier 1, 2 ou 3","t1"],["LA RELATION","client, ex-client, ou ni l'un ni l'autre",""],
+          ["L'APPEL","qui, et pour dire quoi","act"]];
+  lb.forEach(function(b,k){
+    V+=etage(46,4+k*110,168,56,b[0],b[1],b[2]);
+    if(k<lb.length-1){ V+='<path class="cflux" d="M130 '+(64+k*110)+' V'+(108+k*110)+'"/>'
+                        +'<polygon class="cpuce" points="126,'+(106+k*110)+' 134,'+(106+k*110)+' 130,'+(114+k*110)+'"/>'; }
+  });
+  V+='</svg>';
+  return '<div class="chaine">'+S+V+'</div>'
+    +'<div class="lrule">Rien de sale n\'entre : ni le robot, ni les doublons, ni les visites sans personne identifiée. '
+    +'Et les deux étages du milieu ne se déduisent pas l\'un de l\'autre. '
+    +'<b>Un Tier 1 peut être une prospection, une vente additionnelle, un sauvetage ou une reconquête</b> : '
+    +'c\'est le croisement des deux qui dit quoi faire.</div>';
+}
+
 function loopSVG(){
   /* Un canal = deux voies : ce qui monte vers la personne, ce qui en repart.
      Rien ne passe d'un modèle à l'autre — il n'y a pas de trait entre eux. */
@@ -2525,6 +2642,7 @@ function procShow(i){
   /* le schéma passe AVANT le grand chiffre : il illustre la phrase dite, le
      chiffre est la conclusion */
   if(x.loop) h+=loopSVG();
+  if(x.chaine) h+=chaineSVG();
   if(x.becca) h+=beccaSVG();
   if(x.geant) h+='<div class="sgeant'+(x.geant[0].length>9?" long":"")+'">'+esc(x.geant[0])
                 +'</div><div class="sgeant-l">'+x.geant[1]+'</div>';
