@@ -60,6 +60,11 @@ build qui ne survivait pas à la machine qui l'avait produite.
 
 Dit honnêtement, parce que c'est ce qui rend le reste crédible :
 
+- **La vérité terrain a été trouvée, et c'est dit ici plutôt que découvert en entretien.** Le jeu de
+  données contenait une trace de son générateur ; l'audit l'a identifiée. Les règles n'en ont
+  jamais dépendu : barème et seuils figés d'abord, mesure de précision et de rappel faite une
+  seule fois en fin de course, aucun poids déplacé pour rattraper un compte. Le mécanisme exact
+  se raconte de vive voix, pas dans un dépôt public.
 - **Le nurture n'existe pas.** Les 5 741 comptes en signal faible sont étiquetés, pas travaillés.
 - **Le push Slack est manuel.** La liste part quand on la fait partir — pas encore de planification.
 - **La vérification croisée est manuelle.** À l'échelle d'un vrai pipeline, les deux
