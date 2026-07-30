@@ -660,7 +660,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
         <circle cx="20" cy="20" r="3.4" fill="#7c6cf0"/>
       </svg>
       <b>Wake the CRM</b>
-      <span>brouillon v0</span>
+      <span>V1.1</span>
     </div>
     <nav class="tabs" id="tabs">
       <button data-v="macro" class="on">Macro</button>
@@ -727,8 +727,8 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
           <div class="lsearch">
             <input id="q" type="search" placeholder="Rechercher un compte, un domaine…" autocomplete="off">
             <div class="lfilters" id="filters">
-              <button data-f="hot" class="on">Hot</button>
-              <button data-f="warm">Warm</button>
+              <button data-f="hot" class="on">Tier 1</button>
+              <button data-f="warm">Tier 2</button>
               <button data-f="trap">Perdus</button>
               <button data-f="all">Tout</button>
             </div>
@@ -1114,9 +1114,9 @@ var G=(function(){
   function tick(idx,w){
     var e=D.ents[idx], k=kind[idx], t=document.getElementById("ticker");
     var cls=k===2?"hot":(k===3?"risk":"");
-    var lab=k===3?"perdu : canal mort":(k===2?"passe HOT":(EVN[w]||"activité"));
+    var lab=k===3?"perdu : canal mort":(k===2?"entre en tier 1":(EVN[w]||"activité"));
     var el=document.createElement("div"); el.className="tk "+cls;
-    el.innerHTML='<i></i><b>'+esc(e[0])+'</b> · '+lab+'<em>'+e[6]+'</em>';
+    el.innerHTML='<i></i><b>'+esc(e[0])+'</b> · '+lab+'<em>'+vf(e[6])+'</em>';
     t.insertBefore(el,t.firstChild);
     while(t.children.length>9) t.removeChild(t.lastChild);
   }
@@ -1194,7 +1194,7 @@ var G=(function(){
     var c=o.col, css="rgb("+c[0]+","+c[1]+","+c[2]+")";
     var LIB={T1:"Tier 1",T2:"Tier 2",PERDU:"Perdu"};
     var h='<h4>'+esc(d.name)+'</h4><div class="gsub">'+esc(d.segment)+' · fit '+esc(d.fit)+'</div>'
-      +'<div class="gsc"><b style="color:'+css+'">'+d.score+'</b>'
+      +'<div class="gsc"><b style="color:'+css+'">'+vf(d.score)+'</b>'
       +'<em style="color:'+css+'">'+esc(LIB[d.tier]||d.tier)+'</em></div>'
       +'<div class="gline"><span>entré par</span><b>'
       +(d.porte==="conversion"?"une demande":d.porte==="comite"?"le comité":"—")+'</b></div>'
@@ -1205,7 +1205,7 @@ var G=(function(){
       h+='<div class="gppl">';
       d.personnes.slice(0,5).forEach(function(q){
         h+='<div><i style="background:'+(PERSONA[q[2]]||"#a6abb6")+'"></i><u>'+esc(q[0])+'</u><b>'
-          +q[3].toFixed(1)+'</b></div>';
+          +vf(q[3].toFixed(1))+'</b></div>';
       });
       if(d.personnes.length>5) h+='<div style="color:rgba(255,255,255,.35);padding-left:13px">+ '
         +(d.personnes.length-5)+' autres</div>';
@@ -1291,7 +1291,7 @@ var G=(function(){
       if(o){
         cv.style.cursor="pointer";
         var dd=D.detail[String(o.i)];
-        tip.innerHTML='<b>'+esc(o.nom)+'</b>'+esc(dd.tier)+' · '+dd.score+' pts : cliquer pour le détail';
+        tip.innerHTML='<b>'+esc(o.nom)+'</b>'+esc(dd.tier)+' · '+vf(dd.score)+' pts : cliquer pour le détail';
         tip.style.left=Math.min(W-250,e.clientX-b.left+14)+"px";
         tip.style.top=(e.clientY-b.top+14)+"px";
         tip.classList.add("on");
@@ -1327,6 +1327,12 @@ var G=(function(){
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 /* virgule decimale : l'ecran est en francais, le point est un tell technique */
+/* une date se lit en francais : 07-20 se lit « 7 novembre » par un lecteur francais */
+var MOISFR=['janv.','fevr.','mars','avr.','mai','juin','juil.','aout','sept.','oct.','nov.','dec.'];
+function jourFr(d){ var m=String(d).match(/(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[3])+' '+MOISFR[+m[2]-1] : esc(String(d)); }
+/* les personas s'affichent dans la langue des cartes, pas dans celle du moteur */
+var PERSOFR={buyer:'décideur',champion:'champion',utilisateur:'utilisateur',sans_titre:'fonction inconnue',bruit:'hors cible'};
+function persoFr(p){ return PERSOFR[p] || p; }
 function vf(v){ return String(v).replace('.', ','); }
 function nf(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," "); }
 var FILT="hot", SEL=null;
@@ -1356,7 +1362,7 @@ function renderRows(){
       ? '<em style="font-style:normal;color:var(--violet);font-weight:600"> · par le comité</em>' : '';
     h+='<div class="lrow'+(SEL===i?" on":"")+'" data-i="'+i+'">'
       +'<div class="lrow-m"><b>'+esc(e[0])+'</b><span>'+esc(e[1]||"·")+(e[2]?" · "+esc(e[2]):"")+tag+'</span></div>'
-      +'<div class="sc k'+e[10]+'">'+e[6]+'</div></div>';
+      +'<div class="sc k'+e[10]+'">'+vf(e[6])+'</div></div>';
   });
   document.getElementById("rows").innerHTML=h||'<div class="empty" style="padding:30px">Aucun résultat.</div>';
 }
@@ -1379,9 +1385,9 @@ function renderDetail(i){
     +'<h2>'+esc(d.name)+'</h2>'
     +'<div class="dh-sub">'+esc(d.segment)+' · fit '+esc(d.fit)+' · '
     +esc(d.porte ? (PLAY[d.play]||d.play) : 'hors file : canal mort')+'</div></div>'
-    +'<div class="verdict"><div class="n" style="color:var(--'+col+')">'+d.score+'</div>'
+    +'<div class="verdict"><div class="n" style="color:var(--'+col+')">'+vf(d.score)+'</div>'
     +'<div class="l" style="color:var(--'+col+')">'+esc(d.tier)
-    +(d.brut&&d.brut>d.score+0.05?' · brut '+d.brut.toFixed(1):'')+'</div></div></div>';
+    +(d.brut&&d.brut>d.score+0.05?' · brut '+vf(d.brut.toFixed(1)):'')+'</div></div></div>';
 
   h+='<div class="facts">'
     +'<div class="fact">'+(d.porte==="conversion"?'entré par <b>une demande</b>':d.porte==="comite"?'entré par <b>le comité</b>':'<b>aucune porte</b> : sorti des files')+'</div>'
@@ -1406,26 +1412,26 @@ function renderDetail(i){
     d.personnes.forEach(function(p){ tot+=p[3]; if(Math.abs(p[3])>mx) mx=Math.abs(p[3]); });
     var capped = d.brut && d.brut > d.score + 0.05;
     h+='<div class="sec"><div class="sec-h"><h3>Qui a fait le score</h3>'
-      +'<em>'+d.personnes.length+' personnes · chaque total est la somme des lignes en dessous'
-      +(capped?' : ici <b>'+d.brut.toFixed(1)+'</b>, plafonnée à 100':'')+'</em></div><div class="card wf">';
+      +'<em>'+d.personnes.length+' personne'+(d.personnes.length>1?'s':'')+' · chaque total est la somme des lignes en dessous'
+      +(capped?' : ici <b>'+vf(d.brut.toFixed(1))+'</b>, l\'affichage s\'arrête à 100':'')+'</em></div><div class="card wf">';
     d.personnes.forEach(function(p){
       var pct = mx>0 ? 100*Math.abs(p[3])/mx : 0;
       var c = p[3]<0 ? "var(--danger)"
            : p[2]==="buyer"?"var(--violet)":p[2]==="champion"?"var(--ok)":"var(--text-3)";
-      h+='<div class="wfr"><div class="wfr-l">'+esc(p[0])+'<span>'+esc(p[1])+' · '+esc(p[2])+'</span></div>'
+      h+='<div class="wfr"><div class="wfr-l">'+esc(p[0])+'<span>'+esc(p[1])+' · '+esc(persoFr(p[2]))+'</span></div>'
         +'<div class="wfr-b"><i style="width:'+pct.toFixed(1)+'%;left:0;background:'+c+'"></i></div>'
-        +'<div class="wfr-v">'+p[3].toFixed(1)+'</div></div>';
+        +'<div class="wfr-v">'+vf(p[3].toFixed(1))+'</div></div>';
       /* la ligne de multiplication : un score qu'on peut refaire de tête */
       if(p[5] && p[5].length){
         h+='<div class="calc">';
         p[5].forEach(function(e){
           var pts=Math.round(e[5]*10)/10;
           h+='<div class="calcr'+(pts<0?" neg":"")+'">'
-            +'<span class="cd">'+esc(e[0].slice(5))+'</span>'
+            +'<span class="cd">'+jourFr(e[0])+'</span>'
             +'<span class="cq">'+esc(e[1])+'</span>'
-            +'<span class="cm">'+e[2]+' <em>×</em> '+e[3].toFixed(2)+' <em>persona</em> <em>×</em> '
-            +e[4].toFixed(3)+' <em>temps</em></span>'
-            +'<span class="cp">'+(pts>0?"+":"")+pts.toFixed(1)+'</span></div>';
+            +'<span class="cm">'+vf(e[2])+' <em>×</em> '+vf(e[3].toFixed(2))+' <em>qui le fait</em> <em>×</em> '
+            +vf(e[4].toFixed(3))+' <em>ancienneté</em></span>'
+            +'<span class="cp">'+(pts>0?"+":"")+vf(pts.toFixed(1))+'</span></div>';
         });
         h+='</div>';
       } else if(p[4]){

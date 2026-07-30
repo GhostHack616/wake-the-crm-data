@@ -10,4 +10,7 @@
   Content-Type: application/json; charset=utf-8
 /tables/*
   Content-Type: application/json; charset=utf-8
-  Cache-Control: public, max-age=31536000, immutable
+  # 10 minutes, pas un an : les noms de fichiers ne portent pas d'empreinte,
+  # donc « immutable » empêcherait toute correction d'être servie à quelqu'un
+  # qui a déjà ouvert le tableau de bord.
+  Cache-Control: public, max-age=600, must-revalidate
