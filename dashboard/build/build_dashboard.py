@@ -193,7 +193,11 @@ counts = {"accounts": len(acc), "contacts": len(ctc), "events": len(ev),
           "entities": len(comp), "merged": len(acc) - len(comp),
           "anon_events": sum(1 for e in ev if not (e.get("contact_id") or "").strip()),
           "hot": c["tier1"], "warm": c["tier2"], "risk": c["perdus"],
-          "dormant": c.get("silencieuses_aucun_evenement", 0)}
+          "dormant": c.get("silencieuses_aucun_evenement", 0),
+          # les 4 listes d'appel, telles que le moteur les compte. L'écran les
+          # lit ici et ne les écrit jamais en dur : un chiffre recopié ment dès
+          # que le moteur bouge, ça s'est déjà produit deux fois.
+          "listes": c.get("listes", {})}
 for s in steps:
     s["status"] = "done"
 

@@ -1983,17 +1983,43 @@ var PROC=[
 },
 {
  p:"6 · Le résultat", t:"La photo", h:"Chaque entreprise du CRM a une ligne", court:true, vue:"macro",
- say:"Vingt-six à appeler cette semaine, trente-quatre à travailler. Et le compte est bon : aucune entreprise ne disparaît en route.",
+ say:"Vingt mille cinq cent dix-neuf entreprises, et aucune ne disparaît en route. On trie d'abord par ce qu'elles sont, on n'en exclut aucune.",
  geant:["26 + 34 + 9 + 5 741 + 14 709 = 20 519","un contrôle automatique le revérifie à chaque exécution"],
  bareme:[
-  ["Tier 1, à appeler cette semaine", "26", "une demande explicite, ou plusieurs personnes qui bougent en même temps"],
-  ["Tier 2, à travailler", "34", "ça chauffe, mais personne n'a encore rien demandé"],
-  ["Perdus, injoignables", "9", "plus aucun contact qu'on ait le droit d'appeler ou d'écrire"],
-  ["Tier 3, signal faible", "5 741", "quelque chose bouge, trop peu pour justifier un appel"],
-  ["Tier 3, silencieuses", "14 709", "rien du tout depuis quatre-vingt-dix jours"]],
+  ["Trois familles, parce que le même score ne veut pas dire la même chose"],
+  ["Jamais client", "15 179", "le silence veut dire froid. Ce qui compte : va-t-il acheter ?"],
+  ["Client aujourd'hui", "3 282", "le silence veut dire que tout va bien. Ce qui compte : sa date de renouvellement"],
+  ["Ex-client", "2 058", "le silence veut dire qu'il est vraiment parti. Ce qui compte : redonne-t-il signe ?"],
+  ["Trois tiers, une seule échelle, la même pour tout le monde"],
+  ["Tier 1, à appeler cette semaine", "26", "une demande explicite, ou plusieurs personnes qui bougent ensemble"],
+  ["Tier 2, à travailler", "34", "ça chauffe, personne n'a encore rien demandé"],
+  ["Tier 3, le reste", "20 450", "newsletter seulement, tant que rien ne bouge"],
+  ["Et à part, les injoignables", "9", "plus aucun contact qu'on ait le droit d'appeler ou d'écrire"]],
  pb:"La question qu'on ne pose jamais dans ce genre d'exercice : et les vingt mille autres ? Sans réponse, une liste de vingt-six comptes ressemble à une sélection arbitraire.",
+ body:"<b>Le tier ne dit pas ce qu'est le compte, il dit s'il se passe quelque chose.</b> C'est la famille qui dit ce qu'on en fait. Un client à zéro point n'est pas un compte froid, c'est un client content : son horloge à lui, c'est la date de son contrat, pas son score.<br><br>Et personne n'est écarté avant le calcul. Les filtres de bon sens, du type « on ne prospecte pas les clients », détruisaient <b>97 % du rappel</b> quand on les a testés : ils font disparaître exactement les comptes qui rapportent le plus, ceux qui reviennent.",
  q:"Et les quatorze mille silencieuses, vous en faites quoi ?",
  r:"Rien, et c'est un choix assumé.<br><br><b>7 686</b> ont reçu des emails sans jamais réagir : elles sortent des séquences de vente, la newsletter continue.<br><b>7 023</b> n'ont laissé <b>aucune trace</b> dans le CRM : elles partent à l'enrichissement, pas à la relance.<br><br>Les arroser reviendrait à envoyer en masse sur une liste froide. Ce n'est pas du travail commercial, et ça abîme la délivrabilité de tout ce qu'on envoie par ailleurs."
+},
+{
+ p:"6 · Le résultat", t:"Les quatre listes", h:"Quatre listes, et aucune ne s'ouvre de la même façon", court:true, vue:"logic",
+ say:"La note dit qui bouge. La relation dit ce qu'on en fait. C'est le croisement des deux qui donne la liste d'appels, pas le score tout seul.",
+ bareme:[
+  ["Ce qui fait entrer dans chaque liste"],
+  ["Acquisition", "@acquisition",
+   "des futurs clients qui chauffent. On y entre par la note et les portes"],
+  ["Expansion", "@expansion",
+   "des clients qui en veulent plus. On y entre par un signal d'achat : une démo, la page tarifs"],
+  ["Rétention", "@retention",
+   "des comptes à sauver. On y entre par un fait, jamais par la note : un contrat qui arrive à terme, ou des gens qui regardent la porte de sortie"],
+  ["Reconquête", "@reconquete",
+   "des anciens clients qui redonnent signe. On y entre par un signe de vie après le départ"]],
+ kpi:[["@retention","comptes à sauver, dont 209 dont le contrat est déjà échu"],
+      ["51,9 M€","de chiffre d'affaires que ces listes surveillent sans leur donner un point"],
+      ["@nurture","en nurturing : ils ne sont pas oubliés, ils ne sont pas appelés"]],
+ pb:"Une seule liste triée par score enverrait un commercial vendre à une entreprise en train de résilier, et laisserait dormir un client dont le contrat expire dans trois semaines parce qu'il n'a cliqué sur rien. Le score ne sait pas faire cette différence : il ne connaît pas la relation.",
+ body:"<b>La rétention ne passe par aucun score, et c'est voulu.</b> Un client à soixante jours de son renouvellement doit être appelé même s'il n'a rien fait du tout. Aucune note ne doit pouvoir l'en dispenser. Le score ne sert qu'à ordonner la pile : les signaux de départ tout en haut, puis les contrats déjà échus, puis l'échéance la plus proche.<br><br>Le nurturing n'est pas une cinquième liste, c'est le sous-sol des trois familles. Son travail est le même partout, faire bouger ceux qui ne bougent pas, mais son objectif change : <b>faire acheter</b> un futur client, <b>faire rester</b> un client, <b>faire revenir</b> un ancien. Dès que quelqu'un bouge, il remonte dans sa liste.",
+ q:"Pourquoi ne pas faire une seule liste triée par score ?",
+ r:"Parce que le score répond à une seule question, est-ce qu'il se passe quelque chose, et qu'il ne sait rien de la relation.<br><br>Concrètement, une liste unique par score fait deux dégâts. Elle envoie un commercial vendre à une entreprise dont quatre personnes cherchent comment résilier, parce que leur agitation ressemble à de l'intérêt. Et elle laisse dormir <b>209 clients dont le contrat est déjà échu</b>, parce qu'un client content ne clique sur rien.<br><br>Les quatre listes coûtent une colonne. Elles évitent ces deux appels, qui sont les deux pires de la semaine."
 },
 {
  p:"6 · Le résultat", t:"Ce qui a cassé", h:"Trois erreurs, et la règle que chacune a produite", court:true,
@@ -2032,7 +2058,7 @@ var PROC=[
 {
  p:"6 · Le résultat", t:"Ce que je ne fais pas", h:"Six protections qui ne se sont jamais déclenchées", vue:"ops",
  say:"Un moteur qui ne montre que ce qui marche cache ce qu'il ne sait pas faire. Voilà ce qui n'a jamais servi.",
- kpi:[["6","règles qui n'ont produit aucun cas"],["1","dont je peux démontrer qu'elle est mathématiquement inatteignable"],["24","contrôles automatiques, tous verts"]],
+ kpi:[["6","règles qui n'ont produit aucun cas"],["1","dont je peux démontrer qu'elle est mathématiquement inatteignable"],["@gardes","contrôles automatiques sur le scoring, tous verts"]],
  body:"Le cap anti-abus, la priorité du rendez-vous sur les pages négatives, l'invalidation des clics robots, l'alerte sur notre propre silence, le libellé de repli, et le plancher de décroissance appliqué aux preuves. Ce dernier ne peut <b>pas</b> se déclencher : à vingt-et-un jours, une demi-vie de trente jours vaut encore 0,616, bien au-dessus du plancher de 0,25.",
  q:"Pourquoi montrer des règles qui ne servent à rien ?",
  r:"Parce qu'une protection qu'on n'annonce pas est une protection qu'on cache. Si vous les découvrez vous-même dans le code, vous vous demandez ce que je cache d'autre. Et pour l'une d'elles, je sais démontrer pourquoi elle ne peut pas servir : ce qui vaut mieux que de la présenter comme active."
@@ -2325,8 +2351,13 @@ function baremeHTML(rows){
     if(r.length===1){ h+='<tr class="sep"><td colspan="2">'+esc(r[0])+'</td></tr>'; return; }
     var v=r[1], cls = (typeof v==="number") ? (v>0?"pos":(v<0?"neg":"nul")) : "";
     var aff = (typeof v==="number") ? ((v>0?"+":"")+v) : v;
+    /* une valeur préfixée @ est lue dans les compteurs du moteur, jamais écrite
+       en dur : c'est ce qui a déjà fait mentir « 88 contrôles » et « 24 gardes ». */
+    if(typeof v==="string" && v.charAt(0)==="@"){
+      var L=(D.counts&&D.counts.listes)||{}; aff=nf(L[v.slice(1)]!=null?L[v.slice(1)]:"?"); cls="";
+    }
     /* une valeur en lettres se met en forme comme une phrase, pas comme un score */
-    if(typeof v==="string" && /[a-zéèêà]{3}/.test(v)) cls+=" mot";
+    else if(typeof v==="string" && /[a-zéèêà]{3}/.test(v)) cls+=" mot";
     h+='<tr><td><div class="lb">'+esc(r[0])+'</div>'
       +(r[2]?'<div class="wy">'+esc(r[2])+'</div>':'')+'</td>'
       +'<td class="pt2 '+cls+'">'+esc(aff)+'</td></tr>';
@@ -2402,7 +2433,15 @@ function procShow(i){
   if(x.courbe) h+=courbeHTML();
   if(x.kpi){
     h+='<div class="snum">';
-    x.kpi.forEach(function(k){ h+='<div><b>'+esc(k[0])+'</b><span>'+esc(k[1])+'</span></div>'; });
+    /* un chiffre préfixé @ est lu dans les données du moteur, jamais écrit en dur :
+       c'est ce qui a déjà fait mentir « 88 contrôles » et « 18 règles sur 28 ». */
+    x.kpi.forEach(function(k){
+      var v = k[0];
+      if(v==="@gardes") v = (D.sops && D.sops.gardes) ? D.sops.gardes.length : "?";
+      else if(typeof v==="string" && v.charAt(0)==="@"){
+        var L2=(D.counts&&D.counts.listes)||{}; v = nf(L2[v.slice(1)]!=null?L2[v.slice(1)]:"?");
+      }
+      h+='<div><b>'+esc(v)+'</b><span>'+esc(k[1])+'</span></div>'; });
     h+='</div>';
   }
   if(x.pb||x.body||x.q||x.bareme2){
