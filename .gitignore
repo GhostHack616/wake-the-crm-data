@@ -1,3 +1,32 @@
 data_clean/
 __pycache__/
 dashboard/dist/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Éléments de travail internes. Ils restent sur le disque — git les ignore,
+# personne ne les supprime. Chaque ligne porte sa raison : un interdit sans
+# raison finit par sauter au premier commit pressé (même règle que
+# dashboard/build/verifie_ecran.py).
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Document de reprise interne (367 lignes). Réunit à lui seul les trois
+# familles que l'interdit d'écran bannit : il décrit le mécanisme du générateur
+# du jeu de données, il nomme le bloc de référence et ses seuils, et il contient
+# des formulations préparées pour l'oral (« la phrase à dire », « à dire à la
+# démo »). Il porte en plus le contexte de recrutement et le nom des
+# évaluateurs. Rien de tout cela n'a sa place dans un dépôt qu'on fait cloner.
+ANALYSE.md
+
+# Générateur des 12 étapes, en deux moitiés (1-6 et 7-12), avec chemins locaux
+# et sortie ASCII sans accents. Sa sortie canonique est déjà versionnée dans
+# dashboard/build/steps_all.json, relue et accentuée. Versionner le générateur
+# donnerait à lire l'échafaudage au lieu de la méthode, et deux sources pour
+# les mêmes chiffres.
+gen_steps.py
+gen_steps2.py
+
+# Sortie intermédiaire de ces deux scripts (step_01..step_12.json), superseded
+# par dashboard/build/steps_all.json. Artefact régénérable : le versionner
+# créerait une seconde vérité sur les mêmes compteurs, qui divergerait au
+# premier ajustement.
+steps/
