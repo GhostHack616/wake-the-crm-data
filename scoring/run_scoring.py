@@ -373,8 +373,13 @@ def invariants(cfg, lignes, score_p, comptes, alarmes, events_p):
          len([r for r in lignes if r["canal"] == "email" and "désabonné" in r["canal"]])),
         ("SC13", "Tier 1 toujours joignable (un canal par ligne)", 0,
          len([r for r in t1 if not r["canal"]])),
-        ("SC14", "ENT-16714 en play risque, jamais en new business", 0,
-         len([r for r in lignes if r["entity_id"] == "ENT-16714" and r["play"] != "risque"])),
+        # SC14 généralisée (30/07, revue croisée) : elle nommait ENT-16714 en
+        # dur — une garde écrite pour un compte protège un compte. La règle :
+        # TOUT comité qui regarde la porte de sortie part en risque.
+        ("SC14", "comité + signaux négatifs => play risque, jamais new business", 0,
+         len([r for r in lignes
+              if r["porte"] == "comite" and r["signaux_negatifs"] < 0
+              and r["play"] != "risque"])),
         ("SC15", "règles dormantes étiquetées en config", 6, len(cfg["regles_dormantes"])),
         ("SC16", "pertes sèches (perdu qui valait le coup)", exp["perte_seche"],
          len([r for r in lignes if r["perte"] == "seche"])),
