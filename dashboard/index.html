@@ -1477,13 +1477,14 @@ var PROC=[
  bareme:[
   ["Des décisions où j'ai dit non, et ce que chacune a changé"],
   ["Le désabonnement retire 20 points", "règle supprimée",
-   "« fermer un canal, ce n'est pas être fermé à l'offre ». Un des rendez-vous de la base a été pris par une personne désinscrite : cette règle décotait le compte le plus évident du fichier"],
+   "« fermer un canal, ce n'est pas être fermé à l'offre »"],
   ["Consulter sa facture est un signal de départ", "7 events sur 14 retirés",
-   "« ça m'arrive sur n8n et je ne pars pas ». Seules la page résiliation et la page export restent négatives"],
+   "« ça m'arrive sur n8n et je ne pars pas »"],
   ["La page carrières vaut zéro point", "683 candidats flagués",
-   "« ce n'est même pas un lead, ce n'est pas la bonne personne ». Zéro point ne suffisait pas : il fallait une catégorie à part"],
+   "« ce n'est même pas un lead, ce n'est pas la bonne personne »"],
   ["On appelle le décideur le mieux placé", "on appelle celui qui a levé la main",
-   "« si tu appelles mon CIO, il te dit qu'il n'a pas le temps ». Le décideur devient le contexte de l'appel, pas la cible"],
+   "« si tu appelles mon CIO, il te dit qu'il n'a pas le temps »"]],
+ bareme2:[
   ["435 comptes sont injoignables", "le chiffre était faux",
    "« vous avez checké l'opt-out ? ». Il mélangeait les désabonnés et les contacts sans adresse, deux problèmes différents"]],
  pb:"Le brief le dit lui-même : « IA bienvenue, mais tu dois pouvoir défendre chaque ligne de logique comme si tu l'avais écrite. » Ce n'est pas une tolérance, c'est le test. Et un modèle qui relit son propre travail ne trouve que ce qu'il a pensé à chercher : il faut un contradicteur, pas un correcteur.",
@@ -1528,15 +1529,18 @@ var PROC=[
  say:"Les dates dont le jour dépasse 12 révèlent leur format toutes seules. J'en ai 54 000 comme ça : elles donnent une règle sans aucune exception, et j'applique cette règle au reste.",
  geant:["54 419","dates qui <b>prouvent</b> la règle, <b>zéro</b> qui la contredit. <i>05/19/24</i> : 19 n'est pas un mois, donc c'est le jour, donc l'année à 2 chiffres s'écrit mois d'abord. Miroir exact pour l'année à 4 chiffres."],
  bareme:[
+  ["La preuve : on démontre avant d'appliquer"],
+  ["Année sur 2 chiffres → le mois d'abord (américain)", "27 173", "27 173 preuves, zéro contre-exemple"],
+  ["Année sur 4 chiffres → le jour d'abord (français)", "27 246", "27 246 preuves, zéro contre-exemple"],
+  ["Dates où les deux nombres sont sous 13", "35 551", "leur année dit de quelle famille elles sont"],
+  ["Tout ressort en AAAA-MM-JJ", "un seul format",
+   "l'original n'est pas touché"]],
+ bareme2:[
   ["Le geste : trois écritures entrent, une seule sort"],
   ["Le format est détecté ligne par ligne", "", "les trois écritures cohabitent DANS la même colonne, pas une par colonne"],
   ["La date convertie va dans une colonne neuve", "_parsed", "AAAA-MM-JJ, un format unique pour tout ce qui suit"],
   ["Le format détecté est gardé à côté", "_format", "iso · dmy · mdy : l'inférence est écrite, pas cachée"],
   ["La colonne d'origine n'est pas touchée", "intacte", "réversible ligne par ligne, à tout moment"],
-  ["La preuve : on démontre avant d'appliquer"],
-  ["Année sur 2 chiffres → le mois d'abord (américain)", "27 173", "dates où le 2ᵉ nombre dépasse 12 · zéro contre-exemple"],
-  ["Année sur 4 chiffres → le jour d'abord (français)", "27 246", "miroir exact, le 1ᵉʳ nombre dépasse 12 · zéro contre-exemple"],
-  ["Dates où les deux nombres sont sous 13", "35 551", "déduites de la règle : inférence assumée, et réversible"],
   ["Le recoupement qui verrouille"],
   ["3 386 renouvellements remplis", "3 346 + 40", "3 346 clients + 40 ex-clients contradictoires : deux mesures indépendantes qui tombent juste"]],
  pb:"Trois formats coexistent dans les mêmes colonnes. Se tromper ne déclenche <b>aucune erreur</b> : juste <b>~10 000 dates fausses en silence, par colonne</b>. Et tout ce qui suit compare des dates : « actif ces 14 jours », « renouvellement dans 90 jours ».",
@@ -1576,7 +1580,8 @@ var PROC=[
   ["1. Nettoyer", "domain_clean", "www.Acme.com devient acme.com : 1 825 préfixes retirés, casse uniformisée"],
   ["2. Extraire la racine", "domain_root", "acme.com devient acme. C'est la clé numéro 1 de la fusion, à l'étape 7"],
   ["3. Déduire ce qui manque, et le dire", "domain_source",
-   "trois valeurs possibles : declared, inferred_from_contacts, none. Aucune déduction cachée"],
+   "trois valeurs possibles : declared, inferred_from_contacts, none. Aucune déduction cachée"]],
+ bareme2:[
   ["Ce que la déduction attrape"],
   ["Racines déduites des emails professionnels des contacts", "2 538",
    "uniquement quand TOUS les contacts pointent vers la même racine : l'unanimité est exigée"],
@@ -1593,16 +1598,17 @@ var PROC=[
  say:"Mon test de validation n'est pas un échantillon. Les 27 329 fiches qui ont un domaine me servent de banc d'essai : si ma normalisation retombe sur la racine du domaine à 100 %, le geste est prouvé.",
  pb:"La même boîte écrite de plusieurs façons : Talosolmedia, TalosolMedia & Co, Talosolmedia SARL. Et 234 fiches portent une étiquette de doublon dans leur nom : (old), - import, ou un « 2 » collé à la fin.",
  bareme:[
-  ["Le geste, deux colonnes neuves"],
-  ["1. Normaliser le nom", "name_norm",
-   "minuscules, puis retrait des étiquettes de doublon, puis des mentions juridiques (liste en config), puis de la ponctuation"],
-  ["2. Mémoriser l'étiquette trouvée", "dup_marker",
-   "une fiche marquée (old), - import ou « 2 » ne pourra JAMAIS être la fiche de référence de son groupe"],
   ["Les deux tests indépendants"],
   ["Le nom normalisé retombe sur la racine du domaine déclaré", "27 329 / 27 329", "100 %"],
   ["Et sur les racines déduites des emails à l'étape 3", "2 538 / 2 538", "100 %, second test, autre chemin"],
   ["Noms normalisés distincts obtenus", "20 519",
    "exactement la taille de la table entreprises que la fusion produira à l'étape 7. Deux chemins, même nombre"]],
+ bareme2:[
+  ["Le geste, deux colonnes neuves"],
+  ["1. Normaliser le nom", "name_norm",
+   "minuscules, puis retrait des étiquettes de doublon, puis des mentions juridiques (liste en config), puis de la ponctuation"],
+  ["2. Mémoriser l'étiquette trouvée", "dup_marker",
+   "une fiche marquée (old), - import ou « 2 » ne pourra JAMAIS être la fiche de référence de son groupe"]],
  body:"La liste des mentions à retirer ne contient pas que SA, SAS et SARL. Elle contient aussi <b>France</b> (2 994 fiches), <b>Group</b> (2 976) et <b>&amp; Co</b> (2 860). Sans ça, Yellodordata SA et YellodorData &amp; Co restent deux entreprises différentes, et on se retrouve avec <b>3 498 faux conflits</b>. 58 % de la base porte l'un de ces suffixes : c'est le détail qui fait tout.",
  q:"Vous retirez « France » et « SARL » : vous allez fusionner deux filiales différentes.",
  r:"Dans cette base, c'est mesuré : le nom normalisé coïncide avec la racine du domaine sur <b>100 % des 27 329 fiches vérifiables</b>, et sur <b>100 % des 2 538 racines déduites</b> des emails, qui est un second test indépendant. Les suffixes y sont décoratifs, pas discriminants.<br><br>Derrière, trois garde-fous : une borne de sanité sur le nombre d'entités (entre 19 000 et 22 000), une taille maximale des groupes de doublons (aucun ne dépasse 4 fiches), et le retour arrière, puisque rien n'est supprimé.<br><br>Et je dis la limite : en production réelle, j'ajouterais le pays et le chiffre d'affaires comme témoins avant de fusionner des noms à suffixe géographique. Ici, la mesure dit que c'est sûr."
@@ -1612,17 +1618,18 @@ var PROC=[
  say:"1 544 adresses étaient cassées mécaniquement. Je les répare, et je vous dis tout de suite que ça n'a fait gagner aucun compte chaud.",
  pb:"Un double arobase ou un espace au milieu d'une adresse : elle est invalide, le contact est injoignable, et rien ne le signale. Un email sert à deux choses, joindre quelqu'un et identifier son entreprise. Une adresse cassée casse les deux.",
  bareme:[
+  ["Le résultat"],
+  ["Adresses réparées", "1 544", "769 doubles arobases et 775 espaces, au compte exact"],
+  ["Adresses encore invalides après réparation", "0", "c'est LE contrôle qui prouve quelque chose"],
+  ["Adresses partagées par plusieurs fiches", "783", "1 940 porteurs, dont 1 157 copies excédentaires"]],
+ bareme2:[
   ["Le geste, cinq colonnes neuves"],
   ["1. Réparer, mécaniquement", "email_clean",
    "retirer un espace, remplacer deux arobases par une. Aucun caractère ajouté, rien d'inventé"],
   ["2. Étiqueter l'état de l'adresse", "email_status", "ok, repaired, missing ou personal"],
   ["3. Extraire la racine de l'adresse", "email_domain_root", "c'est le témoin de rattachement à la fusion"],
   ["4 et 5. Repérer la même personne en double", "email_is_duplicate",
-   "une adresse portée par plusieurs fiches contact, c'est UNE personne : interdit de la compter deux fois dans un comité d'achat"],
-  ["Le résultat"],
-  ["Adresses réparées", "1 544", "769 doubles arobases et 775 espaces, au compte exact"],
-  ["Adresses encore invalides après réparation", "0", "c'est LE contrôle qui prouve quelque chose"],
-  ["Adresses partagées par plusieurs fiches", "783", "1 940 porteurs, dont 1 157 copies excédentaires"]],
+   "une adresse portée par plusieurs fiches contact, c'est UNE personne : interdit de la compter deux fois dans un comité d'achat"]],
  body:"Le détail que je garde pour la fin : la réparation a <b>révélé un doublon invisible avant</b>. Une adresse cassée qui, une fois réparée, devient identique à celle d'un autre contact. C'est pour ça que la déduplication des personnes vient <b>après</b> le nettoyage, jamais avant.",
  q:"À quoi ça sert de réparer des emails si ça ne change aucun score ?",
  r:"À trois choses.<br><br><b>Un, la joignabilité</b> : le jour où un commercial écrit à un compte, l'adresse doit marcher.<br><b>Deux, la fusion</b> : le domaine de l'email est mon témoin de rattachement.<br><b>Trois, le comité d'achat</b> : 783 adresses sont portées par plusieurs fiches contact. La même personne comptée deux fois fabrique un faux groupe de 4 contacts actifs qui n'en sont que 2.<br><br>Et je le dis franchement : cette étape n'a fait gagner <b>aucun compte chaud</b>. C'est de l'assainissement, pas de la récupération de rappel.",
@@ -1633,15 +1640,16 @@ var PROC=[
  say:"Une date fausse ne doit jamais entrer dans un calcul. Une case vide assumée vaut toujours mieux qu'un chiffre faux qui entre en silence.",
  pb:"6 321 contacts sont créés dans le futur, jusqu'en novembre 2027. Une date de création postérieure à aujourd'hui fausse tout calcul d'ancienneté. Mais on ne peut pas deviner la vraie : la corriger, ce serait inventer une donnée.",
  bareme:[
+  ["Ce qui a été trouvé"],
+  ["Contacts créés dans le futur", "6 321", "neutralisés"],
+  ["Contacts ayant REÇU des emails avant leur création", "414", "impossible, donc date corrompue"],
+  ["Contacts avec seulement des visites avant création", "20", "attribution rétroactive plausible, bénéfice du doute"]],
+ bareme2:[
   ["Le principe, et sa limite"],
   ["On ne corrige jamais", "", "la vraie valeur est inconnaissable, l'inventer serait pire que le trou"],
   ["On neutralise", "date vidée", "la date convertie est vidée, donc elle n'entre plus dans aucun calcul"],
   ["On trace", "un drapeau", "la date d'origine reste visible, personne ne peut la prendre pour vraie"],
   ["On ne touche jamais aux événements", "", "c'est la fiabilité de la DATE qui est jugée, pas l'activité du contact"],
-  ["Ce qui a été trouvé"],
-  ["Contacts créés dans le futur", "6 321", "neutralisés"],
-  ["Contacts ayant REÇU des emails avant leur création", "414", "impossible, donc date corrompue"],
-  ["Contacts avec seulement des visites avant création", "20", "attribution rétroactive plausible, bénéfice du doute"],
   ["Comptes à dernière activité dans le futur", "3", "neutralisés aussi"]],
  body:"La distinction entre les 414 et les 20 n'était pas dans ma première version. Elle est née d'une question posée pendant la revue : <b>et si c'était juste de l'attribution rétroactive ?</b> J'ai vérifié sur les données, et la réponse dépend du type d'événement. C'est pour ça que les deux cas ne sont plus traités pareil.",
  q:"Des événements avant la création du contact, c'est peut-être juste de l'attribution rétroactive, non ?",
@@ -1655,7 +1663,8 @@ var PROC=[
   ["Reconnaître un doublon : trois clés, jamais une seule"],
   ["Clé 1, la racine du domaine", "99,6 % du CRM", "produite à l'étape 3, déductions incluses et tracées"],
   ["Clé 2, le nom normalisé", "20 519 distincts", "produite à l'étape 4, elle couvre les 133 fiches sans racine"],
-  ["Clé 3, le domaine des emails des contacts", "témoin", "le vivant contrôle le déclaratif"],
+  ["Clé 3, le domaine des emails des contacts", "témoin", "le vivant contrôle le déclaratif"]],
+ bareme2:[
   ["Égalité exigée", "exacte", "garde-fou réel : Roccaviaforge n'est pas Roccaviafood"],
   ["Élire la fiche de référence : une cascade, dans cet ordre"],
   ["1. Jamais une fiche étiquetée (old), - import ou « 2 »", "critère d'exclusion", "elle est écartée avant tout le reste"],
@@ -1677,12 +1686,13 @@ var PROC=[
  pb:"La table des entreprises ne vaut rien si les contacts et les événements restent accrochés aux anciennes fiches. Un formulaire posé sur une fiche doublon est un signal qui compte pour une entreprise qui n'existe pas.",
  bareme:[
   ["Ce qui a bougé"],
-  ["Contacts rattachés par leur compte", "76 599", ""],
-  ["Contacts orphelins récupérés par le domaine de leur email", "547", "même geste et même prudence qu'à l'étape 3 : unanimité exigée"],
-  ["Vrais inconnus, mis de côté", "53", "aucun événement : ils partent dans une liste de comptes à créer, pas rangés au hasard"],
   ["Événements rattachés", "90 838", "plus 4 000 anonymes conservés tels quels : on retombe sur 94 838"],
   ["Événements qui changent d'entreprise", "29 184", "32,1 % du total : c'est la mesure de ce que la fusion a réparé"],
   ["Doublons de personnes signalés", "105", "99 par la clé email, 6 par la clé nom"]],
+ bareme2:[
+  ["Contacts rattachés par leur compte", "76 599", ""],
+  ["Contacts orphelins récupérés par le domaine de leur email", "547", "même geste et même prudence qu'à l'étape 3 : unanimité exigée"],
+  ["Vrais inconnus, mis de côté", "53", "aucun événement : ils partent dans une liste de comptes à créer, pas rangés au hasard"]],
  body:"<b>Le moment qui prouve que la surveillance sert à quelque chose.</b> J'attendais 97 doublons de personnes. Le pipeline en a trouvé 99, et c'est une alarme du filet de contrôles qui a signalé l'écart, pas moi. Explication : <b>le ré-attachement lui-même a révélé 2 doublons</b> qui étaient invisibles avant, parce que les deux fiches ne vivaient pas encore dans la même entreprise. L'écart a été expliqué, puis verrouillé.<br><br>Au passage, 11 contacts ont récupéré un titre depuis leur copie, dont un directeur des ressources humaines qui était sans fonction connue. Il repasse de multiplicateur 0,5 à multiplicateur 1 dans le comité d'achat.",
  q:"32 % des événements changent de compte, ça ne vous inquiète pas ?",
  r:"Au contraire, c'est exactement ce que j'allais mesurer. Ces <b>29 184</b> événements étaient rattachés à des fiches doublons : ils existaient, mais ils comptaient pour une entreprise qui n'existe pas. Les recoller, c'est la moitié du travail de détection.<br><br>Et rien n'a été perdu : <b>90 838 rattachés plus 4 000 anonymes conservés font 94 838</b>, le compte exact du fichier de départ."
@@ -1692,18 +1702,19 @@ var PROC=[
  say:"Sans cette étape, les comptes les plus arrosés par le marketing paraissent les plus engagés. Et je flague, je ne supprime pas.",
  pb:"Un même envoi ouvert trois fois dans la journée gonfle le score d'un compte qui n'a rien fait de plus qu'un autre. C'est du bruit de pixel de tracking, pas de l'intérêt.",
  bareme:[
+  ["Le résultat"],
+  ["Lignes signalées comme doublons", "1 988", "réparties en 1 860 groupes"],
+  ["Dont des ouvertures d'email", "88 %", "c'est bien du bruit de tracking"],
+  ["Conversions touchées", "0", "aucun rendez-vous, aucun formulaire"],
+  ["Événements supprimés", "0", "signalés seulement"]],
+ bareme2:[
   ["La clé de doublon, et pourquoi elle est stricte"],
   ["Même contact", "", ""],
   ["Même type d'événement", "", ""],
   ["Même campagne", "", ""],
   ["Même PAGE", "indispensable",
    "sans la page dans la clé, quelqu'un qui visite les tarifs puis la démo le même jour perd la moitié de son parcours"],
-  ["Même jour", "", "la première occurrence est conservée, les suivantes sont signalées"],
-  ["Le résultat"],
-  ["Lignes signalées comme doublons", "1 988", "réparties en 1 860 groupes"],
-  ["Dont des ouvertures d'email", "88 %", "c'est bien du bruit de tracking"],
-  ["Conversions touchées", "0", "aucun rendez-vous, aucun formulaire"],
-  ["Événements supprimés", "0", "signalés seulement"]],
+  ["Même jour", "", "la première occurrence est conservée, les suivantes sont signalées"]],
  body:"Les <b>4 000 visites anonymes ne sont pas touchées</b>, et ce n'est pas un oubli : c'est chiffré. Leur appliquer la même clé supprimerait <b>2 872 lignes à tort</b>, parce que deux visiteurs différents peuvent voir la même page le même jour sans être la même personne. Une règle juste sur une population peut être fausse sur l'autre.",
  q:"Vous supprimez des événements ?",
  r:"Jamais. Ils sont <b>signalés</b>, pas retirés : le scoring les ignore, le fichier les garde. Si la règle se révèle mauvaise, on l'annule sans avoir rien perdu. C'est la règle du chantier entier : rien n'est jamais supprimé ni écrasé."
@@ -1717,7 +1728,8 @@ var PROC=[
   ["Délai médian entre l'envoi et l'ouverture", "4 secondes", "et le motif : plus 2, plus 4, plus 6 secondes, soixante fois de suite"],
   ["Le même délai chez l'humain le plus actif de la base", "23,4 heures", "il n'est pas signalé, et il fait sept fois moins d'événements"],
   ["Pages du site vues par le robot", "0", "il ouvre et il clique, il ne visite rien"],
-  ["Événements neutralisés", "420", "signalés from_bot, pas supprimés"],
+  ["Événements neutralisés", "420", "signalés from_bot, pas supprimés"]],
+ bareme2:[
   ["Deux précisions de méthode qui comptent"],
   ["La détection tourne sur le flux BRUT", "avant la dédup",
    "la déduplication efface justement le motif mécanique : trois ouvertures plus trois clics deviennent un plus un"],
@@ -1734,14 +1746,15 @@ var PROC=[
  bareme:[
   ["Onze états factuels, partition complète 20 519 sur 20 519"],
   ["Clients actifs", "3 037", "fidélisation"],
+  ["Prospects chauds", "22", "le cœur de la liste d'appels"],
+  ["Prospects tièdes", "5 232", "à travailler"],
+  ["Email seulement, morts, dormants", "3 763 · 3 474 · 1 919", "les dormants sortent du champ déclaré du CRM, signalés comme tels"]],
+ bareme2:[
   ["Renouvellements déjà échus", "209", "risque, à traiter en premier"],
   ["Churns contradictoires", "36", "audit : ex-clients qui portent un renouvellement futur"],
   ["Ex-clients réactifs", "870", "reconquête"],
   ["Ex-clients silencieux", "1 188", "reconquête froide"],
-  ["Prospects chauds", "22", "le cœur de la liste d'appels"],
-  ["Prospects tièdes", "5 232", "à travailler"],
-  ["Perdus qui redonnent signe", "769", "réactivation"],
-  ["Email seulement, morts, dormants", "3 763 · 3 474 · 1 919", "les dormants sortent du champ déclaré du CRM, signalés comme tels"]],
+  ["Perdus qui redonnent signe", "769", "réactivation"]],
  body:"Ces onze états se traduisent en <b>9 plays</b>, qui sont des actions commerciales, pas des étiquettes. Le champ « mort » déclaré dans le CRM n'est utilisé qu'en dernier recours, et chaque ligne dans ce cas porte la mention <b>segment_evidence=declared_field</b> : le champ est disqualifié, son usage est assumé et visible.",
  q:"Pourquoi une seule liste d'appels et pas une par segment ?",
  r:"Parce que la mesure m'a montré le contraire de ce que j'avais prévu. Il y a bien <b>22 prospects chauds</b>, mais aussi <b>3 entreprises tout aussi chaudes qui vivent chez les clients actifs et les ex-clients réactifs</b>. Une liste par segment les aurait laissées de côté.<br><br>Donc la liste est <b>unique, tous segments confondus</b>, avec une colonne play. Le segment ne décide pas de l'entrée dans la liste, il décide de <b>ce qu'on dit</b> en appelant. Les files par segment existent, mais ce sont des vues.",
@@ -1757,7 +1770,8 @@ var PROC=[
    "1 107 personnes concernées : c'est un risque de conformité, pas un sujet de performance"],
   ["Emails partis vers des adresses incapables de les recevoir", "1 607",
    "912 contacts sans aucune adresse : le processus d'envoi est cassé"],
-  ["Paires contact et campagne qui reçoivent le même envoi 2 à 7 fois", "1 976", ""],
+  ["Paires contact et campagne qui reçoivent le même envoi 2 à 7 fois", "1 976", ""]],
+ bareme2:[
   ["Les 3 025 000 € de chiffre d'affaires écartés, poste par poste"],
   ["Conflits entre deux fiches clientes", "1 420 000 €", "89 groupes : le sous-total le plus discutable, donc le premier que je donne"],
   ["Ex-clients absorbés sous une fiche cliente", "1 081 000 €", ""],
@@ -1801,10 +1815,11 @@ var PROC=[
   ["Les gestes : pondérés par qui les fait"],
   ["Visite /pricing ou /demo", 10, "il regarde les prix"],
   ["Clic dans un email", 8, "l'ouverture ne prouve rien, le clic si"],
+  ["Ouverture d'email", 0, "un pixel : la moitié des ouvertures mondiales sont du préchargement"]],
+ bareme2:[
   ["Commentaire LinkedIn", 6, "écrire coûte : trois fois le pouce"],
   ["Page produit ou intégrations", 4, "il étudie l'offre"],
   ["Like LinkedIn", 2, "un pouce, une seconde"],
-  ["Ouverture d'email", 0, "un pixel : la moitié des ouvertures mondiales sont du préchargement"],
   ["Email envoyé", 0, "notre activité, pas la sienne"],
   ["Ce qui fait descendre"],
   ["Page de résiliation", -15, "il cherche la porte"],
@@ -1824,7 +1839,8 @@ var PROC=[
   ["Champion", "×0,8", "celui qui peut porter le sujet en interne"],
   ["Utilisateur", "×0,6", "celui qui s'en servira"],
   ["Sans titre connu", "×0,5", "on ne punit pas un trou de données"],
-  ["Bruit", "×0", "stagiaire, candidat, assistant de direction"],
+  ["Bruit", "×0", "stagiaire, candidat, assistant de direction"]],
+ bareme2:[
   ["Les preuves ne sont JAMAIS pondérées"],
   ["Rendez-vous et formulaire", "×1,0", "plein poids, quel que soit celui qui l'a fait, et un contrôle le vérifie à chaque exécution"],
   ["Mon périmètre de décideurs suit le PRODUIT, pas l'ancienneté"],
@@ -1851,11 +1867,12 @@ var PROC=[
  bareme:[
   ["Deux vitesses, parce que deux choses différentes"],
   ["Un geste : clic, visite, like, commentaire", "demi-vie 10 jours",
-   "une intention qu'on ne relance pas retombe en deux semaines"],
+   "une intention non relancée retombe en deux semaines"],
   ["Une preuve : rendez-vous, formulaire", "demi-vie 30 jours",
-   "une demande de démo se travaille pendant un mois, elle ne s'éteint pas comme un clic"],
+   "une démo se travaille, elle ne s'éteint pas comme un clic"],
   ["Le plancher", "25 % pendant 21 jours",
-   "aucun signal de moins de trois semaines ne descend sous le quart de sa valeur"],
+   "rien ne descend sous le quart avant trois semaines"]],
+ bareme2:[
   ["Le calcul, en clair, sur un cas réel"],
   ["Un clic dans un email", "8 points", "le poids de base du geste"],
   ["Fait par un champion", "×0,8", "le multiplicateur du porteur"],
@@ -1898,7 +1915,8 @@ var PROC=[
   ["Un prospect désabonné, mais d'autres preuves vivantes", "plein poids",
    "les signaux comptent normalement, seul le play change : appel ou LinkedIn au lieu de l'email"],
   ["Jamais client, plus rien qui vit, aucun contact joignable", "perdu, canal mort",
-   "environ 9 comptes, montrés à part, hors des files de travail"],
+   "environ 9 comptes, montrés à part, hors des files de travail"]],
+ bareme2:[
   ["Ce que la mesure a dit"],
   ["Comptes concernés par un désabonnement examinés un par un", "118",
    "98 % n'ont qu'un seul cliqueur, et 51 gardent un décideur joignable"],
@@ -1921,12 +1939,13 @@ var PROC=[
  bareme:[
   ["Ce que chaque seuil fait, exactement"],
   ["Tier 2, à partir de 8 points", "l'entrée",
-   "au moins un vrai geste récent. Le chiffre est posé sur la rupture visible dans la courbe des scores, pas sur un chiffre rond"],
+   "au moins un vrai geste récent, posé sur la rupture de la courbe"],
   ["Tier 1, pas un montant mais une porte", "un fait",
-   "une demande explicite, ou un comité actif. Les points ne font pas entrer"],
+   "une demande explicite, ou un comité actif"],
   ["Le garde-fou à 30 points", "jamais déclenché",
-   "il ferait entrer un compte qui accumule énormément sans jamais rien demander. Le meilleur candidat plafonne à 20,4"],
-  ["Tier 3, tout le reste", "seuils absolus", "jamais un classement, jamais un top N"],
+   "jamais atteint : le meilleur compte sans porte plafonne à 20,4"],
+  ["Tier 3, tout le reste", "seuils absolus", "jamais un classement, jamais un top N"]],
+ bareme2:[
   ["Et ce que chaque tier reçoit, côté email"],
   ["La newsletter", "toute la base", "peu importe le score, sauf désabonnés et adresses mortes"],
   ["Les séquences de vente", "activité récente + score", "on ne vend pas à qui ne bouge pas"],
@@ -2312,10 +2331,13 @@ function procShow(i){
     x.kpi.forEach(function(k){ h+='<div><b>'+esc(k[0])+'</b><span>'+esc(k[1])+'</span></div>'; });
     h+='</div>';
   }
-  if(x.pb||x.body||x.q){
+  if(x.pb||x.body||x.q||x.bareme2){
     h+='<button class="smore" id="sMore">▾ le détail</button>'
       +'<div class="sdet" id="sDet"><div class="sdet-in">';
     if(x.pb)   h+='<h5>Le problème</h5><p>'+x.pb+'</p>';
+    /* le reste du tableau : ce qui ne tient pas sur l'écran de présentation
+       descend ici, rien n'est supprimé. Il ne s'ouvre que si on creuse. */
+    if(x.bareme2) h+='<h5>Le détail chiffré</h5>'+baremeHTML(x.bareme2);
     if(x.body) h+='<h5>Ce qui a été fait</h5><p>'+x.body+'</p>';
     var Q=[]; if(x.q) Q.push([x.q,x.r]); if(x.qs) Q=Q.concat(x.qs);
     Q.forEach(function(z){
