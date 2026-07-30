@@ -730,7 +730,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
               <button data-f="hot" class="on">Tier 1</button>
               <button data-f="warm">Tier 2</button>
               <button data-f="trap">Perdus</button>
-              <button data-f="all">Tout</button>
+              <button data-f="all">Tout, tier 3 compris</button>
             </div>
           </div>
           <div class="lrows" id="rows"></div>
@@ -1951,7 +1951,9 @@ var PROC=[
   ["Entrer dans la liste d'appels", "un fait, pas un score",
    "une demande explicite, ou plusieurs personnes actives en même temps"],
   ["Le garde-fou à 30 points", "jamais déclenché",
-   "il existe pour le compte qui accumulerait énormément sans jamais rien demander. Aucun ne l'atteint ici"]],
+   "il existe pour le compte qui accumulerait énormément sans jamais rien demander. Aucun ne l'atteint ici"],
+  ["Tout le reste, le tier 3", "20 450",
+   "newsletter seulement. Il se coupe en deux : 5 741 qui bougent un peu, 14 709 qui ne bougent pas du tout"]],
  body:"Et l'ordre compte : le barème et les seuils ont été fixés <b>avant</b> de regarder le résultat, jamais réglés dessus.<br><br>Côté email, chaque niveau reçoit autre chose. La newsletter part à toute la base, quel que soit le score, sauf aux désabonnés et aux adresses mortes. Les séquences de vente ne partent qu'aux comptes qui bougent. Et trois mois sans nouvelles font sortir des séquences, la newsletter continue.",
  q:"Trente, mais personne ne l'atteint. Donc ça ne sert à rien ?",
  r:"Aujourd'hui, non, et je préfère le dire que le laisser découvrir dans le code. C'est une protection, pas une porte d'entrée : si un jour un compte accumule assez de gestes pour dépasser trente sans jamais rien demander, il mérite un appel et la règle le sortira.<br><br>Sur ce fichier, personne n'y arrive : le meilleur compte qui n'a rien demandé plafonne à <b>20,4</b>."
@@ -1984,11 +1986,11 @@ var PROC=[
  say:"Vingt-six à appeler cette semaine, trente-quatre à travailler. Et le compte est bon : aucune entreprise ne disparaît en route.",
  geant:["26 + 34 + 9 + 5 741 + 14 709 = 20 519","un contrôle automatique le revérifie à chaque exécution"],
  bareme:[
-  ["À appeler cette semaine", "26", "une demande explicite, ou plusieurs personnes qui bougent en même temps"],
-  ["À travailler", "34", "ça chauffe, mais personne n'a encore rien demandé"],
-  ["Injoignables", "9", "plus aucun contact qu'on ait le droit d'appeler ou d'écrire"],
-  ["Signal faible", "5 741", "quelque chose bouge, trop peu pour un appel"],
-  ["Silencieuses", "14 709", "rien depuis quatre-vingt-dix jours"]],
+  ["Tier 1, à appeler cette semaine", "26", "une demande explicite, ou plusieurs personnes qui bougent en même temps"],
+  ["Tier 2, à travailler", "34", "ça chauffe, mais personne n'a encore rien demandé"],
+  ["Perdus, injoignables", "9", "plus aucun contact qu'on ait le droit d'appeler ou d'écrire"],
+  ["Tier 3, signal faible", "5 741", "quelque chose bouge, trop peu pour justifier un appel"],
+  ["Tier 3, silencieuses", "14 709", "rien du tout depuis quatre-vingt-dix jours"]],
  pb:"La question qu'on ne pose jamais dans ce genre d'exercice : et les vingt mille autres ? Sans réponse, une liste de vingt-six comptes ressemble à une sélection arbitraire.",
  q:"Et les quatorze mille silencieuses, vous en faites quoi ?",
  r:"Rien, et c'est un choix assumé.<br><br><b>7 686</b> ont reçu des emails sans jamais réagir : elles sortent des séquences de vente, la newsletter continue.<br><b>7 023</b> n'ont laissé <b>aucune trace</b> dans le CRM : elles partent à l'enrichissement, pas à la relance.<br><br>Les arroser reviendrait à envoyer en masse sur une liste froide. Ce n'est pas du travail commercial, et ça abîme la délivrabilité de tout ce qu'on envoie par ailleurs."
