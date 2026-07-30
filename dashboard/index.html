@@ -481,6 +481,8 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
   margin-left:auto;margin-right:auto;line-height:1.6}
 .sgeant{font-family:var(--display);font-size:clamp(70px,12vw,140px);font-weight:600;
   line-height:1;letter-spacing:-.04em;margin:10px 0 4px;font-variant-numeric:tabular-nums}
+/* un géant long (un format, une égalité) déborderait à 140 px : il rétrécit */
+.sgeant.long{font-size:clamp(38px,6.2vw,74px);letter-spacing:-.03em}
 .sgeant-l{font-size:15px;color:var(--text-2)}
 .sbar{max-width:560px;margin:34px auto 0;text-align:left}
 .sbar table{width:100%;border-collapse:collapse;font-size:14px}
@@ -1473,20 +1475,21 @@ var PROC=[
 },
 {
  p:"2 · Réparer", t:"Étape 1 — les dates", court:true,
- h:"Trois formats dans le même champ",
+ h:"« 03/04/2026 » : le 3 avril ou le 4 mars ?",
  vue:"ops",
- say:"Puis j'ai commencé par les dates. Quatre colonnes en portent, sur les deux fichiers — et trois écritures différentes s'y partagent le contenu à parts presque égales.",
- geant:["134 818","dates à décoder — <b>ce ne sont pas des lignes</b> : 30 000 comptes × 3 colonnes de date, plus 77 199 contacts × 1 colonne, font <b>167 199 emplacements</b>, dont 32 381 sont vides."],
+ say:"J'ai commencé par les dates, parce que tout le reste en dépend. Trois écritures se partageaient les quatre colonnes. J'ai tout réécrit dans une seule — et ce n'est ni la française, ni l'américaine.",
+ geant:["AAAA-MM-JJ","<b>notre format de sortie, sur les 134 818 dates.</b> C'est l'ISO 8601, la norme internationale : ni <i>03/04/2026</i>, ni <i>04/03/2026</i>, mais <b>2026-04-03</b>."],
  bareme:[
-  ["Les trois écritures qui cohabitaient"],
-  ["ISO — 2022-12-13", "44 848", "33,3 % des dates écrites"],
-  ["Américain — 05/19/24, le mois d'abord", "45 057", "33,4 %"],
-  ["Français — 21/03/2022, le jour d'abord", "44 913", "33,3 %"],
-  ["Illisible", "0", "aucune date perdue, aucune devinée"]],
- pb:"Se tromper de format n'affiche aucune erreur. Ça produit des dates fausses en silence — et toutes les fenêtres de temps derrière sont décalées : « actif ces 14 jours », « renouvellement dans 90 jours », tout devient faux.",
- body:"Les trois nombres ferment : <b>44 848 + 45 057 + 44 913 = 134 818</b> — aucune date n'est oubliée ni comptée deux fois. La règle appliquée : <b>année à 2 chiffres = américain, année à 4 chiffres = français</b>. Et aucune date devinée : illisible, c'est vide plus un drapeau <b>error</b>, jamais une valeur inventée.",
- q:"Comment vous pouvez deviner le mois et le jour ?",
- r:"Je ne devine pas, je démontre. Sur <b>54 419</b> dates, un des deux nombres dépasse 12 : la règle y est vérifiable, et il y a <b>zéro contre-exemple</b>. C'est seulement après cette démonstration que je l'applique aux <b>35 551</b> dates ambiguës — 39,5 % des dates en barres. Sans ça, ces 35 551 dates étaient un pile ou face. <br><br>Au total <b>134 818</b> dates converties, <b>0 échec</b>. Les 94 838 horodatages d'événements étaient déjà en ISO : hors périmètre."
+  ["Pourquoi celui-là, et pas le français ni l'américain"],
+  ["Il ne peut pas se lire à l'envers", "", "année, mois, jour — un seul ordre possible"],
+  ["Trier le texte, c'est trier le temps", "", "2018-01-05 < 2022-12-13 < 2026-11-03, sans conversion"],
+  ["Il ne prend pas parti", "", "choisir le format français aurait été un choix d'équipe, pas une norme"],
+  ["Il est déjà celui des événements", "", "les 94 838 horodatages étaient en ISO — on aligne le reste dessus"]],
+ pb:"« 03/04/2026 » se lit 3 avril en France et 4 mars aux États-Unis. Se tromper n'affiche <b>aucune erreur</b> : ça produit des dates fausses en silence, et toutes les fenêtres de temps derrière sont décalées — « actif ces 14 jours », « renouvellement dans 90 jours », tout devient faux.",
+ body:"<b>La règle de lecture, en une phrase : le nombre de chiffres de l'année décide de l'ordre.</b> Année sur <b>4 chiffres</b> → le <b>jour</b> d'abord (français) : <i>21/03/2022</i> devient <b>2022-03-21</b>. Année sur <b>2 chiffres</b> → le <b>mois</b> d'abord (américain) : <i>08/01/19</i> devient <b>2019-08-01</b>, le 1<sup>er</sup> août et non le 8 janvier.<br><br>Ce n'est pas une convention qu'on a posée : c'est une règle que les données imposent, et qui se vérifie avant d'être appliquée. Une date illisible n'est jamais devinée — elle sort vide, avec un drapeau.",
+ q:"Justement : « 03/04/2026 », vous en faites quoi ? Et comment vous savez que vous ne vous trompez pas ?",
+ r:"<b>2026-04-03, le 3 avril</b> — parce que l'année est sur 4 chiffres. La même suite de chiffres écrite <i>03/04/26</i> serait le <b>4 mars</b>. Et je ne le décide pas, je le démontre sur les données avant de l'appliquer :<br><br>• <b>Année sur 4 chiffres</b> (44 913 dates) : le premier nombre monte jusqu'à <b>31</b>, et le second <b>ne dépasse jamais 12</b>. Le premier est donc le jour. <b>27 246</b> dates le prouvent, <b>0</b> le contredisent.<br>• <b>Année sur 2 chiffres</b> (45 057 dates) : l'inverse exact — le premier <b>ne dépasse jamais 12</b>, le second monte à <b>31</b>. Le premier est donc le mois. <b>27 173</b> dates le prouvent, <b>0</b> le contredisent.<br><br>Ces <b>54 419</b> dates ne sont pas ambiguës : elles tranchent la règle. C'est seulement <i>après</i> cette démonstration que je l'applique aux <b>35 551</b> dates où les deux nombres sont ≤ 12 — celles qui, prises isolément, étaient un pile ou face.",
+ qs:[["Et pourquoi vous n'avez pas tout mis au format français, puisque la base est européenne ?","Parce qu'un format d'affichage n'est pas un format de stockage. <b>JJ/MM/AAAA se trie faux</b> : en texte, <i>02/01/2019</i> passe avant <i>01/12/2018</i>. Toutes les fenêtres du scoring — 14 jours, 45 jours, 90 jours — reposent sur des comparaisons de dates ; un ordre faux les casse toutes. L'ISO est le seul des trois où l'ordre du texte est l'ordre du temps. Rien n'empêche de <b>réafficher</b> en français à l'écran ; ce qu'on ne fait pas, c'est calculer dessus."],["Vos 134 818 dates, ça fait plus de lignes que de comptes.","Ce ne sont pas des lignes, ce sont des <b>cases</b>. 30 000 comptes × 3 colonnes de date + 77 199 contacts × 1 colonne = <b>167 199 cases</b>, dont <b>32 381 vides</b> : il reste <b>134 818</b> dates à décoder. Elles se répartissent en 44 848 ISO + 45 057 américaines + 44 913 françaises — la somme referme exactement, aucune date oubliée ni comptée deux fois. <b>134 818 converties, 0 échec.</b>"]]
 },
 {
  p:"2 · Réparer", t:"Étape 2 — les pays", h:"30 façons d'écrire 8 pays", vue:"data",
@@ -1852,7 +1855,8 @@ function procShow(i){
   }
   var h='<div class="skick">'+esc(x.p)+'</div><h1 class="sh1">'+esc(x.h)+'</h1>'
        +'<div class="ssay">'+esc(x.say)+'</div>';
-  if(x.geant) h+='<div class="sgeant">'+esc(x.geant[0])+'</div><div class="sgeant-l">'+x.geant[1]+'</div>';
+  if(x.geant) h+='<div class="sgeant'+(x.geant[0].length>9?" long":"")+'">'+esc(x.geant[0])
+                +'</div><div class="sgeant-l">'+x.geant[1]+'</div>';
   if(x.loop) h+=loopSVG();
   if(x.bareme) h+=baremeHTML(x.bareme);
   if(x.courbe) h+=courbeHTML();
