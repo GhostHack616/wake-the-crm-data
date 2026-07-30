@@ -1,0 +1,139 @@
+# =============================================================
+# Config du SCORING — Wake the CRM · V1.1
+# Calibrée par Romain le 29/07. "Config, pas code" : chaque poids,
+# seuil et règle vit ici, avec son pourquoi — exigence du brief.
+# =============================================================
+version: "V1.1"
+reference_date: "2026-07-22"       # NOW du dataset = dernier event, jamais la date système
+
+# Le scoring lit le flux NET : jamais un doublon d'event, jamais le bot,
+# jamais un anonyme (4 000 visites non rattachables à une entreprise).
+# Les signaux se comptent par PERSONNE (copies duplicate_of -> fiche principale).
+
+points:
+  # Preuves — plein poids quel que soit le porteur : le décideur déclare
+  # (13/16 formulaires), l'opérationnel organise (9/9 RDV sans buyer).
+  meeting_booked: 40               # il demande à nous parler — la preuve ultime
+  form_fill: 35                    # il se déclare ; c'est nous qui rappelons
+  # Gestes — pondérés par le porteur :
+  email_click: 8                   # action volontaire (l'ouverture ne prouve rien, le clic si)
+  linkedin_comment: 6              # écrire coûte — 3x le like (905 commentaires / 917 likes)
+  linkedin_like: 2                 # un pouce, une seconde
+  email_open: 0                    # 49 % des opens mondiaux = préchargement Apple (Litmus 2025)
+  email_sent: 0                    # notre activité, pas la sienne
+
+# Chaque page a un poids DÉCLARÉ — une page inconnue = alarme, jamais un défaut silencieux.
+pages:
+  /pricing: 10                     # il regarde les prix — le geste le plus proche de l'achat
+  /demo: 10                        # il regarde la PAGE démo (≠ démo réservée = meeting_booked)
+  /product/ats: 4                  # il étudie l'offre
+  /product/payroll: 4
+  /product/performance: 4
+  /integrations: 4                 # vérification de compatibilité = évaluation mi-parcours
+  /customers: 4                    # recherche de références = évaluation
+  /help/cancel-subscription: -15   # il cherche la porte (piège ENT-16714)
+  /help/export-data: -15           # il récupère ses données pour partir
+  /billing: 0                      # consulter sa facture ≠ partir (acté 28/07)
+  /support: 0
+  /support/billing: 0
+  /careers: 0                      # des candidats, pas des prospects (683 flagués)
+  /blog/hr-trends-2026: 0          # curiosité, pas intention
+  /blog/interview-tips: 0
+  /blog/onboarding-guide: 0
+  /about: 0
+  /: 0
+
+# Resserrés par Romain le 29/07 (« l'écart me paraissait grand »).
+multiplicateurs:
+  buyer: 1.0
+  champion: 0.8
+  utilisateur: 0.6
+  sans_titre: 0.5                  # on ne punit pas un trou de données
+  NON_CLASSE: 0.5
+  bruit: 0.0                       # signaux faibles ignorés — conversions plein poids quand même
+# Les événements NÉGATIFS (pages de sortie) valent plein poids peu importe le porteur.
+
+decroissance:
+  demi_vie_gestes_jours: 10        # un clic d'avant-hier ≠ un clic d'il y a 2 mois
+  demi_vie_preuves_jours: 30       # « une démo, ça se travaille, ça ne meurt pas seul » (Romain 29/07)
+  plancher: 0.25                   # tout signal de moins de 21 jours garde >= 25 % de sa valeur
+  plancher_fenetre_jours: 21
+
+# LES DEUX PORTES vers le Tier 1 — des RÈGLES sémantiques, pas des points.
+# C'est ce qui rend l'appartenance au Tier 1 robuste au test ±30 %.
+portes:
+  porte1_conversion_fenetre_jours: 45   # « 45 j sans relance, ça n'arrive pas » (Romain)
+  porte2_comite:
+    personnes_min: 3               # une décision B2B est collective (Forrester : 13 pers./deal)
+    fenetre_jours: 14              # 3 personnes en 15 jours = un comité ; en 3 ans = du hasard
+    decideur_requis: true          # sans sponsor : 0 conversion sur 32-38 comptes (mesuré 2 IA)
+    # gestes de comité = événements à poids > 0 UNIQUEMENT (définition gravée —
+    # elle a réconcilié les mesures 38/32 -> 11 des deux IA)
+
+seuils:                            # absolus — jamais un top N (« un top N ment quand tout est froid »)
+  tier1: 30                        # une preuve fraîche OU un comité qui s'agite
+  tier2: 8                         # au moins un vrai geste récent
+  score_affiche_max: 100
+
+fit:                               # étiquette A/B/C : ORDONNE la file, ne bloque JAMAIS l'entrée
+  tailles_cible: ["51-200", "201-500", "501-1000", "1001-5000", "5000+"]
+  # A = taille dans la cible ET >= 1 décideur identifié · B = l'un des deux · C = aucun
+
+# « Perdu — canal mort » (acté 28/07) : jamais client + aucune conversion ni
+# signal hors email + tous les cliqueurs désabonnés + plus AUCUN contact
+# joignable (non désabonné ET adresse ok/repaired). Sorti des files de travail.
+# Le désabonnement ne touche JAMAIS le score (piège n°7) — ceci est un état
+# de canal, pas une décote.
+perdu_canal_mort:
+  actif: true
+
+departage:                         # à preuves égales ET fit égal, dans l'ordre :
+  - fit                            # A avant B avant C
+  - n_records                      # « compte historiquement travaillé » — jamais des points
+  - score                          # puis le score décimal
+
+# Règles DORMANTES : présentes en config, étiquetées, jamais présentées comme
+# actives — elles ne mordent pas sur CE fichier (mesures à l'appui).
+regles_dormantes:
+  - regle: "RDV prime sur les pages négatives"
+    mesure: "0 cas (25 comptes à conversion x 0 visite sortie/carrières)"
+  - regle: "cap anti-abus personne-jour"
+    mesure: "max mesuré : 3 signaux forts"
+  - regle: "invalidation clics robots de sécurité (<2 s, rafale)"
+    mesure: "0 clic < 5 s, minimum 64 s, médiane envoi->clic ~18 h"
+  - regle: "alerte 'chaud sans relance de notre part' (le silence est le nôtre)"
+    mesure: "0 cas sur la fenêtre de 90 jours"
+  - regle: "libellé de repli 'signaux récents (15-21 j), sans demande' (aucune personne active sur 14 j)"
+    mesure: "0 cas au run du 29/07 — repérée par l'IA n°2 au montage du push"
+  - regle: "plancher de décroissance (25 %) appliqué aux PREUVES"
+    mesure: "structurellement inatteignable : à 21 j (fin de fenêtre plancher), une demi-vie de 30 j vaut encore 0,616 — le plancher ne mord que sur les gestes vers J20-21. Repérée par l'IA n°2 au contrôle des cascades"
+
+# Verrous du run V1.1 (mesurés puis gravés — toute dérive = alarme rouge).
+invariants:
+  # Fenêtre comité ANCRÉE au présent (14 DERNIERS jours) : les comités de
+  # mai-juin, refroidis, ne qualifient plus — le seul comité vivant au 22/07
+  # est ENT-16714 (4 pers dont un décideur, sur les pages de sortie : à sauver).
+  tier1_total: 26                  # 25 conversions + 1 comité VIVANT (fenêtre ancrée, validé Romain 29/07)
+  tier1_porte1_conversions: 25
+  tier1_porte2_comite: 1           # ENT-16714 : 4 pers./14 derniers jours dont un décideur, play risque.
+                                   # Les 10 « comités » historiques (mai-juin, scores 0,1-6,6) sont T3
+                                   # à raison — un comité d'il y a 2 mois n'est pas un comité.
+  tier2: 34                        # 36 de la simulation − 2 « perdus » (score >= 8 mais
+                                   # plus personne de joignable : sortis des files, règle actée)
+  perdus_canal_mort: 9
+  perte_seche: 2                   # tag C (29/07) : le perdu valait le coup (score >= seuil T2)
+  perte_canal_mort_froid: 7        # canal coupé mais rien à perdre — déjà froid
+  perdus_dans_files_de_travail: 0
+  entites_scorees_flux: {from_bot: 0, is_duplicate_event: 0, is_anonymous: 0}
+  ecart_max_somme_etages: 0.01
+  # Partition complète (actée par Romain le 29/07 — « toutes les entreprises
+  # doivent être dedans ») : le fichier de scores couvre les 20 519 entreprises
+  # du CRM, plus une seule invisible. Les silencieuses ne sont PAS un 4e tier :
+  # elles sont Tier 3, étiquetées — le tier décide l'action (nurture auto), le
+  # score ordonne la file, l'étiquette dit pourquoi le nurture ne suffira
+  # probablement pas (c'est l'enrichissement qui peut les réveiller).
+  partition_totale: 20519
+  tier3_signal: 5741                        # >= 1 signal à poids > 0 (score de 0,0 affiché à 7,8)
+  silencieuses_total: 14709                 # aucun signal à poids > 0 sur la fenêtre de 90 j
+  silencieuses_events_sans_poids: 7686      # des envois/ouvertures/blog — rien qui compte
+  silencieuses_aucun_evenement: 7023        # jamais la moindre trace dans le CRM     # somme des scores personnes = score compte, à l'arrondi près

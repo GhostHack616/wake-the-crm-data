@@ -1,3 +1,45 @@
+# Wake the CRM : la réponse
+
+Ce dépôt contient l'énoncé du challenge (conservé plus bas, intact) et la machine construite en réponse : cleanup, scoring, push Slack et dashboard.
+
+**Le dashboard en ligne : https://wake-the-crm.netlify.app** (vues Macro, Logique, Ops, Process et Données ; le flux d'événements se rejoue en live).
+
+## Où est quoi
+
+| Dossier | Contenu |
+|---|---|
+| `cleanup/` | le pipeline de nettoyage, 12 étapes + sa config. Rien n'est supprimé ni écrasé : chaque réparation vit dans une colonne neuve, originaux intacts |
+| `scoring/` | le moteur de scoring V1.1 + `scoring_config.yaml` (chaque poids, seuil et règle y vit, commenté : « config, pas code ») |
+| `dashboard_data/` | les sorties versionnées que le dashboard consomme (scores, hot list, données du dash) |
+| `dashboard/` | le tableau de bord : build reproductible + test automatique d'interdit d'écran |
+| `docs/` | `decisions.md` (qui a décidé quoi, et où le vérifier), le schéma du scoring, l'architecture d'enrichissement |
+| `slack/` | le push de la hot list avec les preuves (aucun secret dans le dépôt : l'adresse d'envoi vit dans l'environnement) |
+| `cleanup_report.md` | le rapport d'audit auto-généré à chaque exécution : 95 invariants + la traçabilité règle par règle |
+
+## Tout se reconstruit depuis un clone nu
+
+```bash
+python3 cleanup/run_cleanup.py               # nettoie, fusionne, segmente -> data_clean/ + cleanup_report.md
+python3 scoring/run_scoring.py               # score, tiers, hot list -> dashboard_data/
+python3 dashboard/build/build_dashboard.py   # construit le dashboard -> dashboard/dist/
+```
+
+119 contrôles automatiques tournent à chaque exécution (95 sur le nettoyage, 24 sur le scoring). Un statut ne se déclare pas : il se constate sur le run, et un contrôle rouge fait échouer le pipeline. Après chaque déploiement, le site servi est comparé à l'octet au build du dépôt.
+
+## Transparence sur la vérité terrain
+
+L'énoncé annonce que les comptes réellement chauds ont été plantés dans les données. C'est assumé ici plutôt que découvert en entretien : l'audit a identifié une trace du générateur qui permet de reconstituer cette vérité terrain. Elle n'a jamais servi à construire les règles : le barème et les seuils ont été figés d'abord, la mesure de précision et de rappel a été faite une seule fois, en fin de course, et aucun poids n'a été déplacé pour rattraper un compte. Le détail du mécanisme se raconte de vive voix, pas dans un dépôt public.
+
+## Les décisions
+
+Chaque choix a un pourquoi. `docs/decisions.md` liste les arbitrages qui ont fait le projet, avec leurs mots d'origine et l'endroit exact où les vérifier.
+
+---
+
+*Ci-dessous : l'énoncé original du challenge, conservé tel que reçu.*
+
+---
+
 # Wake the CRM — Challenge GTM Engineer
 
 Bienvenue. Ce repo contient tout ce qu'il te faut. Lis ce README en entier avant d'ouvrir les CSVs.

@@ -1,0 +1,2515 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Wake the CRM · moteur de détection de comptes chauds</title>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=clash-display@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --panel:#ffffff; --soft:#f5f5f5; --soft-2:#ececec;
+  --line:#e4e4e4; --line-2:#efefef;
+  --text:#0a0a0a; --text-2:#5b5b5b; --text-3:#9a9a9a;
+  --violet:#7c6cf0; --violet-soft:rgba(124,108,240,.12);
+  --ok:#2fa56f; --ok-soft:rgba(47,165,111,.12);
+  --warn:#e0a53f; --warn-soft:rgba(224,165,63,.14);
+  --danger:#e0653f; --danger-soft:rgba(224,101,63,.13);
+  --ink:#15171c; --on-ink:#fff;
+  --top-bg:rgba(255,255,255,.72);
+  --shadow-card:0 1px 2px rgba(10,10,10,.05);
+  --shadow-pop:0 16px 40px -16px rgba(10,10,10,.30), 0 2px 8px rgba(10,10,10,.07);
+  --font:"General Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --display:"Clash Display","General Sans",sans-serif;
+  --fs-xs:11.5px; --fs-sm:12.5px; --fs-md:13px; --fs-lg:15px; --fs-xl:18px;
+  --r-sm:7px; --r-md:9px; --r-lg:12px; --r-pill:999px;
+  --e:cubic-bezier(.2,.7,.2,1);
+  --dust:22,24,34;
+}
+body.dark{
+  --bg:#0d0e12; --panel:#15171d; --soft:#1c1f27; --soft-2:#252934;
+  --line:#2a2e39; --line-2:#20232b;
+  --text:#eceef2; --text-2:#a6abb6; --text-3:#6d737f;
+  --violet:#9a8dff; --violet-soft:rgba(124,108,240,.22);
+  --ok:#4fd08a; --ok-soft:rgba(79,208,138,.15);
+  --warn:#e3a648; --warn-soft:rgba(227,166,72,.16);
+  --danger:#e8685c; --danger-soft:rgba(232,104,92,.16);
+  --ink:#eceef2; --on-ink:#15171d;
+  --top-bg:rgba(14,15,20,.72);
+  --shadow-card:0 1px 2px rgba(0,0,0,.45);
+  --shadow-pop:0 18px 46px -16px rgba(0,0,0,.72), 0 2px 10px rgba(0,0,0,.5);
+  --dust:196,206,232;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:var(--fs-md);
+  -webkit-font-smoothing:antialiased;overflow:hidden;transition:background .3s ease,color .3s ease}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--soft-2);border-radius:9px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ══════════════════════════════ SPLASH ══════════════════════════════ */
+.splash{position:fixed;inset:0;z-index:9999;
+  background:radial-gradient(120% 100% at 50% 44%, #13141b 0%, #0a0b10 58%, #06070b 100%);
+  display:flex;align-items:center;justify-content:center;padding:34px;text-align:center;
+  transform:translateY(0);transition:transform .9s cubic-bezier(.72,0,.2,1);will-change:transform;
+  box-shadow:0 30px 60px -10px rgba(0,0,0,.6);cursor:pointer}
+.splash::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,transparent 6%,rgba(124,108,240,.9) 50%,transparent 94%);
+  opacity:0;transition:opacity .3s ease;box-shadow:0 0 22px 2px rgba(124,108,240,.5)}
+.splash.hide{transform:translateY(-101%);pointer-events:none}
+.splash.hide::after{opacity:1}
+.sp-sonar{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+.splash-inner{position:relative;z-index:1;transition:opacity .5s ease, transform .6s cubic-bezier(.5,0,.2,1)}
+.splash.hide .splash-inner{opacity:0;transform:translateY(-44px) scale(.965)}
+.sp-status{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.46);margin-bottom:26px}
+.sp-dot{width:7px;height:7px;border-radius:50%;background:#7c6cf0;
+  box-shadow:0 0 10px 1px rgba(124,108,240,.75);animation:spPulse 1.5s ease-in-out infinite}
+.sp-mark{width:46px;height:46px;margin:0 auto 20px;opacity:0;animation:spIn .8s .16s var(--e) forwards}
+.sp-title{font-family:var(--display);font-size:44px;font-weight:600;color:#fff;letter-spacing:-.025em;
+  line-height:1.03;opacity:0;transform:translateY(10px);animation:spIn .75s .42s cubic-bezier(.2,.85,.2,1) forwards}
+.sp-title em{font-style:normal;color:#a99bff}
+.sp-info{margin-top:16px;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.56);
+  letter-spacing:.012em;font-variant-numeric:tabular-nums;opacity:0;transform:translateY(10px);
+  animation:spIn .75s .6s cubic-bezier(.2,.85,.2,1) forwards}
+.sp-info b{color:rgba(255,255,255,.86);font-weight:600}
+.sp-sig{margin-top:34px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.28);opacity:0;animation:spIn .8s 1.05s var(--e) forwards}
+.sp-prog{position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(255,255,255,.07)}
+.sp-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c6cf0,#a99bff);border-radius:0 2px 2px 0}
+.sp-prog i.run{animation:spProg var(--sp-dur,4200ms) cubic-bezier(.3,0,.3,1) forwards}
+.sp-skip{position:absolute;bottom:26px;right:24px;font-size:12.5px;font-weight:600;
+  color:rgba(255,255,255,.55);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:8px 16px;transition:.14s;z-index:2}
+.sp-skip:hover{color:#fff;background:rgba(255,255,255,.14)}
+@keyframes spIn{to{opacity:1;transform:none}}
+@keyframes spPulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spProg{from{width:0}to{width:100%}}
+@keyframes appReveal{0%{opacity:.4;transform:scale(1.02) translateY(14px)}60%{opacity:1}100%{opacity:1;transform:none}}
+body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
+@media(max-width:640px){.sp-title{font-size:31px}.sp-info{font-size:12.5px}}
+
+/* ══════════════════════════════ SHELL ══════════════════════════════ */
+.app{height:100%;display:flex;flex-direction:column;opacity:0}
+.app.on{opacity:1}
+.top{height:54px;flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:0 18px;
+  border-bottom:1px solid var(--line);background:var(--top-bg);backdrop-filter:blur(14px);
+  position:relative;z-index:20}
+.brand{display:flex;align-items:center;gap:10px;flex:0 0 auto;cursor:pointer;
+  border-radius:var(--r-sm);padding:4px 7px;margin-left:-7px;transition:.14s}
+.brand:hover{background:var(--soft)}
+.brand:focus-visible{outline:2px solid var(--violet);outline-offset:1px}
+.brand svg{width:22px;height:22px;display:block}
+.brand b{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-.015em}
+.brand span{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--text-3);
+  border-left:1px solid var(--line);padding-left:10px;margin-left:2px}
+.tabs{display:flex;gap:2px;margin-left:auto;background:var(--soft);padding:3px;border-radius:var(--r-pill)}
+.tabs button{padding:6px 15px;border-radius:var(--r-pill);font-size:var(--fs-sm);font-weight:600;
+  color:var(--text-2);transition:.16s var(--e);white-space:nowrap}
+.tabs button:hover{color:var(--text)}
+.tabs button.on{background:var(--panel);color:var(--text);box-shadow:var(--shadow-card)}
+.tbtn{width:32px;height:32px;border-radius:var(--r-sm);display:grid;place-items:center;
+  color:var(--text-2);border:1px solid var(--line);transition:.16s}
+.tbtn:hover{background:var(--soft);color:var(--text)}
+.tbtn svg{width:15px;height:15px}
+.views{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;display:none;overflow:auto}
+.view.on{display:block}
+
+/* ══════════════════════════════ MACRO ══════════════════════════════ */
+.macro{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;
+  background:radial-gradient(115% 90% at 50% 30%, #11121a 0%, #0a0b10 60%, #07080c 100%)}
+.gtip{position:absolute;z-index:9;pointer-events:none;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 11px;font-size:var(--fs-xs);
+  box-shadow:var(--shadow-card);opacity:0;transition:opacity .12s;white-space:nowrap}
+.gtip.on{opacity:1}
+.gpop{position:absolute;z-index:11;width:330px;max-width:calc(100% - 32px);border-radius:var(--r-lg);
+  background:rgba(20,22,30,.92);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 24px 60px -18px rgba(0,0,0,.8);padding:17px 18px 16px;color:#eceef2;
+  opacity:0;transform:scale(.96);transform-origin:top left;pointer-events:none;transition:.18s var(--e)}
+.gpop.on{opacity:1;transform:none;pointer-events:auto}
+.gpop-x{position:absolute;top:9px;right:10px;width:22px;height:22px;border-radius:5px;
+  color:rgba(255,255,255,.4);font-size:15px;line-height:1;display:grid;place-items:center}
+.gpop-x:hover{background:rgba(255,255,255,.1);color:#fff}
+.gpop h4{font-family:var(--display);font-size:16px;font-weight:600;padding-right:22px;line-height:1.2}
+.gpop .gsub{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px;letter-spacing:.02em}
+.gpop .gsc{display:flex;align-items:baseline;gap:8px;margin:11px 0 12px}
+.gpop .gsc b{font-family:var(--display);font-size:29px;font-weight:600;line-height:1}
+.gpop .gsc em{font-style:normal;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.gpop .gline{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:5px 0;
+  border-top:1px solid rgba(255,255,255,.07)}
+.gpop .gline span{color:rgba(255,255,255,.45)}
+.gpop .gline b{font-weight:600;text-align:right}
+.gpop .gppl{margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)}
+.gpop .gppl div{display:flex;align-items:center;gap:7px;font-size:11.5px;padding:3px 0}
+.gpop .gppl i{width:6px;height:6px;border-radius:50%;flex:0 0 auto}
+.gpop .gppl u{flex:1;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gpop .gppl b{font-variant-numeric:tabular-nums}
+.gpop .gfull{margin-top:13px;width:100%;padding:8px;border-radius:var(--r-sm);
+  background:rgba(255,255,255,.09);font-size:12px;font-weight:600;color:#fff;transition:.14s}
+.gpop .gfull:hover{background:rgba(255,255,255,.17)}
+.gtip b{display:block;font-size:var(--fs-sm);font-weight:600}
+.macro-stage{flex:1;position:relative;min-height:0}
+.macro-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.mk{position:absolute;top:20px;left:22px;display:flex;flex-direction:column;gap:2px;z-index:3;pointer-events:none}
+.mk-eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.34);font-weight:600}
+.mk-date{font-family:var(--display);font-size:26px;font-weight:600;color:#fff;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1.15}
+.mk-sub{font-size:12px;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums;margin-top:1px}
+.mstats{position:absolute;top:20px;right:22px;display:flex;flex-direction:column;gap:9px;z-index:3;
+  align-items:flex-end;pointer-events:none}
+.mstat{display:flex;align-items:baseline;gap:9px}
+.mstat b{font-family:var(--display);font-size:21px;font-weight:600;color:#fff;
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em;min-width:64px;text-align:right}
+.mstat span{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.38);font-weight:600;min-width:96px}
+.mstat.hot b{color:#a99bff}
+.mstat.risk b{color:#e8685c}
+.mstat.warm b{color:#e3a648}
+.ticker{position:absolute;left:22px;bottom:18px;width:min(370px,42vw);z-index:3;pointer-events:none;
+  display:flex;flex-direction:column-reverse;gap:5px;max-height:190px;overflow:hidden;
+  -webkit-mask-image:linear-gradient(to top,#000 62%,transparent);mask-image:linear-gradient(to top,#000 62%,transparent)}
+.tk{display:flex;align-items:center;gap:8px;font-size:11.5px;color:rgba(255,255,255,.6);
+  animation:tkIn .4s var(--e);white-space:nowrap;overflow:hidden}
+.tk i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3);flex:0 0 auto}
+.tk.hot i{background:#a99bff;box-shadow:0 0 8px 1px rgba(169,155,255,.6)}
+.tk.hot{color:rgba(255,255,255,.92);font-weight:600}
+.tk.risk i{background:#e8685c;box-shadow:0 0 8px 1px rgba(232,104,92,.5)}
+.tk b{color:#fff;font-weight:600}
+.tk em{font-style:normal;color:rgba(255,255,255,.4);margin-left:auto;padding-left:8px}
+@keyframes tkIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.legend{position:absolute;right:22px;bottom:18px;z-index:3;display:flex;gap:16px;pointer-events:none}
+.lg{display:flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:rgba(255,255,255,.34);font-weight:600}
+.lg i{width:7px;height:7px;border-radius:50%}
+.transport{flex:0 0 auto;height:64px;display:flex;align-items:center;gap:16px;padding:0 22px;
+  border-top:1px solid rgba(255,255,255,.07);background:rgba(8,9,13,.6);backdrop-filter:blur(12px);z-index:4}
+.play{width:38px;height:38px;border-radius:50%;background:var(--violet);color:#fff;display:grid;
+  place-items:center;flex:0 0 auto;box-shadow:0 4px 18px -4px rgba(124,108,240,.7);transition:.16s}
+.play:hover{filter:brightness(1.1)}
+.play svg{width:15px;height:15px}
+.scrub{flex:1;position:relative;height:34px;display:flex;align-items:center;cursor:pointer}
+.scrub-bg{position:absolute;left:0;right:0;height:26px;display:flex;align-items:flex-end;gap:1px}
+.scrub-bg i{flex:1;background:rgba(255,255,255,.11);border-radius:1px 1px 0 0;min-height:1px;transition:background .2s}
+.scrub-bg i.past{background:rgba(124,108,240,.62)}
+.scrub-line{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 10px 1px rgba(255,255,255,.5);
+  border-radius:2px;pointer-events:none;transition:left .06s linear}
+.speed{display:flex;gap:2px;background:rgba(255,255,255,.07);padding:3px;border-radius:var(--r-pill);flex:0 0 auto}
+.speed button{padding:4px 10px;border-radius:var(--r-pill);font-size:11px;font-weight:600;
+  color:rgba(255,255,255,.5);transition:.14s}
+.speed button.on{background:rgba(255,255,255,.15);color:#fff}
+.tcount{font-family:var(--display);font-size:13px;font-weight:600;color:rgba(255,255,255,.75);
+  font-variant-numeric:tabular-nums;flex:0 0 auto;min-width:74px}
+.pin{position:absolute;z-index:2;pointer-events:auto;transform:translate(-50%,-100%);
+  padding:4px 9px;border-radius:var(--r-pill);background:rgba(124,108,240,.16);
+  border:1px solid rgba(169,155,255,.4);color:#fff;font-size:11px;font-weight:600;white-space:nowrap;
+  backdrop-filter:blur(6px);animation:pinIn .5s var(--e);cursor:pointer;transition:.14s}
+.pin:hover{background:rgba(124,108,240,.34)}
+.pin b{color:#c6bcff;margin-left:6px;font-variant-numeric:tabular-nums}
+@keyframes pinIn{from{opacity:0;transform:translate(-50%,-88%) scale(.9)}to{opacity:1}}
+@media(max-width:820px){.ticker{display:none}.mstat span{display:none}.legend{display:none}}
+
+/* ══════════════════════════════ LOGIQUE ══════════════════════════════ */
+.logic{position:absolute;inset:0;display:flex;overflow:hidden}
+.llist{width:330px;flex:0 0 auto;border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--panel)}
+.lsearch{padding:12px;border-bottom:1px solid var(--line-2);display:flex;flex-direction:column;gap:9px}
+.lsearch input{width:100%;padding:9px 12px;border-radius:var(--r-sm);border:1px solid var(--line);
+  background:var(--soft);color:var(--text);font-size:var(--fs-sm);outline:0;transition:.14s}
+.lsearch input:focus{border-color:var(--violet);box-shadow:0 0 0 3px var(--violet-soft);background:var(--panel)}
+.lfilters{display:flex;gap:4px}
+.lfilters button{flex:1;padding:6px 0;border-radius:var(--r-sm);font-size:11px;font-weight:600;
+  color:var(--text-2);background:var(--soft);transition:.14s}
+.lfilters button.on{background:var(--ink);color:var(--on-ink)}
+.lrows{flex:1;overflow:auto}
+.lrow{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:1px solid var(--line-2);
+  cursor:pointer;transition:.12s}
+.lrow:hover{background:var(--soft)}
+.lrow.on{background:var(--violet-soft)}
+.lrow-m{flex:1;min-width:0}
+.lrow-m b{display:block;font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrow-m span{display:block;font-size:var(--fs-xs);color:var(--text-3);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.sc{font-family:var(--display);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;
+  flex:0 0 auto;min-width:40px;text-align:right}
+.sc.k2{color:var(--violet)} .sc.k1{color:var(--warn)} .sc.k3{color:var(--danger)} .sc.k0{color:var(--text-3)}
+.ldetail{flex:1;overflow:auto;padding:26px 30px 60px;min-width:0}
+.empty{height:100%;display:grid;place-items:center;color:var(--text-3);font-size:var(--fs-sm)}
+.dh{display:flex;align-items:flex-start;gap:16px;margin-bottom:6px}
+.dh-t{flex:1;min-width:0}
+.dh h2{font-family:var(--display);font-size:27px;font-weight:600;letter-spacing:-.022em;line-height:1.15}
+.dh-sub{font-size:var(--fs-sm);color:var(--text-2);margin-top:5px}
+.dh-sub a{color:var(--violet);text-decoration:none}
+.verdict{flex:0 0 auto;text-align:right}
+.verdict .n{font-family:var(--display);font-size:42px;font-weight:600;line-height:1;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums}
+.verdict .l{font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;margin-top:4px}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--r-pill);
+  font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.tag.k2{background:var(--violet-soft);color:var(--violet)}
+.tag.k1{background:var(--warn-soft);color:var(--warn)}
+.tag.k3{background:var(--danger-soft);color:var(--danger)}
+.tag.k0{background:var(--soft);color:var(--text-3)}
+.facts{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0 24px}
+.fact{padding:4px 10px;border-radius:var(--r-sm);background:var(--soft);font-size:var(--fs-xs);color:var(--text-2)}
+.fact b{color:var(--text);font-weight:600}
+.sec{margin-top:26px}
+.sec-h{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.sec-h h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);font-weight:600}
+.sec-h em{font-style:normal;font-size:var(--fs-xs);color:var(--text-3);margin-left:auto}
+.card{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);
+  box-shadow:var(--shadow-card);overflow:hidden}
+/* waterfall du score */
+.wf{display:flex;flex-direction:column}
+.wfr{display:flex;align-items:center;gap:12px;padding:12px 15px;border-bottom:1px solid var(--line-2)}
+.wfr:last-child{border-bottom:0}
+.wfr-l{width:150px;flex:0 0 auto;font-size:var(--fs-sm);font-weight:600}
+.wfr-l span{display:block;font-size:10.5px;color:var(--text-3);font-weight:500;margin-top:1px}
+.wfr-b{flex:1;height:8px;border-radius:4px;background:var(--soft);overflow:hidden;position:relative}
+.wfr-b i{position:absolute;top:0;bottom:0;border-radius:4px;transition:width .5s var(--e)}
+.wfr-v{width:66px;flex:0 0 auto;text-align:right;font-family:var(--display);font-size:14px;
+  font-weight:600;font-variant-numeric:tabular-nums}
+.wfr.tot{background:var(--soft);font-weight:700}
+.wfr.tot .wfr-v{font-size:18px}
+/* règles */
+.rule{display:flex;gap:13px;padding:13px 15px;border-bottom:1px solid var(--line-2)}
+.rule:last-child{border-bottom:0}
+.rule-w{width:54px;flex:0 0 auto;font-family:var(--display);font-size:16px;font-weight:600;
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.rule-w.pos{color:var(--violet)} .rule-w.neg{color:var(--danger)} .rule-w.nil{color:var(--text-3)}
+.rule-b{flex:1;min-width:0}
+.rule-b b{font-size:var(--fs-sm);font-weight:600;display:block}
+.rule-b b em{font-style:normal;color:var(--text-3);font-weight:500;margin-left:7px;font-size:var(--fs-xs)}
+.rule-b p{font-size:var(--fs-xs);color:var(--text-2);margin-top:3px;line-height:1.5}
+.rule-b p::before{content:"pourquoi · ";color:var(--text-3);font-weight:600;letter-spacing:.04em}
+/* timeline */
+.tl{max-height:330px;overflow:auto}
+.tlr{display:flex;align-items:center;gap:11px;padding:8px 15px;border-bottom:1px solid var(--line-2);font-size:var(--fs-xs)}
+.tlr:last-child{border-bottom:0}
+.tlr-d{width:56px;flex:0 0 auto;color:var(--text-3);font-variant-numeric:tabular-nums}
+.tlr-t{width:132px;flex:0 0 auto;font-weight:600}
+.tlr-t.hi{color:var(--violet)}
+.tlr-c{flex:1;min-width:0;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tlr-w{flex:0 0 auto;color:var(--text-3);font-variant-numeric:tabular-nums}
+/* contacts */
+.ctc{display:flex;flex-wrap:wrap;gap:7px;padding:14px 15px}
+.ctcx{display:flex;align-items:center;gap:7px;padding:5px 11px;border-radius:var(--r-pill);
+  background:var(--soft);font-size:var(--fs-xs)}
+.ctcx b{font-weight:600}
+.ctcx span{color:var(--text-3)}
+.ctcx.sen{background:var(--violet-soft);color:var(--violet)}
+.ctcx.sen b,.ctcx.sen span{color:inherit}
+.ctcx.out{background:var(--danger-soft);color:var(--danger);text-decoration:line-through}
+/* décroissance */
+.decay{padding:15px}
+.decay svg{width:100%;height:96px;display:block;overflow:visible}
+.decay-c{display:flex;gap:22px;margin-top:11px;font-size:var(--fs-xs);color:var(--text-2)}
+.decay-c b{color:var(--text);font-weight:600}
+.warnbox{display:flex;gap:11px;padding:13px 15px;border-radius:var(--r-md);background:var(--danger-soft);
+  border:1px solid rgba(224,101,63,.28);font-size:var(--fs-sm);color:var(--text);margin-bottom:18px;line-height:1.55}
+.warnbox b{color:var(--danger)}
+
+/* ══════════════════════════════ DONNÉES ══════════════════════════════ */
+/* la ligne de multiplication sous chaque personne — un score refaisable de tête */
+.calc{padding:0 15px 12px 15px;margin-top:-4px}
+.calcr{display:flex;align-items:baseline;gap:10px;padding:4px 0;font-size:var(--fs-xs);
+  border-top:1px solid var(--line-2)}
+.calcr:first-child{border-top:0}
+.calcr .cd{flex:0 0 40px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.calcr .cq{flex:0 0 128px;color:var(--text);font-weight:600}
+.calcr .cm{flex:1;color:var(--text-2);font-variant-numeric:tabular-nums;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.calcr .cm em{font-style:normal;color:var(--text-3);font-size:10px}
+.calcr .cp{flex:0 0 52px;text-align:right;font-weight:700;color:var(--ok);
+  font-variant-numeric:tabular-nums}
+.calcr.neg .cp{color:var(--danger)}
+@media(max-width:680px){
+  .calcr{flex-wrap:wrap;gap:4px 8px}
+  .calcr .cq{flex:1 1 auto}.calcr .cm{flex:1 1 100%;white-space:normal}
+}
+/* les gardes du scoring, dans la vue Ops */
+.grd{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;padding:14px}
+.grdr{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--r-sm);
+  background:var(--soft);font-size:var(--fs-xs)}
+.grdr i{flex:0 0 7px;height:7px;border-radius:50%;background:var(--ok)}
+.grdr.ko i{background:var(--danger)}
+.grdr b{flex:1;font-weight:500;color:var(--text-2)}
+.grdr span{color:var(--text-3);font-variant-numeric:tabular-nums}
+.drm{padding:0 15px 14px}
+.drmr{display:flex;gap:11px;padding:9px 0;border-top:1px solid var(--line-2);font-size:var(--fs-xs)}
+.drmr b{flex:0 0 44%;font-weight:600;color:var(--text)}
+.drmr span{flex:1;color:var(--text-2)}
+.dataw{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.dbar{flex:0 0 auto;display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+.dtabs{display:flex;align-items:center;flex-wrap:wrap;gap:3px;background:var(--soft);padding:3px;border-radius:var(--r-pill)}
+.dtabs button{padding:6px 13px;border-radius:var(--r-pill);font-size:var(--fs-sm);font-weight:600;color:var(--text-2);transition:.16s var(--e);white-space:nowrap}
+.dtabs button b{font-weight:700;color:var(--text-3);margin-left:5px;font-variant-numeric:tabular-nums}
+.dtabs button.on{background:var(--panel);color:var(--text);box-shadow:var(--shadow-card)}
+.dtabs button.on b{color:var(--violet)}
+/* Deux des cinq tables n'existaient pas : il faut le lire AVANT de cliquer,
+   pas seulement dans la légende une fois dedans. */
+.dgrp{padding:0 7px 0 9px;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3);white-space:nowrap}
+.dgrp.nous{color:var(--violet)}
+.dsep{width:1px;height:17px;background:var(--line);margin:0 5px}
+.dbar input{flex:1;max-width:340px;padding:8px 12px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--soft);color:var(--text);font-size:var(--fs-sm);outline:0;transition:.14s}
+.dbar input:focus{border-color:var(--violet);box-shadow:0 0 0 3px var(--violet-soft);background:var(--panel)}
+.dcount{margin-left:auto;font-size:var(--fs-xs);color:var(--text-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dlegend{flex:0 0 auto;display:flex;gap:20px;padding:8px 18px;border-bottom:1px solid var(--line-2);font-size:10.5px;color:var(--text-3)}
+.dlegend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.dlegend i.og{background:var(--soft-2)} .dlegend i.ad{background:var(--violet)}
+.dscroll{flex:1;overflow:auto;position:relative}
+/* table-layout:fixed est imposé par le défilement virtuel : les largeurs sont
+   calculées une fois sur TOUTE la table (colgroup en px), sinon elles sauteraient
+   à chaque tranche dessinée. */
+.dtable{border-collapse:separate;border-spacing:0;font-size:var(--fs-xs);table-layout:fixed;min-width:100%}
+.dtable tr.dcale td{padding:0;border:0;background:transparent}
+.dtable tr.dcale:hover td{background:transparent}
+.dtable th{position:sticky;top:0;z-index:2;background:var(--panel);text-align:left;padding:9px 11px;
+  border-bottom:1px solid var(--line);white-space:nowrap;font-size:10px;letter-spacing:.05em;
+  text-transform:uppercase;font-weight:700;color:var(--text-3);cursor:pointer;user-select:none}
+.dtable th:hover{color:var(--text)}
+.dtable th.add{color:var(--violet)}
+.dtable th.add::before{content:"+ ";opacity:.6}
+.dtable th .ar{opacity:.45;margin-left:4px}
+.dtable td{padding:7px 11px;border-bottom:1px solid var(--line-2);white-space:nowrap;color:var(--text-2);max-width:280px;overflow:hidden;text-overflow:ellipsis}
+.dtable td.add{color:var(--text);background:var(--violet-soft)}
+.dtable tr:hover td{background:var(--soft)}
+.dtable tr:hover td.add{background:var(--violet-soft);filter:brightness(.97)}
+.dtable td.num{text-align:right;font-variant-numeric:tabular-nums}
+.dload{padding:60px;text-align:center;color:var(--text-3);font-size:var(--fs-sm)}
+@media(max-width:680px){
+  .dbar{flex-wrap:wrap;gap:8px;padding:10px 12px}
+  .dbar input{max-width:none;width:100%;order:3}
+  .dtabs{order:1;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .dtabs::-webkit-scrollbar{display:none}
+  .dcount{order:2;margin-left:0;white-space:normal}
+  .dlegend{padding:7px 12px;gap:12px}
+  .dtable td{max-width:190px}
+}
+
+/* ══════════════════════════════ OPS ══════════════════════════════ */
+.ops{padding:26px 30px 70px;max-width:1120px;margin:0 auto}
+.oph{display:flex;align-items:flex-end;gap:18px;margin-bottom:22px;flex-wrap:wrap}
+.oph h2{font-family:var(--display);font-size:25px;font-weight:600;letter-spacing:-.022em}
+.oph .st{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:var(--r-pill);
+  font-size:var(--fs-xs);font-weight:600;background:var(--ok-soft);color:var(--ok);margin-left:auto}
+.oph .st i{width:6px;height:6px;border-radius:50%;background:currentColor;animation:spPulse 2s ease-in-out infinite}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:11px;margin-bottom:26px}
+.kpi{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);padding:14px 15px;
+  box-shadow:var(--shadow-card)}
+.kpi b{display:block;font-family:var(--display);font-size:24px;font-weight:600;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi span{display:block;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--text-3);font-weight:600;margin-top:5px}
+.kpi em{display:block;font-style:normal;font-size:var(--fs-xs);color:var(--text-2);margin-top:6px}
+.kpi.hi b{color:var(--violet)}
+.kpi.al b{color:var(--danger)}
+.steps{display:flex;flex-direction:column;gap:8px}
+.stp{border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel);overflow:hidden;
+  box-shadow:var(--shadow-card)}
+.stp-h{display:flex;align-items:center;gap:12px;padding:12px 15px;cursor:pointer;transition:.12s}
+.stp-h:hover{background:var(--soft)}
+.stp-n{width:26px;height:26px;border-radius:var(--r-sm);display:grid;place-items:center;flex:0 0 auto;
+  font-size:11px;font-weight:700;background:var(--soft);color:var(--text-3);font-variant-numeric:tabular-nums}
+.stp.done .stp-n{background:var(--ok-soft);color:var(--ok)}
+.stp.next .stp-n{background:var(--violet-soft);color:var(--violet)}
+.stp-t{flex:1;min-width:0}
+.stp-t b{font-size:var(--fs-sm);font-weight:600}
+.stp-t span{display:block;font-size:var(--fs-xs);color:var(--text-3);margin-top:1px}
+.stp-ph{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--text-3);
+  padding:3px 8px;border-radius:var(--r-sm);background:var(--soft);flex:0 0 auto}
+.stp-ck{display:flex;align-items:center;gap:5px;font-size:var(--fs-xs);font-weight:600;flex:0 0 auto}
+.stp-ck.ok{color:var(--ok)} .stp-ck.ko{color:var(--danger)} .stp-ck.na{color:var(--text-3)}
+.stp-body{display:none;padding:0 15px 15px;border-top:1px solid var(--line-2)}
+.stp.open .stp-body{display:block}
+.stp-ins{font-size:var(--fs-sm);line-height:1.6;color:var(--text);padding:13px 0;border-bottom:1px solid var(--line-2)}
+.stp-ins::before{content:"insight";display:block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text-3);font-weight:700;margin-bottom:5px}
+.mini{width:100%;border-collapse:collapse;font-size:var(--fs-xs);margin-top:12px}
+.mini th{text-align:left;font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--text-3);
+  font-weight:700;padding:6px 8px;border-bottom:1px solid var(--line)}
+.mini td{padding:7px 8px;border-bottom:1px solid var(--line-2);color:var(--text-2);vertical-align:top}
+.mini td:first-child{color:var(--text);font-weight:500}
+.mini td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mini .ok{color:var(--ok);font-weight:600} .mini .ko{color:var(--danger);font-weight:600}
+.note{font-size:var(--fs-xs);color:var(--text-3);line-height:1.6;margin-top:18px;
+  padding:13px 15px;border-radius:var(--r-md);background:var(--soft)}
+.note b{color:var(--text-2)}
+.curve{padding:16px 18px 14px}
+.curve svg{width:100%;height:150px;display:block;overflow:visible}
+.curve-lg{display:flex;flex-wrap:wrap;gap:20px;margin-top:12px;font-size:var(--fs-xs);color:var(--text-2)}
+.curve-lg i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:6px}
+.curve-lg b{color:var(--text);font-weight:600}
+@media(max-width:900px){.llist{width:250px}.ldetail{padding:18px}.ops{padding:18px}}
+
+
+
+/* ── le schéma du dispositif : deux modèles, une personne au milieu ────────
+   Le style avait disparu dans une réécriture du bloc Process : le schéma
+   s'affichait en texte nu. Il est maintenant en SVG, avec les flux animés. */
+.loop{margin:34px auto 0;max-width:640px}
+.loop svg{width:100%;height:auto;display:block;overflow:visible}
+.loop .lh{display:block} .loop .lv{display:none}
+.lnom{font-family:var(--display);font-size:15px;font-weight:600;fill:var(--text)}
+.lrole{font-size:9px;letter-spacing:.15em;text-transform:uppercase;fill:var(--text-3)}
+.lbox{fill:var(--panel);stroke:var(--line);stroke-width:1}
+.lbox.mid{fill:var(--ink);stroke:var(--ink)}
+.lnom.on{fill:var(--on-ink)} .lrole.on{fill:var(--on-ink);opacity:.55}
+.lflux{stroke:var(--violet);stroke-width:2;stroke-linecap:round;fill:none;
+  stroke-dasharray:6 10;opacity:.8}
+.lflux.a{animation:fluxA 1.15s linear infinite}
+.lflux.b{animation:fluxB 1.15s linear infinite}
+@keyframes fluxA{to{stroke-dashoffset:-16}}
+@keyframes fluxB{to{stroke-dashoffset:16}}
+.lpuce{fill:var(--violet)}
+.lrule{text-align:center;margin-top:20px;font-size:var(--fs-sm);color:var(--text-2);line-height:1.6}
+.lrule b{color:var(--text);font-weight:600}
+@media(prefers-reduced-motion:reduce){ .lflux.a,.lflux.b{animation:none} }
+@media(max-width:600px){
+  .loop{max-width:230px;margin-top:26px}
+  .loop .lh{display:none} .loop .lv{display:block}
+}
+
+/* les types de carte : un déroulé de 26 temps sur un seul gabarit endort */
+.sphase{text-align:center}
+.sphase .pn{font-family:var(--display);font-size:clamp(64px,13vw,150px);font-weight:600;
+  line-height:.9;letter-spacing:-.05em;color:var(--violet);opacity:.16}
+.sphase .pt{font-family:var(--display);font-size:clamp(26px,4vw,46px);font-weight:600;
+  letter-spacing:-.028em;margin-top:-.28em}
+.sphase .pl{font-size:15px;color:var(--text-2);margin-top:16px;max-width:520px;
+  margin-left:auto;margin-right:auto;line-height:1.6}
+.sgeant{font-family:var(--display);font-size:clamp(70px,12vw,140px);font-weight:600;
+  line-height:1;letter-spacing:-.04em;margin:10px 0 4px;font-variant-numeric:tabular-nums}
+/* un géant long (un format, une égalité) déborderait à 140 px : il rétrécit */
+.sgeant.long{font-size:clamp(38px,6.2vw,74px);letter-spacing:-.03em}
+.sgeant-l{font-size:15px;color:var(--text-2)}
+.sbar{max-width:620px;margin:34px auto 0;text-align:left}
+/* table-layout fixe : sans ça, une valeur longue à droite (« règle supprimée »)
+   écrase la colonne de gauche et la ligne devient illisible. */
+.sbar table{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}
+.sbar td{padding:9px 4px;border-bottom:1px solid var(--line-2)}
+.sbar td:first-child{width:64%}
+.sbar tr:last-child td{border-bottom:0}
+.sbar .lb{font-weight:600}
+.sbar .wy{color:var(--text-3);font-size:12px;line-height:1.5;margin-top:3px}
+.sbar .pt2{text-align:right;font-family:var(--display);font-size:19px;font-weight:600;
+  font-variant-numeric:tabular-nums;padding-left:14px;overflow-wrap:break-word}
+/* une valeur qui n'est pas un nombre est une conclusion, pas un score :
+   plus petite, en gras, sur plusieurs lignes si besoin */
+.sbar .pt2.mot{font-family:inherit;font-size:13px;font-weight:700;line-height:1.4}
+.sbar .pos{color:var(--ok)} .sbar .neg{color:var(--danger)} .sbar .nul{color:var(--text-3)}
+.sbar .sep td{border:0;padding-top:20px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-3);font-weight:700}
+.scourbe{max-width:600px;margin:32px auto 0}
+.scourbe svg{width:100%;height:180px;display:block;overflow:visible}
+.scourbe .lg2{display:flex;gap:22px;justify-content:center;margin-top:14px;font-size:12px;color:var(--text-2)}
+.scourbe .lg2 i{display:inline-block;width:15px;height:2px;vertical-align:middle;margin-right:7px}
+.scourbe .lg2 b{color:var(--text)}
+.spath{position:absolute;top:18px;left:22px;z-index:3;font-size:10px;letter-spacing:.11em;
+  text-transform:uppercase;font-weight:700;color:var(--violet);opacity:0;transition:.2s}
+.spath.on{opacity:1}
+.sdots i.key{box-shadow:0 0 0 2px var(--violet-soft)}
+
+/* ══ PROCESS — une scène plein écran, un temps à la fois ═════════════════ */
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 22%, var(--soft) 0%, var(--bg) 62%)}
+.sscroll{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;
+  align-items:center;padding:64px 40px 34px}
+.sinner{width:100%;max-width:820px;text-align:center;margin:auto}
+.skick{font-size:10px;letter-spacing:.19em;text-transform:uppercase;color:var(--violet);
+  font-weight:700;margin-bottom:16px}
+.sh1{font-family:var(--display);font-size:clamp(28px,4.4vw,54px);font-weight:600;
+  letter-spacing:-.028em;line-height:1.06}
+.ssay{font-size:clamp(15px,1.5vw,20px);line-height:1.55;color:var(--text-2);margin-top:20px;
+  max-width:640px;margin-left:auto;margin-right:auto}
+.snum{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:36px;max-width:760px;
+  margin-left:auto;margin-right:auto}
+.snum div{min-width:128px;max-width:210px;flex:0 1 auto;padding:14px 16px;border-radius:var(--r-lg);
+  background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-card)}
+.snum b{display:block;font-family:var(--display);font-size:27px;font-weight:600;line-height:1;
+  font-variant-numeric:tabular-nums}
+.snum span{display:block;font-size:11px;color:var(--text-3);margin-top:7px;line-height:1.35;max-width:170px}
+.smore{margin-top:34px;font-size:12px;font-weight:600;color:var(--text-3);
+  display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r-pill);
+  border:1px solid var(--line)}
+.smore:hover{color:var(--text);background:var(--panel)}
+.sdet{max-height:0;overflow:hidden;transition:max-height .32s var(--e);text-align:left}
+.sdet.on{max-height:1200px}
+.sdet-in{max-width:640px;margin:26px auto 0;padding-top:24px;border-top:1px solid var(--line)}
+.sdet h5{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);
+  font-weight:700;margin-bottom:7px}
+.sdet p{font-size:14px;line-height:1.7;color:var(--text-2);margin-bottom:22px}
+.sdet p b{color:var(--text);font-weight:600}
+.sask{padding:16px 18px;border-radius:var(--r-md);background:var(--panel);border:1px solid var(--line);margin-bottom:12px}
+.sask .aq{font-size:14px;font-weight:600;line-height:1.45}
+.sask .ar{font-size:13.5px;color:var(--text-2);line-height:1.7;margin-top:10px;padding-top:10px;
+  border-top:1px solid var(--line-2)}
+.sask .ar b{color:var(--text);font-weight:600}
+.sgo{margin-top:22px;display:inline-flex;align-items:center;gap:7px;padding:9px 16px;
+  border-radius:var(--r-pill);background:var(--ink);color:var(--on-ink);font-size:13px;font-weight:600}
+
+.snav{flex:0 0 auto;height:70px;display:flex;align-items:center;justify-content:center;gap:22px;
+  border-top:1px solid var(--line);background:var(--top-bg);backdrop-filter:blur(14px);z-index:4}
+.sarr{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel);
+  display:grid;place-items:center;font-size:19px;color:var(--text-2);transition:.14s}
+.sarr:hover{color:var(--text);box-shadow:var(--shadow-card)}
+.sarr[disabled]{opacity:.28;cursor:default}
+.sdots{display:flex;gap:5px;align-items:center;max-width:52vw;overflow:hidden}
+.sdots i{width:6px;height:6px;border-radius:50%;background:var(--soft-2);transition:.2s;cursor:pointer}
+.sdots i.on{background:var(--violet);width:22px;border-radius:3px}
+.sdots i.done{background:var(--text-3)}
+.splan{position:absolute;top:18px;right:22px;z-index:3;font-size:12px;font-weight:600;
+  color:var(--text-3);padding:7px 13px;border-radius:var(--r-pill);border:1px solid var(--line)}
+.splan:hover{color:var(--text);background:var(--panel)}
+
+.pmenu{position:absolute;inset:0;z-index:12;background:var(--bg);opacity:0;pointer-events:none;
+  transition:opacity .22s;overflow:auto}
+.pmenu.on{opacity:1;pointer-events:auto}
+.pmenu-in{max-width:660px;margin:0 auto;padding:56px 24px 60px}
+.ppart{padding:22px 12px 8px;font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--text-3);font-weight:700}
+.pitem{display:flex;gap:13px;align-items:baseline;padding:11px 12px;cursor:pointer;
+  border-radius:var(--r-sm);transition:.13s}
+.pitem:hover{background:var(--soft)}
+.pitem.on{background:var(--violet-soft)}
+.pitem i{flex:0 0 22px;font-style:normal;font-size:11px;font-weight:700;color:var(--text-3);
+  font-variant-numeric:tabular-nums}
+.pitem.on i{color:var(--violet)}
+.pitem b{font-size:15px;font-weight:500;color:var(--text-2)}
+.pitem.on b{color:var(--text);font-weight:600}
+
+@media(max-width:680px){
+  .sscroll{padding:66px 18px 26px}
+  .ssay{font-size:15px} .snum{gap:10px} .snum div{min-width:0;flex:1 1 44%;padding:13px}
+  .snum b{font-size:21px} .splan{top:12px;right:14px}
+  .sdots{max-width:40vw}
+}
+@media(max-width:680px){
+  .logic{flex-direction:column}.llist{width:100%;height:44%;border-right:0;border-bottom:1px solid var(--line)}
+  .tabs button{padding:6px 11px;font-size:11.5px}.brand span{display:none}
+  .transport{gap:10px;padding:0 12px}.tcount{min-width:0;font-size:11.5px}
+  /* la barre du haut doit tenir dans l'écran : 4 onglets depuis l'ajout de « Données » */
+  .top{gap:8px;padding:0 10px}
+  .brand b{font-size:13.5px}
+  .tabs{min-width:0;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tbtn{flex:0 0 auto}
+}
+@media(max-width:420px){ .brand b{display:none} }
+</style>
+</head>
+<body>
+
+<!-- ══════════ SPLASH ══════════ -->
+<div class="splash" id="splash">
+  <canvas class="sp-sonar" id="spSonar" aria-hidden="true"></canvas>
+  <div class="splash-inner">
+    <div class="sp-status"><span class="sp-dot"></span><span id="spStatus">Sondage de la base</span></div>
+    <svg class="sp-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <circle cx="20" cy="20" r="15" stroke="#7c6cf0" stroke-width="1.4" opacity=".45"/>
+      <ellipse cx="20" cy="20" rx="15" ry="5.6" stroke="#a99bff" stroke-width="1.2" opacity=".7"/>
+      <ellipse cx="20" cy="20" rx="5.6" ry="15" stroke="#a99bff" stroke-width="1.2" opacity=".35"/>
+      <circle cx="20" cy="20" r="3.1" fill="#a99bff"/>
+    </svg>
+    <div class="sp-title">Wake the <em>CRM</em></div>
+    <div class="sp-info" id="spInfo">Chargement du corpus…</div>
+    <div class="sp-sig">Romain Bouloche · Challenge Bulldozer</div>
+  </div>
+  <button class="sp-skip" id="spSkip">Passer &rarr;</button>
+  <div class="sp-prog"><i id="spProg"></i></div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand" id="brand" role="button" tabindex="0" title="Revenir à l'accueil">
+      <svg viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="15" stroke="currentColor" stroke-width="1.6" opacity=".35"/>
+        <ellipse cx="20" cy="20" rx="15" ry="5.6" stroke="currentColor" stroke-width="1.5" opacity=".6"/>
+        <circle cx="20" cy="20" r="3.4" fill="#7c6cf0"/>
+      </svg>
+      <b>Wake the CRM</b>
+      <span>brouillon v0</span>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-v="macro" class="on">Macro</button>
+      <button data-v="logic">Logique</button>
+      <button data-v="ops">Ops</button>
+      <button data-v="data">Données</button>
+      <button data-v="proc">Process</button>
+    </nav>
+    <button class="tbtn" id="themeBtn" title="Thème" aria-label="Basculer le thème">
+      <svg viewBox="0 0 20 20" fill="none" id="thIcon"><path d="M16 11.2A6.6 6.6 0 0 1 8.8 4a6.6 6.6 0 1 0 7.2 7.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    </button>
+  </header>
+
+  <div class="views">
+    <!-- ─────── MACRO ─────── -->
+    <section class="view on" id="vMacro">
+      <div class="macro">
+        <div class="macro-stage" id="stage">
+          <canvas id="globe"></canvas>
+          <div class="mk">
+            <div class="mk-eyebrow">Rejeu du flux d'événements</div>
+            <div class="mk-date" id="mDate">—</div>
+            <div class="mk-sub" id="mSub">—</div>
+          </div>
+          <div class="mstats">
+            <div class="mstat"><b id="sAwake">0</b><span>comptes réveillés</span></div>
+            <div class="mstat hot"><b id="sHot">0</b><span>hot</span></div>
+            <div class="mstat warm"><b id="sWarm">0</b><span>warm</span></div>
+            <div class="mstat risk"><b id="sRisk">0</b><span>perdus : canal mort</span></div>
+          </div>
+          <div class="ticker" id="ticker"></div>
+          <div class="legend">
+            <div class="lg"><i style="background:#9a8dff;box-shadow:0 0 8px 1px rgba(154,141,255,.6)"></i>tier 1 : ils ont levé la main</div>
+            <div class="lg"><i style="background:#e8685c"></i>ils s'en vont : rétention</div>
+            <div class="lg"><i style="background:#e3a648"></i>tier 2 : ça chauffe</div>
+            <div class="lg"><i style="background:none;border:1.5px solid #6d737f"></i>perdu : canal mort</div>
+          </div>
+          <div class="gtip" id="gtip"></div>
+          <div class="gpop" id="gpop">
+            <button class="gpop-x" id="gpopX">×</button>
+            <div id="gpopIn"></div>
+          </div>
+        </div>
+        <div class="transport">
+          <button class="play" id="playBtn" aria-label="Lecture">
+            <svg id="playIco" viewBox="0 0 20 20" fill="currentColor"><path d="M6 4.2v11.6L16 10 6 4.2Z"/></svg>
+          </button>
+          <div class="tcount" id="tCount">J0 / 90</div>
+          <div class="scrub" id="scrub">
+            <div class="scrub-bg" id="scrubBg"></div>
+            <div class="scrub-line" id="scrubLine" style="left:0"></div>
+          </div>
+          <div class="speed" id="speed">
+            <button data-s="1">×1</button><button data-s="3" class="on">×3</button><button data-s="8">×8</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────── LOGIQUE ─────── -->
+    <section class="view" id="vLogic">
+      <div class="logic">
+        <aside class="llist">
+          <div class="lsearch">
+            <input id="q" type="search" placeholder="Rechercher un compte, un domaine…" autocomplete="off">
+            <div class="lfilters" id="filters">
+              <button data-f="hot" class="on">Hot</button>
+              <button data-f="warm">Warm</button>
+              <button data-f="trap">Perdus</button>
+              <button data-f="all">Tout</button>
+            </div>
+          </div>
+          <div class="lrows" id="rows"></div>
+        </aside>
+        <div class="ldetail" id="detail"><div class="empty">Sélectionne un compte à gauche.</div></div>
+      </div>
+    </section>
+
+    <!-- ─────── OPS ─────── -->
+    <section class="view" id="vOps"><div class="ops" id="opsBody"></div></section>
+
+    <!-- ─────── DONNÉES ─────── -->
+    <!-- ─────── PROCESS ─────── -->
+    <section class="view" id="vProc">
+      <div class="slide" id="slide">
+        <div class="spath" id="sPath">▸ chemin court</div>
+        <button class="splan" id="pPlan">Le plan</button>
+        <div class="sscroll" id="sScroll"><div class="sinner" id="pBody"></div></div>
+        <div class="snav">
+          <button class="sarr" id="pPrev">‹</button>
+          <div class="sdots" id="pDots"></div>
+          <button class="sarr" id="pNext">›</button>
+        </div>
+      </div>
+      <div class="pmenu" id="pMenu"><div class="pmenu-in"><div id="pList"></div></div></div>
+    </section>
+
+    <section class="view" id="vData">
+      <div class="dataw">
+        <div class="dbar">
+          <div class="dtabs" id="dtabs">
+            <span class="dgrp">reçus de vous</span>
+            <button data-t="accounts">Fiches CRM <b>30 000</b></button>
+            <button data-t="contacts">Contacts <b>77 199</b></button>
+            <button data-t="events">Événements <b>94 838</b></button>
+            <span class="dsep"></span>
+            <span class="dgrp nous">produits par nous</span>
+            <button data-t="companies" class="on">Entreprises <b>20 519</b></button>
+            <button data-t="hot_list">Hot list <b>60</b></button>
+          </div>
+          <input id="dq" type="search" placeholder="Rechercher…" autocomplete="off">
+          <span class="dcount" id="dcount">—</span>
+        </div>
+        <div class="dlegend" id="dlegend">
+          <span><i class="og"></i>colonnes d'origine (jamais modifiées)</span>
+          <span><i class="ad"></i>colonnes ajoutées par le nettoyage</span>
+          <span style="margin-left:auto">source : <b>dashboard_data/</b> · branche <b>cleanup-pipeline</b></span>
+        </div>
+        <div class="dscroll" id="dscroll"><table class="dtable" id="dtable"></table></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+
+<script>
+"use strict";
+var D=null, VIEW="macro";
+
+/* ══════════════════════════════════════════════════════════════
+   SPLASH — sonar de descente : la base est sondée de haut en bas,
+   les comptes s'allument au passage du scan.
+   ══════════════════════════════════════════════════════════════ */
+function startSonar(cv){
+  if(!cv||!cv.getContext) return function(){};
+  var ctx=cv.getContext("2d"), reduce=false;
+  try{ reduce=matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var W=0,H=0,pts=[],relief=[],relief2=[],strata=[],compact=false,exW=0,exH=0;
+  function rnd(s){ var x=Math.sin(s*99.13)*43758.5453; return x-Math.floor(x); }
+  function mkRelief(baseY,amp,ph,n){ var a=[]; for(var j=0;j<=n;j++){ var t=j/n;
+    a.push({x:t*W, y:baseY-(Math.sin(t*6.2+ph)*.5+.5)*amp*.55-(Math.sin(t*13.1+ph*2)*.5+.5)*amp*.45}); } return a; }
+  function build(){
+    W=cv.clientWidth||innerWidth; H=cv.clientHeight||innerHeight;
+    cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); ctx.setTransform(dpr,0,0,dpr,0,0);
+    compact=W<640; exW=Math.min(300,W*.34); exH=Math.min(120,H*.16);
+    var lbl=compact?[]:["ACC-018231","comptes fusionnés","VP People · active","opted_out ✕","/pricing ×2","bot · 420 events","meeting_booked","renewal J-14","3 contacts / 7j"];
+    var n=compact?7:9;
+    pts=[];
+    for(var i=0;i<n;i++){
+      var rx=rnd(i+1), ry=rnd(i+7.7), left=(i%2===0);
+      pts.push({ x: left ? W*((compact?.05:.08)+rx*(compact?.10:.18)) : W*((compact?.95:.92)-rx*(compact?.10:.18)),
+                 y: H*(.12+ry*.66), name:lbl[i]||"", lit:0, done:false });
+    }
+    pts.sort(function(a,b){return a.y-b.y;});
+    relief=mkRelief(H*(compact?.93:.90), H*(compact?.09:.17), .4, compact?60:18);
+    relief2=compact?[]:mkRelief(H*.965, H*.11, 2.1, 15);
+    strata=[]; if(!compact) for(var s=0;s<8;s++) strata.push(H*(.1+s*.1));
+  }
+  build();
+  var t0=performance.now(), raf=0, run=true;
+  function contour(p,st,lw,fl){ if(!p||!p.length)return;
+    if(fl){ ctx.beginPath(); ctx.moveTo(p[0].x,p[0].y); for(var i=1;i<p.length;i++)ctx.lineTo(p[i].x,p[i].y);
+      ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fillStyle=fl; ctx.fill(); }
+    ctx.beginPath(); ctx.moveTo(p[0].x,p[0].y); for(var j=1;j<p.length;j++)ctx.lineTo(p[j].x,p[j].y);
+    ctx.strokeStyle=st; ctx.lineWidth=lw; ctx.stroke(); }
+  function dot(c,cx){
+    if(!c.done){ ctx.fillStyle="rgba(150,140,255,.08)"; ctx.beginPath(); ctx.arc(c.x,c.y,1.6,0,6.284); ctx.fill(); return; }
+    var a=c.lit;
+    if(a>.05){ var g=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,8+a*10);
+      g.addColorStop(0,"rgba(169,155,255,"+(.5*a)+")"); g.addColorStop(1,"rgba(169,155,255,0)");
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(c.x,c.y,8+a*10,0,6.284); ctx.fill(); }
+    ctx.fillStyle="rgba(190,180,255,"+(.35+a*.6).toFixed(3)+")"; ctx.beginPath(); ctx.arc(c.x,c.y,2.4,0,6.284); ctx.fill();
+    if(c.name){
+      ctx.font="500 11.5px system-ui,-apple-system,'Segoe UI',sans-serif"; ctx.textBaseline="middle";
+      var tw=ctx.measureText(c.name).width, left=(c.x<cx), tx=left?c.x-9:c.x+9, al=left?"right":"left";
+      if(left&&(tx-tw)<6){ left=false; tx=c.x+9; al="left"; }
+      else if(!left&&(tx+tw)>W-6){ left=true; tx=c.x-9; al="right"; }
+      ctx.textAlign=al;
+      ctx.strokeStyle="rgba(179,168,255,"+(.32*a).toFixed(3)+")"; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(c.x+(al==="left"?4:-4),c.y); ctx.lineTo(tx-(al==="left"?2:-2),c.y); ctx.stroke();
+      ctx.fillStyle="rgba(255,255,255,"+(.28+a*.5).toFixed(3)+")"; ctx.fillText(c.name,tx,c.y);
+    }
+  }
+  function frame(now){
+    if(!run) return;
+    var el=(now-t0)/1000, cx=W/2, cy=H/2;
+    var prog=Math.min(1,el/2.9), eased=1-Math.pow(1-prog,2.4), scanY=reduce?H:eased*H;
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle="rgba(150,150,180,.035)"; ctx.lineWidth=1;
+    for(var s=0;s<strata.length;s++){ ctx.beginPath(); ctx.moveTo(0,strata[s]); ctx.lineTo(W,strata[s]); ctx.stroke(); }
+    var rev=Math.min(1,Math.max(0,(scanY-H*.64)/(H*.24))); if(reduce)rev=1;
+    if(rev>0){
+      contour(relief2,"rgba(124,108,240,"+(.13*rev).toFixed(3)+")",1,null);
+      contour(relief,"rgba(150,135,255,"+(.36*rev).toFixed(3)+")",1.4,"rgba(124,108,240,"+(.06*rev).toFixed(3)+")");
+    }
+    if(scanY<H+2&&!reduce){
+      var gd=ctx.createLinearGradient(0,scanY-46,0,scanY+46);
+      gd.addColorStop(0,"rgba(124,108,240,0)"); gd.addColorStop(.5,"rgba(124,108,240,.13)"); gd.addColorStop(1,"rgba(124,108,240,0)");
+      ctx.fillStyle=gd; ctx.fillRect(0,scanY-46,W,92);
+      var la=scanY>H-1?Math.max(0,1-(el-2.9)/.4):1;
+      ctx.strokeStyle="rgba(179,168,255,"+(.8*la).toFixed(3)+")"; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.moveTo(0,scanY); ctx.lineTo(W,scanY); ctx.stroke();
+      ctx.fillStyle="rgba(179,168,255,"+(.9*la).toFixed(3)+")"; ctx.fillRect(0,scanY-3,2,6); ctx.fillRect(W-2,scanY-3,2,6);
+    }
+    var cg=ctx.createRadialGradient(cx,cy,0,cx,cy,exW*1.5);
+    cg.addColorStop(0,"rgba(8,9,13,.85)"); cg.addColorStop(.55,"rgba(8,9,13,.4)"); cg.addColorStop(1,"rgba(8,9,13,0)");
+    ctx.save(); ctx.beginPath(); ctx.ellipse(cx,cy,exW*1.5,exH*1.7,0,0,6.284); ctx.fillStyle=cg; ctx.fill(); ctx.restore();
+    for(var i=0;i<pts.length;i++){ var c=pts[i];
+      if(!c.done&&scanY>=c.y){ c.done=true; c.lit=1; }
+      if(c.done) c.lit = reduce?.72:(.34+Math.max(0,(c.lit-.34))*.955);
+      dot(c,cx);
+    }
+    raf=requestAnimationFrame(frame);
+  }
+  var onR=function(){ build(); }; addEventListener("resize",onR);
+  raf=requestAnimationFrame(frame);
+  return function(){ run=false; if(raf)cancelAnimationFrame(raf); removeEventListener("resize",onR); };
+}
+
+function runSplash(done){
+  var sp=document.getElementById("splash");
+  var stop=startSonar(document.getElementById("spSonar"));
+  var reduce=false; try{ reduce=matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+  var DUR=reduce?1400:4200, FADE=900, fin=false, t1,t2;
+  var pr=document.getElementById("spProg");
+  sp.style.setProperty("--sp-dur",DUR+"ms"); pr.classList.add("run");
+  t1=setTimeout(function(){ document.getElementById("spStatus").textContent="Moteur en ligne"; }, Math.max(300,DUR-700));
+  function close(){
+    if(fin) return; fin=true;
+    clearTimeout(t1); clearTimeout(t2);
+    document.body.classList.add("sp-revealing");
+    setTimeout(function(){ document.body.classList.remove("sp-revealing"); },900);
+    document.getElementById("app").classList.add("on");
+    sp.classList.add("hide");
+    setTimeout(stop,FADE);
+    setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); if(done)done(); },FADE+60);
+  }
+  t2=setTimeout(close,DUR);
+  document.getElementById("spSkip").onclick=function(e){ e.stopPropagation(); close(); };
+  sp.onclick=close;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MACRO — le CRM comme un globe endormi. Chaque point = une entité.
+   Le rejeu du stream d'events allume les points jour après jour.
+   ══════════════════════════════════════════════════════════════ */
+var G=(function(){
+/* ══════════════════════════════════════════════════════════════════════════
+   MACRO — la nuée. 20 519 grains sur une sphère, 69 constellations.
+
+   La poussière n'est pas une donnée : les positions se déduisent du rang de
+   chaque entreprise par une spirale de Fibonacci calculée ici. Rien à
+   télécharger. Les couleurs disent le SENS de l'appel, pas le score — violet
+   pour ceux qui ont levé la main, rouge pour celui qui s'en va : deux
+   consignes opposées ne peuvent pas être deux nuances voisines.
+
+   Les fils entre grains sont DÉCORATIFS : ils relient des voisins
+   géométriques, ils n'affirment aucune relation entre entreprises. Les seuls
+   liens qui disent quelque chose sont ceux d'une constellation — le compte à
+   ses personnes, et les personnes entre elles quand le comité est réel.
+   ══════════════════════════════════════════════════════════════════════════ */
+  var cv,ctx,W=0,H=0,DPR=1,dcv,dctx,dimg,dbuf,R=1,raf=0;
+  var N=0,px,py,pz,kind,lit,seen,MESH=null;
+  var NODES=[],NODEI={},day=0,playing=false,speed=3,acc=0;
+  var awake=0,nHot=0,nWarm=0,nRisk=0;
+  var ax=-0.34,ay=0.55,tax=-0.34,tay=0.55,spin=0.0015,drag=null,SEL=null;
+  var COL={froid:[0,0,0],t1:[154,141,255],risque:[232,104,92],t2:[227,166,72],perdu:[109,115,127]};
+  var PERSONA={buyer:"#9a8dff",champion:"#4fd08a","utilisateur":"#a6abb6",bruit:"#4a4f5a"};
+
+  function semer(n){
+    px=new Float32Array(n); py=new Float32Array(n); pz=new Float32Array(n);
+    var ga=Math.PI*(3-Math.sqrt(5));
+    for(var i=0;i<n;i++){
+      /* un bruit déterministe tiré du rang : sans lui la spirale dessine des
+         arcs de moiré et la nuée ressemble à une gravure, pas à de la poussière */
+      var h=Math.sin(i*12.9898)*43758.5453; h-=Math.floor(h);
+      var h2=Math.sin(i*78.233)*43758.5453; h2-=Math.floor(h2);
+      var y=1-((i+h*0.9)/(n-1))*2; if(y<-1)y=-1; if(y>1)y=1;
+      var r=Math.sqrt(Math.max(0,1-y*y)), t=ga*i+(h2-0.5)*0.45;
+      px[i]=Math.cos(t)*r; py[i]=y; pz[i]=Math.sin(t)*r;
+    }
+  }
+  function tisser(){
+    var pas=Math.max(1,Math.floor(N/1400)), ech=[];
+    for(var i=0;i<N;i+=pas) ech.push(i);
+    var m=ech.length, E=[];
+    for(var a=0;a<m;a++){
+      var ia=ech[a], b1=-1,b2=-1,d1=1e9,d2=1e9;
+      for(var b=0;b<m;b++){
+        if(b===a) continue;
+        var ib=ech[b], dx=px[ia]-px[ib], dy=py[ia]-py[ib], dz=pz[ia]-pz[ib], dd=dx*dx+dy*dy+dz*dz;
+        if(dd<d1){ d2=d1;b2=b1;d1=dd;b1=ib; } else if(dd<d2){ d2=dd;b2=ib; }
+      }
+      if(b1>=0) E.push(ia,b1);
+      if(b2>=0) E.push(ia,b2);
+    }
+    MESH=new Int32Array(E);
+  }
+  function couleur(i){
+    var k=kind[i];
+    if(k===3) return COL.perdu;
+    if(k===2){ var d=D.detail[String(i)]; return (d&&d.play==="risque")?COL.risque:COL.t1; }
+    if(k===1) return COL.t2;
+    return COL.froid;
+  }
+  function lireTheme(){
+    /* La scène Macro a son propre fond sombre, quel que soit le thème de la page
+       (voir .macro, dégradé fixe). La poussière ne suit donc PAS le thème : la
+       faire suivre peignait des grains noirs sur un fond noir — la nuée
+       disparaissait en thème clair. */
+    COL.froid=[196,206,232];
+    NODES.forEach(function(o){ o.col=couleur(o.i); });
+  }
+  function resize(){
+    var st=document.getElementById("stage"), b=st.getBoundingClientRect();
+    DPR=Math.min(2,window.devicePixelRatio||1);
+    W=Math.max(1,Math.round(b.width)); H=Math.max(1,Math.round(b.height));
+    cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+    dcv.width=W; dcv.height=H; dimg=dctx.createImageData(W,H);
+    dbuf=new Uint32Array(dimg.data.buffer);
+    R=Math.min(W,H)*0.335;
+  }
+
+  function draw(){
+    var ca=Math.cos(ax),sa=Math.sin(ax),cb=Math.cos(ay),sb=Math.sin(ay),cx=W/2,cy=H/2;
+    dbuf.fill(0);
+    var fr=COL.froid[0],fg=COL.froid[1],fb=COL.froid[2];
+    for(var i=0;i<N;i++){
+      var x=px[i],y=py[i],z=pz[i];
+      var x1=x*cb+z*sb, z1=z*cb-x*sb, y1=y*ca-z1*sa, z2=z1*ca+y*sa;
+      var d=1/(1.9-z2*0.55), sx=(cx+x1*R*d*1.9)|0, sy=(cy+y1*R*d*1.9)|0;
+      if(sx<0||sy<0||sx>=W||sy>=H) continue;
+      var prof=(z2+1)*0.5;
+      var a=(0.035+prof*prof*0.62)*(1+lit[i]*1.9); if(a>1)a=1;
+      var c=couleur(i), rr=c[0],gg=c[1],bb=c[2];
+      if(kind[i]===0 && lit[i]>0.02){ rr=(rr+fr*2)/3; gg=(gg+fg*2)/3; bb=(bb+fb*2)/3; }
+      var o=sy*W+sx, al=(a*255)|0;
+      if(al>(dbuf[o]>>>24)) dbuf[o]=(al<<24)|(bb<<16)|(gg<<8)|rr;
+    }
+    dctx.putImageData(dimg,0,0);
+    ctx.clearRect(0,0,W,H);
+    ctx.drawImage(dcv,0,0);
+
+    if(MESH){
+      ctx.beginPath(); var t1=0;
+      for(var e=0;e<MESH.length;e+=2){
+        var A=MESH[e],B=MESH[e+1];
+        if(lit[A]<0.02&&lit[B]<0.02) continue;
+        var Ax=px[A]*cb+pz[A]*sb, Az=pz[A]*cb-px[A]*sb, Ay=py[A]*ca-Az*sa, Az2=Az*ca+py[A]*sa;
+        if(Az2<-0.15) continue;
+        var Bx=px[B]*cb+pz[B]*sb, Bz=pz[B]*cb-px[B]*sb, By=py[B]*ca-Bz*sa, Bz2=Bz*ca+py[B]*sa;
+        if(Bz2<-0.15) continue;
+        var da=1/(1.9-Az2*0.55), db=1/(1.9-Bz2*0.55);
+        ctx.moveTo(cx+Ax*R*da*1.9,cy+Ay*R*da*1.9); ctx.lineTo(cx+Bx*R*db*1.9,cy+By*R*db*1.9); t1++;
+      }
+      if(t1){ ctx.strokeStyle="rgba("+fr+","+fg+","+fb+",0.20)"; ctx.lineWidth=0.65; ctx.stroke(); }
+      ctx.beginPath(); var t2=0;
+      for(var e2=0;e2<MESH.length;e2+=2){
+        var A2=MESH[e2],B2=MESH[e2+1];
+        if(lit[A2]<0.28&&lit[B2]<0.28) continue;
+        var ax2=px[A2]*cb+pz[A2]*sb, az2=pz[A2]*cb-px[A2]*sb, ay2=py[A2]*ca-az2*sa, az3=az2*ca+py[A2]*sa;
+        if(az3<-0.1) continue;
+        var bx2=px[B2]*cb+pz[B2]*sb, bz2=pz[B2]*cb-px[B2]*sb, by2=py[B2]*ca-bz2*sa, bz3=bz2*ca+py[B2]*sa;
+        if(bz3<-0.1) continue;
+        var da2=1/(1.9-az3*0.55), db2=1/(1.9-bz3*0.55);
+        ctx.moveTo(cx+ax2*R*da2*1.9,cy+ay2*R*da2*1.9); ctx.lineTo(cx+bx2*R*db2*1.9,cy+by2*R*db2*1.9); t2++;
+      }
+      if(t2){ ctx.strokeStyle="rgba(154,141,255,0.20)"; ctx.lineWidth=0.75; ctx.stroke(); }
+    }
+
+    var vis=[];
+    for(var n=0;n<NODES.length;n++){
+      var nd=NODES[n], i2=nd.i;
+      var X=px[i2],Y=py[i2],Z=pz[i2];
+      var X1=X*cb+Z*sb, Z1=Z*cb-X*sb, Y1=Y*ca-Z1*sa, Z2=Z1*ca+Y*sa;
+      var dd2=1/(1.9-Z2*0.55);
+      nd.sx=cx+X1*R*dd2*1.9; nd.sy=cy+Y1*R*dd2*1.9; nd.z=Z2; nd.d=dd2;
+      if(nd.on>0.01) vis.push(nd);
+    }
+    vis.sort(function(a,b){ return a.z-b.z; });
+    var pris=[];
+    for(var v=0;v<vis.length;v++){
+      var o2=vis[v], c2=o2.col, prof2=(o2.z+1)*0.5;
+      var poids=o2.k===2?1:(o2.k===1?0.62:0.5);
+      var al2=(0.35+prof2*0.65)*o2.on*poids;
+      var rad=(3.2+Math.sqrt(o2.score)*0.72)*o2.d;
+      var css="rgba("+c2[0]+","+c2[1]+","+c2[2]+",";
+      if(o2.on>0.55 && o2.pp.length){
+        if(o2.comite>=3){
+          var pos=[];
+          for(var q=0;q<o2.pp.length;q++){
+            var an=o2.pp[q].a+ay*0.4, rq=rad*3;
+            pos.push([o2.sx+Math.cos(an)*rq, o2.sy+Math.sin(an)*rq*0.86]);
+          }
+          ctx.strokeStyle=css+(al2*0.16).toFixed(3)+")"; ctx.lineWidth=Math.max(.4,0.7*o2.d);
+          ctx.beginPath();
+          for(var u=0;u<pos.length;u++) for(var w2=u+1;w2<pos.length;w2++){
+            ctx.moveTo(pos[u][0],pos[u][1]); ctx.lineTo(pos[w2][0],pos[w2][1]);
+          }
+          ctx.stroke();
+        }
+        for(var pp2=0;pp2<o2.pp.length;pp2++){
+          var P=o2.pp[pp2], ang=P.a+ay*0.4, rr2=rad*3;
+          var qx=o2.sx+Math.cos(ang)*rr2, qy=o2.sy+Math.sin(ang)*rr2*0.86;
+          ctx.strokeStyle=css+(al2*0.30).toFixed(3)+")"; ctx.lineWidth=Math.max(.5,0.9*o2.d);
+          ctx.beginPath(); ctx.moveTo(o2.sx,o2.sy); ctx.lineTo(qx,qy); ctx.stroke();
+          ctx.fillStyle=P.c; ctx.globalAlpha=al2*0.92;
+          ctx.beginPath(); ctx.arc(qx,qy,Math.max(1.1,(1.3+P.w*2.1)*o2.d),0,6.2832); ctx.fill();
+          ctx.globalAlpha=1;
+        }
+      }
+      if(o2.on>0.3){
+        var g=ctx.createRadialGradient(o2.sx,o2.sy,0,o2.sx,o2.sy,rad*4.6);
+        g.addColorStop(0,css+(al2*0.30).toFixed(3)+")"); g.addColorStop(1,css+"0)");
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(o2.sx,o2.sy,rad*4.6,0,6.2832); ctx.fill();
+      }
+      if(o2.k===3){
+        ctx.strokeStyle=css+al2.toFixed(3)+")"; ctx.lineWidth=Math.max(1,1.4*o2.d);
+        ctx.beginPath(); ctx.arc(o2.sx,o2.sy,rad,0,6.2832); ctx.stroke();
+      }else{
+        ctx.fillStyle=css+al2.toFixed(3)+")";
+        ctx.beginPath(); ctx.arc(o2.sx,o2.sy,rad,0,6.2832); ctx.fill();
+      }
+      if(SEL===o2.i){
+        ctx.strokeStyle=css+"0.95)"; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.arc(o2.sx,o2.sy,rad+7,0,6.2832); ctx.stroke();
+      }
+      if(o2.pulse>0){
+        ctx.strokeStyle=css+(o2.pulse*0.55).toFixed(3)+")"; ctx.lineWidth=1.4;
+        ctx.beginPath(); ctx.arc(o2.sx,o2.sy,rad+(1-o2.pulse)*46,0,6.2832); ctx.stroke();
+        o2.pulse-=0.018;
+      }
+      if(o2.k===2 && o2.z>0.15 && o2.on>0.9 && o2.rang<10){
+        var txt=o2.nom.length>22?o2.nom.slice(0,21)+"…":o2.nom;
+        var lx=o2.sx, ly=o2.sy-rad-9, lw=txt.length*5.6, libre=true;
+        for(var z=0;z<pris.length;z++){
+          var pr=pris[z];
+          if(Math.abs(pr[0]-lx)<(pr[2]+lw)/2+8 && Math.abs(pr[1]-ly)<15){ libre=false; break; }
+        }
+        if(libre){
+          pris.push([lx,ly,lw]);
+          ctx.font="600 11px "+getComputedStyle(document.body).fontFamily;
+          ctx.fillStyle=css+(al2*0.85).toFixed(3)+")"; ctx.textAlign="center";
+          ctx.fillText(txt,lx,ly);
+        }
+      }
+    }
+  }
+
+  function tick(idx,w){
+    var e=D.ents[idx], k=kind[idx], t=document.getElementById("ticker");
+    var cls=k===2?"hot":(k===3?"risk":"");
+    var lab=k===3?"perdu : canal mort":(k===2?"passe HOT":(EVN[w]||"activité"));
+    var el=document.createElement("div"); el.className="tk "+cls;
+    el.innerHTML='<i></i><b>'+esc(e[0])+'</b> · '+lab+'<em>'+e[6]+'</em>';
+    t.insertBefore(el,t.firstChild);
+    while(t.children.length>9) t.removeChild(t.lastChild);
+  }
+  function avancer(d){
+    var st=D.stream[d]; if(!st) return;
+    for(var i=0;i<st.length;i+=2){
+      var idx=st[i], w=st[i+1];
+      lit[idx]=Math.min(1.5,lit[idx]+0.30+w*0.20);
+      if(!seen[idx]){
+        seen[idx]=1; awake++;
+        var k=kind[idx];
+        if(k===2){ nHot++; tick(idx,w); }
+        else if(k===3){ nRisk++; if(nRisk<=6) tick(idx,w); }
+        else if(k===1){ nWarm++; if(w>=3&&nWarm%9===0) tick(idx,w); }
+        else if(w>=4) tick(idx,w);
+      }
+      var nd=NODEI[idx];
+      if(nd!==undefined){
+        var o=NODES[nd], av=o.on;
+        o.on=Math.min(1,o.on+0.34+w*0.16);
+        if(av<0.55&&o.on>=0.55) o.pulse=1;
+      }
+    }
+    var bar=document.querySelectorAll("#scrubBg i")[d]; if(bar) bar.classList.add("past");
+  }
+  function paintHud(){
+    var t=new Date(D.d0+"T00:00:00"); t.setDate(t.getDate()+day);
+    var MON=["janv","févr","mars","avr","mai","juin","juil","août","sept","oct","nov","déc"];
+    document.getElementById("mDate").textContent=t.getDate()+" "+MON[t.getMonth()]+" "+t.getFullYear();
+    document.getElementById("mSub").textContent=fmt(D.counts.entities)+" entités · "+fmt(D.counts.events)+" events sur 90 jours";
+    document.getElementById("sAwake").textContent=fmt(awake);
+    document.getElementById("sHot").textContent=fmt(nHot);
+    document.getElementById("sWarm").textContent=fmt(nWarm);
+    document.getElementById("sRisk").textContent=fmt(nRisk);
+    document.getElementById("tCount").textContent="J"+day+" / "+(D.days-1);
+    document.getElementById("scrubLine").style.left=(day/(D.days-1)*100)+"%";
+  }
+  function fmt(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g," "); }
+  var EVN={0:"activité",1:"clic / visite",2:"clic email",3:"/pricing · form",4:"meeting booké"};
+
+  function reset(){
+    day=0; awake=nHot=nWarm=nRisk=0;
+    lit.fill(0); seen.fill(0);
+    NODES.forEach(function(o){ o.on=0; o.pulse=0; });
+    document.getElementById("ticker").innerHTML="";
+    document.querySelectorAll("#scrubBg i").forEach(function(e){ e.classList.remove("past"); });
+    paintHud();
+  }
+  function seek(d){
+    d=Math.max(0,Math.min(D.days-1,d|0));
+    reset();
+    for(var k=0;k<=d;k++) avancer(k);
+    day=d; paintHud();
+  }
+  function setPlay(v){
+    playing=v;
+    document.getElementById("playIco").innerHTML = v
+      ? '<path d="M5 4h4v12H5zM11 4h4v12h-4z"/>' : '<path d="M6 4.2v11.6L16 10 6 4.2Z"/>';
+  }
+  function noeudSous(mx,my){
+    var best=null,bd=1e9;
+    for(var n=0;n<NODES.length;n++){
+      var o=NODES[n]; if(o.on<0.25||o.sx===undefined) continue;
+      var dx=o.sx-mx, dy=o.sy-my, dd=dx*dx+dy*dy;
+      var r=(3.2+Math.sqrt(o.score)*0.72)*o.d+9;
+      if(dd<r*r&&dd<bd){ bd=dd; best=o; }
+    }
+    return best;
+  }
+  var POP=null;
+  function fermerPop(){ SEL=null; POP=null; document.getElementById("gpop").classList.remove("on"); }
+  function popup(o,mx,my){
+    SEL=o.i; POP=o;
+    var d=D.detail[String(o.i)];
+    var c=o.col, css="rgb("+c[0]+","+c[1]+","+c[2]+")";
+    var LIB={T1:"Tier 1",T2:"Tier 2",PERDU:"Perdu"};
+    var h='<h4>'+esc(d.name)+'</h4><div class="gsub">'+esc(d.segment)+' · fit '+esc(d.fit)+'</div>'
+      +'<div class="gsc"><b style="color:'+css+'">'+d.score+'</b>'
+      +'<em style="color:'+css+'">'+esc(LIB[d.tier]||d.tier)+'</em></div>'
+      +'<div class="gline"><span>entré par</span><b>'
+      +(d.porte==="conversion"?"une demande":d.porte==="comite"?"le comité":"—")+'</b></div>'
+      +'<div class="gline"><span>actives / 14 j</span><b>'+esc(d.comite)+'</b></div>'
+      +(d.tier!=="PERDU"?'<div class="gline"><span>qui appeler</span><b>'+esc(d.qui)+'</b></div>'
+        +'<div class="gline"><span>preuve</span><b>'+esc(d.preuve)+'</b></div>':'');
+    if(d.personnes && d.personnes.length){
+      h+='<div class="gppl">';
+      d.personnes.slice(0,5).forEach(function(q){
+        h+='<div><i style="background:'+(PERSONA[q[2]]||"#a6abb6")+'"></i><u>'+esc(q[0])+'</u><b>'
+          +q[3].toFixed(1)+'</b></div>';
+      });
+      if(d.personnes.length>5) h+='<div style="color:rgba(255,255,255,.35);padding-left:13px">+ '
+        +(d.personnes.length-5)+' autres</div>';
+      h+='</div>';
+    }
+    h+='<button class="gfull" data-i="'+o.i+'">Voir la fiche complète →</button>';
+    var pop=document.getElementById("gpop");
+    document.getElementById("gpopIn").innerHTML=h;
+    pop.classList.add("on");
+    var pw=pop.offsetWidth, ph=pop.offsetHeight;
+    pop.style.left=Math.max(10,Math.min(W-pw-10,mx+16))+"px";
+    pop.style.top =Math.max(10,Math.min(H-ph-10,my-20))+"px";
+  }
+
+  function loop(){
+    if(playing){
+      acc+=speed;
+      while(acc>=6){ acc-=6; if(day<D.days-1){ day++; avancer(day); paintHud(); } else { setPlay(false); break; } }
+    }
+    if(!drag) tay+=spin;
+    ax+=(tax-ax)*0.12; ay+=(tay-ay)*0.12;
+    draw();
+    raf=requestAnimationFrame(loop);
+  }
+
+  function init(){
+    N=D.ents.length;
+    cv=document.getElementById("globe"); ctx=cv.getContext("2d");
+    dcv=document.createElement("canvas"); dctx=dcv.getContext("2d");
+    lireTheme(); semer(N);
+    kind=new Uint8Array(N); lit=new Float32Array(N); seen=new Uint8Array(N);
+    for(var i=0;i<N;i++) kind[i]=D.ents[i][10];
+    Object.keys(D.detail).forEach(function(key){
+      var j=+key, d=D.detail[key];
+      var pp=(d.personnes||[]).map(function(q,n,arr){
+        return { a:(n/arr.length)*6.2832+0.4, w:Math.min(1,Math.abs(q[3])/40), c:PERSONA[q[2]]||"#a6abb6" };
+      });
+      NODEI[j]=NODES.length;
+      NODES.push({ i:j, nom:d.name, k:kind[j], col:couleur(j), score:Math.max(1,d.score),
+                   comite:parseInt(d.comite,10)||0, pp:pp, on:0, pulse:0, rang:99 });
+    });
+    NODES.filter(function(o){return o.k===2;}).sort(function(a,b){return b.score-a.score;})
+         .forEach(function(o,r){ o.rang=r; });
+    tisser(); resize();
+
+    var bg=document.getElementById("scrubBg"), mx=1;
+    for(var d1=0;d1<D.days;d1++) mx=Math.max(mx,D.stream[d1].length/2);
+    var html="";
+    for(var d2=0;d2<D.days;d2++){ var hh=Math.round((D.stream[d2].length/2)/mx*100); html+='<i style="height:'+Math.max(3,hh)+'%"></i>'; }
+    bg.innerHTML=html;
+
+    document.getElementById("playBtn").onclick=function(){
+      if(day>=D.days-1) reset();
+      setPlay(!playing);
+    };
+    document.getElementById("speed").onclick=function(e){
+      var b=e.target.closest("button[data-s]"); if(!b) return;
+      speed=+b.dataset.s;
+      this.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x===b); });
+    };
+    var sc=document.getElementById("scrub");
+    function scrubTo(e){ var r=sc.getBoundingClientRect(); setPlay(false); seek(Math.round((e.clientX-r.left)/r.width*(D.days-1))); }
+    sc.onclick=scrubTo;
+    var dr=false;
+    sc.onpointerdown=function(e){ dr=true; sc.setPointerCapture(e.pointerId); scrubTo(e); };
+    sc.onpointermove=function(e){ if(dr) scrubTo(e); };
+    sc.onpointerup=function(){ dr=false; };
+
+    var st=document.getElementById("stage"), tip=document.getElementById("gtip");
+    cv.style.cursor="grab";
+    st.addEventListener("pointerdown",function(e){
+      drag={x:e.clientX,y:e.clientY,ax:tax,ay:tay,moved:0}; cv.style.cursor="grabbing";
+    });
+    st.addEventListener("pointermove",function(e){
+      var b=st.getBoundingClientRect();
+      if(drag){
+        var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+        drag.moved=Math.max(drag.moved,Math.abs(dx)+Math.abs(dy));
+        tay=drag.ay+dx*0.006; tax=Math.max(-1.3,Math.min(1.3,drag.ax-dy*0.006));
+        return;
+      }
+      var o=noeudSous(e.clientX-b.left,e.clientY-b.top);
+      if(o){
+        cv.style.cursor="pointer";
+        var dd=D.detail[String(o.i)];
+        tip.innerHTML='<b>'+esc(o.nom)+'</b>'+esc(dd.tier)+' · '+dd.score+' pts : cliquer pour le détail';
+        tip.style.left=Math.min(W-250,e.clientX-b.left+14)+"px";
+        tip.style.top=(e.clientY-b.top+14)+"px";
+        tip.classList.add("on");
+      }else{ cv.style.cursor="grab"; tip.classList.remove("on"); }
+    });
+    function relache(e){
+      if(drag && drag.moved<5){
+        var b=st.getBoundingClientRect();
+        var o=noeudSous(e.clientX-b.left,e.clientY-b.top);
+        if(o){ popup(o,e.clientX-b.left,e.clientY-b.top); } else { fermerPop(); }
+      }
+      drag=null; cv.style.cursor="grab"; tip.classList.remove("on");
+    }
+    st.addEventListener("pointerup",relache);
+    st.addEventListener("pointercancel",function(){ drag=null; cv.style.cursor="grab"; });
+
+    document.getElementById("gpopX").onclick=fermerPop;
+    document.getElementById("gpop").onclick=function(e){
+      var g=e.target.closest(".gfull"); if(!g) return;
+      var i=+g.dataset.i; fermerPop(); SEL=i; openLogic(i);
+    };
+
+    reset(); paintHud();
+    raf=requestAnimationFrame(loop);
+    setTimeout(function(){ setPlay(true); },600);
+  }
+  return {init:init, resize:function(){ if(cv) resize(); }, theme:lireTheme};
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   LOGIQUE — pourquoi ce compte est hot, sans ouvrir le code.
+   ══════════════════════════════════════════════════════════════ */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function nf(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," "); }
+var FILT="hot", SEL=null;
+
+function listIdx(){
+  var q=(document.getElementById("q").value||"").trim().toLowerCase();
+  var out=[];
+  if(q){
+    for(var i=0;i<D.ents.length&&out.length<200;i++){
+      var e=D.ents[i];
+      if((e[0]+" "+e[1]).toLowerCase().indexOf(q)>=0) out.push(i);
+    }
+    return out;
+  }
+  function byScore(a){ return a.sort(function(x,y){ return D.ents[y][6]-D.ents[x][6]; }); }
+  if(FILT==="hot")  return byScore(D.top.slice());
+  if(FILT==="trap") return byScore((D.perdus||D.suspects||[]).slice());
+  if(FILT==="warm"){ for(var j=0;j<D.ents.length;j++) if(D.ents[j][10]===1) out.push(j); return byScore(out).slice(0,200); }
+  for(var k=0;k<D.ents.length;k++) if(D.ents[k][6]>0) out.push(k);
+  return byScore(out).slice(0,200);
+}
+function renderRows(){
+  var ix=listIdx(), h="";
+  ix.forEach(function(i){
+    var e=D.ents[i], dd=D.detail[String(i)];
+    var tag = (dd&&dd.porte==="comite")
+      ? '<em style="font-style:normal;color:var(--violet);font-weight:600"> · par le comité</em>' : '';
+    h+='<div class="lrow'+(SEL===i?" on":"")+'" data-i="'+i+'">'
+      +'<div class="lrow-m"><b>'+esc(e[0])+'</b><span>'+esc(e[1]||"—")+(e[2]?" · "+esc(e[2]):"")+tag+'</span></div>'
+      +'<div class="sc k'+e[10]+'">'+e[6]+'</div></div>';
+  });
+  document.getElementById("rows").innerHTML=h||'<div class="empty" style="padding:30px">Aucun résultat.</div>';
+}
+var KL={0:["Froid","k0"],1:["Warm","k1"],2:["HOT","k2"],3:["Perdu","k3"]};
+var TYL={email_sent:"email envoyé",email_open:"ouverture",email_click:"clic email",
+  form_fill:"formulaire",meeting_booked:"RDV booké",website_visit:"visite site",
+  pricing_visit:"visite /pricing",linkedin_engagement:"LinkedIn"};
+
+function renderDetail(i){
+  var d=D.detail[String(i)], e=D.ents[i], box=document.getElementById("detail");
+  if(!d){
+    box.innerHTML='<div class="empty">Ce compte n\'est ni en Tier 1 ni en Tier 2.<br>'
+      +'Le détail complet est calculé pour les 60 comptes de la hot list.</div>';
+    return;
+  }
+  var col = d.tier==="T1" ? "violet" : "warn";
+  var PLAY={new_business:"🎯 nouvelle affaire",retention:"📈 rétention",win_back:"🔄 reconquête",
+            risque:"⚠️ risque",reactivation:"⚡ réactivation",nurture:"🌱 nurturing"};
+  var h='<div class="dh"><div class="dh-t">'
+    +'<h2>'+esc(d.name)+'</h2>'
+    +'<div class="dh-sub">'+esc(d.segment)+' · fit '+esc(d.fit)+' · '+esc(PLAY[d.play]||d.play)+'</div></div>'
+    +'<div class="verdict"><div class="n" style="color:var(--'+col+')">'+d.score+'</div>'
+    +'<div class="l" style="color:var(--'+col+')">'+esc(d.tier)
+    +(d.brut&&d.brut>d.score+0.05?' · brut '+d.brut.toFixed(1):'')+'</div></div></div>';
+
+  h+='<div class="facts">'
+    +'<div class="fact">'+(d.porte==="conversion"?'entré par <b>une demande</b>':d.porte==="comite"?'entré par <b>le comité</b>':'<b>aucune porte</b> : sorti des files')+'</div>'
+    +'<div class="fact"><b>'+esc(d.comite)+'</b> personnes actives / 14 j</div>'
+    +'<div class="fact">sponsor décideur <b>'+esc(d.sponsor)+'</b></div>'
+    +(e[9]>1?'<div class="fact"><b>'+e[9]+'</b> fiches fusionnées</div>':'')
+    +(e[5]?'<div class="fact">ARR <b>'+nf(e[5])+' €</b></div>':'')
+    +'</div>';
+
+  /* la ligne d'action */
+  h+='<div class="sec"><div class="sec-h"><h3>'+(d.tier==="PERDU"?'Pourquoi personne':'Qui appeler')+'</h3>'+'<em>'+(d.tier==="PERDU"?'le score existe, le canal non':'celui qui a levé la main')+'</em></div>'
+    +'<div class="card" style="padding:16px 18px">'
+    +'<div style="font-family:var(--display);font-size:19px;font-weight:600">'+esc(d.qui)+'</div>'
+    +'<div style="font-size:var(--fs-sm);color:var(--text-2);margin-top:3px">'+esc(d.titre)+'</div>'
+    +'<div style="margin-top:11px;display:flex;gap:8px;flex-wrap:wrap">'
+    +'<span class="fact" style="background:var(--violet-soft);color:var(--violet)">'+esc(d.preuve)+'</span>'
+    +'<span class="fact">canal : <b>'+esc(d.canal)+'</b></span></div></div></div>';
+
+  /* le double étage */
+  if(d.personnes && d.personnes.length){
+    var tot=0, mx=0;
+    d.personnes.forEach(function(p){ tot+=p[3]; if(Math.abs(p[3])>mx) mx=Math.abs(p[3]); });
+    var capped = d.brut && d.brut > d.score + 0.05;
+    h+='<div class="sec"><div class="sec-h"><h3>Qui a fait le score</h3>'
+      +'<em>'+d.personnes.length+' personnes · chaque total est la somme des lignes en dessous'
+      +(capped?' : ici <b>'+d.brut.toFixed(1)+'</b>, plafonnée à 100':'')+'</em></div><div class="card wf">';
+    d.personnes.forEach(function(p){
+      var pct = mx>0 ? 100*Math.abs(p[3])/mx : 0;
+      var c = p[3]<0 ? "var(--danger)"
+           : p[2]==="buyer"?"var(--violet)":p[2]==="champion"?"var(--ok)":"var(--text-3)";
+      h+='<div class="wfr"><div class="wfr-l">'+esc(p[0])+'<span>'+esc(p[1])+' · '+esc(p[2])+'</span></div>'
+        +'<div class="wfr-b"><i style="width:'+pct.toFixed(1)+'%;left:0;background:'+c+'"></i></div>'
+        +'<div class="wfr-v">'+p[3].toFixed(1)+'</div></div>';
+      /* la ligne de multiplication : un score qu'on peut refaire de tête */
+      if(p[5] && p[5].length){
+        h+='<div class="calc">';
+        p[5].forEach(function(e){
+          var pts=Math.round(e[5]*10)/10;
+          h+='<div class="calcr'+(pts<0?" neg":"")+'">'
+            +'<span class="cd">'+esc(e[0].slice(5))+'</span>'
+            +'<span class="cq">'+esc(e[1])+'</span>'
+            +'<span class="cm">'+e[2]+' <em>×</em> '+e[3].toFixed(2)+' <em>persona</em> <em>×</em> '
+            +e[4].toFixed(3)+' <em>temps</em></span>'
+            +'<span class="cp">'+(pts>0?"+":"")+pts.toFixed(1)+'</span></div>';
+        });
+        h+='</div>';
+      } else if(p[4]){
+        h+='<div style="padding:0 15px 11px 15px;font-size:var(--fs-xs);color:var(--text-2);margin-top:-6px">'
+          +esc(p[4])+'</div>';
+      }
+    });
+    h+='</div></div>';
+  }
+
+  /* décroissance */
+  var HL=D.config.half_life_days, pts=[];
+  for(var t=0;t<=90;t+=2) pts.push([t/90*100, 100-Math.pow(.5,t/HL)*100]);
+  h+='<div class="sec"><div class="sec-h"><h3>Décroissance appliquée</h3><em>gestes : demi-vie '+HL+' j · preuves : 30 j</em></div>'
+    +'<div class="card decay"><svg viewBox="0 0 100 100" preserveAspectRatio="none">'
+    +'<polyline points="'+pts.map(function(p){return p[0].toFixed(1)+","+p[1].toFixed(1);}).join(" ")+'" fill="none" stroke="var(--violet)" stroke-width="1.6" vector-effect="non-scaling-stroke"/>'
+    +'<line x1="0" y1="50" x2="100" y2="50" stroke="var(--line)" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>'
+    +'</svg><div class="decay-c"><span>aujourd\'hui <b>100 %</b></span><span>J-'+HL+' <b>50 %</b></span>'
+    +'<span>J-'+(HL*2)+' <b>25 %</b></span></div></div></div>';
+
+  box.innerHTML=h; box.scrollTop=0;
+}
+function openLogic(i){
+  SEL=i; FILT="all";
+  document.querySelectorAll("#filters button").forEach(function(b){ b.classList.toggle("on",b.dataset.f==="all"); });
+  showView("logic"); renderRows(); renderDetail(i);
+  var r=document.querySelector('.lrow[data-i="'+i+'"]'); if(r) r.scrollIntoView({block:"center"});
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PROCESS — le déroulé de l'exercice.
+   Chaque temps porte trois choses : ce que Romain raconte, le problème
+   rencontré, et la question que Gab va poser avec sa réponse. Un temps peut
+   emmener le tableau de bord sur la vue qui le prouve.
+
+   INTERDIT D'ÉCRAN (gravé) — ne jamais écrire ici, quel que soit le build :
+     1. tout ce qui touche au générateur du jeu de données — mécanisme,
+        colonne, seuil, bloc. Cela se dit à l'oral, au moment choisi.
+     2. les formulations préparées pour l'oral, les réponses apprises par cœur.
+     3. les notes internes : brouillons, hésitations, versions rejetées.
+   Le registre des erreurs, lui, est assumé : il montre ce qui a été corrigé.
+   ══════════════════════════════════════════════════════════════════════════ */
+var PROC=[
+{
+ p:"1 · L'analyse", t:"Comment on a travaillé", court:true,
+ h:"La preuve que c'est moi qui dirige",
+ say:"J'ai fait travailler deux IA en parallèle, chacune vérifiant le travail de l'autre. Elles ont produit une vingtaine d'erreurs. Aucune n'a atteint le livrable, parce qu'elles se sont attrapées entre elles. Mais les décisions qui ont changé le résultat, c'est moi qui les ai prises.",
+ loop:true,
+ geant:["10","fois où j'ai dit non. Je ne vous dis pas « j'ai tout relu » : tout le monde le prétend, personne ne peut le prouver. Je peux vous citer les dix décisions, avec ce que chacune a changé."],
+ bareme:[
+  ["Ce que l'IA proposait, ce que j'ai imposé, ce que ça a changé"],
+  ["Le désabonnement retire 20 points", "règle supprimée",
+   "« fermer un canal, ce n'est pas être fermé à l'offre ». Un des rendez-vous de la base a été pris par une personne désinscrite : cette règle décotait le compte le plus évident du fichier"],
+  ["Consulter sa facture est un signal de départ", "7 events sur 14 retirés",
+   "« ça m'arrive sur n8n et je ne pars pas ». Seules la page résiliation et la page export restent négatives"],
+  ["La page carrières vaut zéro point", "683 candidats flagués",
+   "« ce n'est même pas un lead, ce n'est pas la bonne personne ». Zéro point ne suffisait pas : il fallait une catégorie à part"],
+  ["On appelle le décideur le mieux placé", "on appelle celui qui a levé la main",
+   "« si tu appelles mon CIO, il te dit qu'il n'a pas le temps ». Le décideur devient le contexte de l'appel, pas la cible"],
+  ["435 comptes sont injoignables", "le chiffre était faux",
+   "« vous avez checké l'opt-out ? ». Il mélangeait les désabonnés et les contacts sans adresse, deux problèmes différents"]],
+ pb:"Le brief le dit lui-même : « IA bienvenue, mais tu dois pouvoir défendre chaque ligne de logique comme si tu l'avais écrite. » Ce n'est pas une tolérance, c'est le test. Et un modèle qui relit son propre travail ne trouve que ce qu'il a pensé à chercher.",
+ body:"Les deux modèles ne se parlent jamais. Je suis le seul canal et le seul à trancher. Quand les chiffres divergeaient, personne n'argumentait : chacun renvoyait <b>sa définition exécutable et son chiffre</b>, et je comparais. Aucune décision n'a été prise parce qu'un modèle était plus convaincant que l'autre.",
+ q:"Et la double lecture, elle a attrapé quoi ?",
+ r:"Un exemple parmi la vingtaine : un champ commercial qui ne s'héritait jamais entre fiches fusionnées, soit <b>1 407 comptes</b> récupérables. Le filet comptait 88 contrôles à ce moment-là, tous au vert. Il en compte 95 aujourd'hui, le correctif en a ajouté 7. Un test vérifie ce qu'on a pensé à tester. Une seconde implémentation vérifie ce qu'on n'a pas pensé.<br><br>La limite, je l'assume : la vérification croisée est manuelle. Sur un vrai pipeline, les deux implémentations tourneraient en intégration continue et le build casserait sur divergence."
+},
+{
+ p:"1 · L'analyse", t:"Ce que cette double lecture a trouvé", court:true,
+ h:"Un CRM de 8 ans, et rien qui tienne debout",
+ say:"Avant de toucher à quoi que ce soit, on a chiffré les dégâts. Voilà ce qu'il y avait dans les trois fichiers.",
+ pb:"Aucun de ces problèmes ne déclenche d'erreur. Le CRM s'ouvre, les filtres répondent, les chiffres s'affichent, et ils sont faux en silence.",
+ kpi:[["32 %","des fiches sont des doublons : 30 000 fiches pour 20 519 entreprises réelles"],
+      ["3","formats de dates mélangés dans les mêmes colonnes"],
+      ["30","façons d'écrire 8 pays : filtrer « France » en montrait 2 730 sur 13 517"],
+      ["2 671","fiches sans aucun domaine"],
+      ["1 544","adresses email cassées : @@ ou espaces"],
+      ["4 000","événements sans personne rattachée"],
+      ["69,7 M€","d'ARR additionné qu'on ne pouvait pas défendre"]],
+ body:"C'est cette liste qui a donné la structure du chantier : <b>réparer</b> ce qui est réparable, <b>reconstruire</b> la table qui manquait (celle des entreprises), puis <b>classer</b>. Trois phases, douze étapes, traitées une par une.",
+ q:"Vous avez trouvé ça comment, exactement ?",
+ r:"En comptant. Pas en ouvrant le fichier au hasard : en passant chaque colonne au crible et en comparant deux comptages indépendants. Tous les chiffres de cet écran se recalculent depuis les CSV d'origine."
+},
+{
+ p:"1 · L'analyse", t:"La règle posée avant tout code", court:true,
+ h:"Rien n'est jamais supprimé ni écrasé",
+ vue:"data",
+ say:"Avant de nettoyer, j'ai décidé de ne rien détruire. Vos colonnes d'origine sont là, intactes. Les miennes sont à côté.",
+ pb:"Un nettoyage qui écrase est irréversible. Si une règle est fausse, on ne peut plus revenir en arrière, et on ne peut plus prouver ce qu'on a changé.",
+ body:"Chaque réparation vit dans une <b>colonne neuve</b>, avec sa trace et son drapeau. L'original reste au caractère près. Le retour arrière est toujours possible, et la comparaison avant/après est vérifiable à l'écran, ligne par ligne.",
+ kpi:[["12 + 17","fiches CRM : 12 colonnes d'origine intactes, 17 ajoutées"],
+      ["8 + 17","contacts : 8 d'origine, 17 ajoutées"],
+      ["0","donnée supprimée sur les trois fichiers"]],
+ go:["data","Ouvrir la table et comparer"],
+ q:"Comment je vérifie que vous n'avez pas touché à mes données ?",
+ r:"Vous les avez sous les yeux. Dans l'onglet <b>Données</b>, les colonnes grises sont les vôtres, jamais modifiées, et les violettes sont les miennes. Vous prenez n'importe quelle ligne et vous comparez."
+},
+{
+ p:"2 · Réparer", t:"Étape 1 : les dates", court:true,
+ h:"« 05/19/24 » ne peut pas mentir",
+ vue:"ops",
+ say:"Les dates dont le jour dépasse 12 révèlent leur format toutes seules. J'en ai 54 000 comme ça : elles donnent une règle sans aucune exception, et j'applique cette règle au reste.",
+ geant:["54 419","dates qui <b>prouvent</b> la règle, <b>zéro</b> qui la contredit. <i>05/19/24</i> : 19 n'est pas un mois, donc c'est le jour, donc l'année à 2 chiffres s'écrit mois d'abord. Miroir exact pour l'année à 4 chiffres."],
+ bareme:[
+  ["Le geste : trois écritures entrent, une seule sort"],
+  ["Le format est détecté ligne par ligne", "", "les trois écritures cohabitent DANS la même colonne, pas une par colonne"],
+  ["La date convertie va dans une colonne neuve", "_parsed", "AAAA-MM-JJ, un format unique pour tout ce qui suit"],
+  ["Le format détecté est gardé à côté", "_format", "iso · dmy · mdy : l'inférence est écrite, pas cachée"],
+  ["La colonne d'origine n'est pas touchée", "intacte", "réversible ligne par ligne, à tout moment"],
+  ["La preuve : on démontre avant d'appliquer"],
+  ["Année sur 2 chiffres → le mois d'abord (américain)", "27 173", "dates où le 2ᵉ nombre dépasse 12 · zéro contre-exemple"],
+  ["Année sur 4 chiffres → le jour d'abord (français)", "27 246", "miroir exact, le 1ᵉʳ nombre dépasse 12 · zéro contre-exemple"],
+  ["Dates où les deux nombres sont sous 13", "35 551", "déduites de la règle : inférence assumée, et réversible"],
+  ["Le recoupement qui verrouille"],
+  ["3 386 renouvellements remplis", "3 346 + 40", "3 346 clients + 40 ex-clients contradictoires : deux mesures indépendantes qui tombent juste"]],
+ pb:"Trois formats coexistent dans les mêmes colonnes. Se tromper ne déclenche <b>aucune erreur</b> : juste <b>~10 000 dates fausses en silence, par colonne</b>. Et tout ce qui suit compare des dates : « actif ces 14 jours », « renouvellement dans 90 jours ».",
+ body:"<b>Le format de sortie est AAAA-MM-JJ</b> (ISO 8601), pour deux raisons opérationnelles. Il ne peut pas se lire à l'envers. Et <b>trier le texte revient à trier le temps</b> : en JJ/MM/AAAA, <i>02/01/2019</i> passerait avant <i>01/12/2018</i>, et toutes les fenêtres du scoring seraient fausses. C'est aussi déjà le format des 94 838 horodatages d'événements : on aligne le reste dessus.<br><br>Le périmètre : 4 colonnes de date sur les deux fichiers, soit <b>167 199 cases</b>, dont <b>32 381 vides</b> → <b>134 818 dates</b> décodées (44 848 ISO + 45 057 américaines + 44 913 françaises, la somme referme). <b>0 échec.</b> Une date illisible n'est jamais devinée : elle sort vide, avec un drapeau.",
+ q:"Et les dates où les deux nombres sont sous 13 ?",
+ r:"Il y en a <b>35 551</b>. Elles sont <b>déduites de la règle, pas lues directement</b> : c'est une <b>inférence assumée</b>. Elle est fondée parce que la règle n'a <b>aucun contre-exemple sur 54 419 cas vérifiables</b>, et parce que le format d'origine est conservé sur chaque ligne : <b>tout est réversible</b>."
+},
+{
+ p:"2 · Réparer", t:"Étape 2 : les pays", h:"30 façons d'écrire 8 pays", vue:"data",
+ say:"Filtrer « France » dans ce CRM montrait 2 730 fiches. Il y en avait 13 517.",
+ pb:"FR, France, france, FRANCE, Fr : pour une machine, ce sont cinq pays différents. Toute segmentation par marché, tout routage commercial, tout reporting était faux, et rien ne le signalait.",
+ bareme:[
+  ["Le geste, en quatre temps"],
+  ["1. Recenser toutes les écritures présentes", "30 écritures",
+   "aucune ne doit échapper au recensement, sinon la table est incomplète sans qu'on le sache"],
+  ["2. Écrire la table de correspondance à la main", "30 vers 8",
+   "chaque écriture pointe vers un code ISO 3166, le standard international à deux lettres"],
+  ["3. Écrire le résultat dans une colonne neuve", "country_clean",
+   "la colonne d'origine n'est pas touchée"],
+  ["4. Surveiller ce qui n'entre pas dans la table", "0 inconnue",
+   "une écriture absente de la table n'est jamais devinée : elle sort en « non mappée » dans le rapport"]],
+ kpi:[["30 000 / 30 000","fiches classées"],["0","pays deviné"],
+      ["45 %","de France, puis Belgique, Pays-Bas, Allemagne, Espagne, Italie, Suisse, Royaume-Uni"]],
+ body:"La table vit en <b>configuration</b>, pas dans le code : une graphie nouvelle s'ajoute en une ligne, sans toucher au programme. C'est ce qui rend la règle relisible en trente secondes, et c'est ce qui garantit qu'aucune valeur n'est interprétée au hasard.",
+ q:"Pourquoi des codes ISO ? Et si une écriture inconnue apparaît demain ?",
+ r:"Je normalise vers <b>ISO 3166</b>, le standard international : n'importe quel outil en aval, enrichissement, CRM, tableau de bord, le comprend, et les codes ne changent pas selon la langue. La table de correspondance vit en configuration, pas dans le code : une graphie inconnue n'est jamais devinée, elle sort en « non mappée » dans le rapport d'audit, et on l'ajoute à la table en une ligne.",
+ qs:[["Pourquoi pas une librairie de détection, ou une IA ?","Pour <b>30 valeurs distinctes</b>, une table explicite est plus sûre, plus rapide et 100 % auditable. Une librairie introduirait des devinettes invisibles. Le bon outil pour la bonne taille de problème. Et j'ai une contre-vérification : le compte par pays recoupe mon audit initial au chiffre près."],
+     ["Et quand deux doublons de la même entreprise se contredisent sur le pays ?","C'est massif, et je l'ai chiffré : <b>5 947 cas</b>, soit 69 % des entreprises qui ont plusieurs fiches. Je tranche par <b>vote majoritaire</b> des fiches ; à égalité, la fiche de référence l'emporte, et le conflit est signalé pour revue.<br><br>Et j'en tire une conclusion de conception : à ce niveau de contradiction, <b>le pays ne porte aucun poids dans le score</b>. Il sert au reporting, pas à la qualification."],
+     ["Vous auriez pu deviner le pays depuis le site web.","Mesuré aussi, et non : la répartition des pays est <b>identique sur toutes les extensions</b>. Le .com, le .fr, le .eu, le .co et le .io affichent tous 44 à 46 % de France, qui est le taux de base du fichier. Une boîte en .fr n'est pas plus française qu'une autre dans ce CRM : le domaine ne peut pas arbitrer le pays."]]
+},
+{
+ p:"2 · Réparer", t:"Étape 3 : les domaines", h:"Déduire n'est pas deviner", vue:"data",
+ say:"2 671 fiches n'avaient aucun domaine. J'en ai récupéré 2 538, sans en inventer un seul.",
+ pb:"Le domaine est la première clé pour reconnaître deux fiches d'une même entreprise. Sans lui, une boîte reste éclatée en plusieurs comptes pour toujours. Et la même entreprise existe ici en .com, en .fr et en .eu.",
+ bareme:[
+  ["Le geste, trois colonnes neuves"],
+  ["1. Nettoyer", "domain_clean", "www.Acme.com devient acme.com : 1 825 préfixes retirés, casse uniformisée"],
+  ["2. Extraire la racine", "domain_root", "acme.com devient acme. C'est la clé numéro 1 de la fusion, à l'étape 7"],
+  ["3. Déduire ce qui manque, et le dire", "domain_source",
+   "trois valeurs possibles : declared, inferred_from_contacts, none. Aucune déduction cachée"],
+  ["Ce que la déduction attrape"],
+  ["Racines déduites des emails professionnels des contacts", "2 538",
+   "uniquement quand TOUS les contacts pointent vers la même racine : l'unanimité est exigée"],
+  ["Déductions ambiguës", "0", "si les contacts ne sont pas unanimes, rien n'est déduit"],
+  ["Fiches qui restent sans racine", "133", "94 sans aucun contact, 39 avec des emails personnels seulement"]],
+ body:"Bilan de couverture : 27 329 domaines déclarés plus 2 538 déduits, soit <b>99,6 % du CRM</b> couvert par la clé numéro 1 de la fusion. Il reste 133 fiches aveugles, et pour celles-là la fusion s'appuiera sur le nom normalisé, la clé numéro 2.",
+ q:"Vous avez deviné 2 538 domaines ?",
+ r:"Je ne les ai pas devinés, je les ai <b>déduits et tracés</b>. Et j'ai validé la méthode avant de l'appliquer : sur les <b>25 785</b> comptes qui ont à la fois un domaine déclaré et des emails professionnels de contacts, la racine du domaine correspond aux emails dans <b>100 % des cas</b>, zéro divergence.<br><br>Si la correspondance est parfaite quand les deux existent, alors déduire depuis les emails quand le domaine manque est fondé. Je ne déduis que si tous les contacts sont unanimes, et il y a zéro cas ambigu. Chaque déduction porte <b>domain_source=inferred_from_contacts</b> : je ne cache pas l'inférence, je la documente.",
+ qs:[["Pourquoi retirer l'extension ? acme.fr et acme.com peuvent être deux sociétés différentes.","J'ai mesuré avant de trancher : <b>5 547 racines</b> existent en plusieurs extensions dans cette base, et <b>zéro cas</b> où la même racine porte des noms d'entreprise différents. Et par sécurité, la fusion exige <b>aussi</b> l'égalité du nom normalisé : la racine seule ne décide jamais.<br><br>Je l'ai vérifié deux fois par deux chemins qui ne partagent aucune hypothèse : par les noms d'entreprise après normalisation, zéro divergence, et par les emails des contacts rattachés, zéro divergence non plus. Dernier point : aucune racine ne fait moins de six caractères, donc le risque classique de collision sur racine courte ne s'applique pas ici."],
+     ["Et s'il y avait des URL complètes, des sous-domaines, des cas tordus ?","Vérifié, pas supposé : <b>zéro protocole http</b>, un seul préfixe possible (www.), et exactement <b>5 extensions</b>. Le pipeline est défensif : une extension inconnue sortirait dans le rapport au lieu d'être traitée en silence."]]
+},
+{
+ p:"2 · Réparer", t:"Étape 4 : les noms", h:"La deuxième clé, et son banc d'essai", vue:"data",
+ say:"Mon test de validation n'est pas un échantillon. Les 27 329 fiches qui ont un domaine me servent de banc d'essai : si ma normalisation retombe sur la racine du domaine à 100 %, le geste est prouvé.",
+ pb:"La même boîte écrite de plusieurs façons : Talosolmedia, TalosolMedia & Co, Talosolmedia SARL. Et 234 fiches portent une étiquette de doublon dans leur nom : (old), - import, ou un « 2 » collé à la fin.",
+ bareme:[
+  ["Le geste, deux colonnes neuves"],
+  ["1. Normaliser le nom", "name_norm",
+   "minuscules, puis retrait des étiquettes de doublon, puis des mentions juridiques (liste en config), puis de la ponctuation"],
+  ["2. Mémoriser l'étiquette trouvée", "dup_marker",
+   "une fiche marquée (old), - import ou « 2 » ne pourra JAMAIS être la fiche de référence de son groupe"],
+  ["Les deux tests indépendants"],
+  ["Le nom normalisé retombe sur la racine du domaine déclaré", "27 329 / 27 329", "100 %"],
+  ["Et sur les racines déduites des emails à l'étape 3", "2 538 / 2 538", "100 %, second test, autre chemin"],
+  ["Noms normalisés distincts obtenus", "20 519",
+   "exactement la taille de la table entreprises que la fusion produira à l'étape 7. Deux chemins, même nombre"]],
+ body:"La liste des mentions à retirer ne contient pas que SA, SAS et SARL. Elle contient aussi <b>France</b> (2 994 fiches), <b>Group</b> (2 976) et <b>&amp; Co</b> (2 860). Sans ça, Yellodordata SA et YellodorData &amp; Co restent deux entreprises différentes, et on se retrouve avec <b>3 498 faux conflits</b>. 58 % de la base porte l'un de ces suffixes : c'est le détail qui fait tout.",
+ q:"Vous retirez « France » et « SARL » : vous allez fusionner deux filiales différentes.",
+ r:"Dans cette base, c'est mesuré : le nom normalisé coïncide avec la racine du domaine sur <b>100 % des 27 329 fiches vérifiables</b>, et sur <b>100 % des 2 538 racines déduites</b> des emails, qui est un second test indépendant. Les suffixes y sont décoratifs, pas discriminants.<br><br>Derrière, trois garde-fous : une borne de sanité sur le nombre d'entités (entre 19 000 et 22 000), une taille maximale des groupes de doublons (aucun ne dépasse 4 fiches), et le retour arrière, puisque rien n'est supprimé.<br><br>Et je dis la limite : en production réelle, j'ajouterais le pays et le chiffre d'affaires comme témoins avant de fusionner des noms à suffixe géographique. Ici, la mesure dit que c'est sûr."
+},
+{
+ p:"2 · Réparer", t:"Étape 5 : les emails", h:"Réparer sans inventer", vue:"data",
+ say:"1 544 adresses étaient cassées mécaniquement. Je les répare, et je vous dis tout de suite que ça n'a fait gagner aucun compte chaud.",
+ pb:"Un double arobase ou un espace au milieu d'une adresse : elle est invalide, le contact est injoignable, et rien ne le signale. Un email sert à deux choses, joindre quelqu'un et identifier son entreprise. Une adresse cassée casse les deux.",
+ bareme:[
+  ["Le geste, cinq colonnes neuves"],
+  ["1. Réparer, mécaniquement", "email_clean",
+   "retirer un espace, remplacer deux arobases par une. Aucun caractère ajouté, rien d'inventé"],
+  ["2. Étiqueter l'état de l'adresse", "email_status", "ok, repaired, missing ou personal"],
+  ["3. Extraire la racine de l'adresse", "email_domain_root", "c'est le témoin de rattachement à la fusion"],
+  ["4 et 5. Repérer la même personne en double", "email_is_duplicate",
+   "une adresse portée par plusieurs fiches contact, c'est UNE personne : interdit de la compter deux fois dans un comité d'achat"],
+  ["Le résultat"],
+  ["Adresses réparées", "1 544", "769 doubles arobases et 775 espaces, au compte exact"],
+  ["Adresses encore invalides après réparation", "0", "c'est LE contrôle qui prouve quelque chose"],
+  ["Adresses partagées par plusieurs fiches", "783", "1 940 porteurs, dont 1 157 copies excédentaires"]],
+ body:"Le détail que je garde pour la fin : la réparation a <b>révélé un doublon invisible avant</b>. Une adresse cassée qui, une fois réparée, devient identique à celle d'un autre contact. C'est pour ça que la déduplication des personnes vient <b>après</b> le nettoyage, jamais avant.",
+ q:"À quoi ça sert de réparer des emails si ça ne change aucun score ?",
+ r:"À trois choses.<br><br><b>Un, la joignabilité</b> : le jour où un commercial écrit à un compte, l'adresse doit marcher.<br><b>Deux, la fusion</b> : le domaine de l'email est mon témoin de rattachement.<br><b>Trois, le comité d'achat</b> : 783 adresses sont portées par plusieurs fiches contact. La même personne comptée deux fois fabrique un faux groupe de 4 contacts actifs qui n'en sont que 2.<br><br>Et je le dis franchement : cette étape n'a fait gagner <b>aucun compte chaud</b>. C'est de l'assainissement, pas de la récupération de rappel.",
+ qs:[["Donc les comptes prioritaires sont tous joignables par email ?","Non, et c'est une nuance que je préfère donner moi-même. <b>3 des comptes prioritaires</b> restent injoignables par email : un sans adresse, deux en adresse personnelle. Ça ne change pas leur score, <b>ça change le canal</b> : téléphone ou LinkedIn.<br><br>Attention à ne pas confondre avec un autre chiffre que je donne plus loin : <b>4 comptes joignables uniquement par téléphone</b>. Celui-là compte en plus l'interdiction d'écrire à une personne désabonnée, dont l'adresse fonctionne pourtant. Deux définitions, deux chiffres, les deux vrais."]]
+},
+{
+ p:"2 · Réparer", t:"Étape 6 : les dates impossibles", h:"On ne corrige pas une date fausse, on la neutralise", vue:"ops",
+ say:"Une date fausse ne doit jamais entrer dans un calcul. Une case vide assumée vaut toujours mieux qu'un chiffre faux qui entre en silence.",
+ pb:"6 321 contacts sont créés dans le futur, jusqu'en novembre 2027. Une date de création postérieure à aujourd'hui fausse tout calcul d'ancienneté. Mais on ne peut pas deviner la vraie : la corriger, ce serait inventer une donnée.",
+ bareme:[
+  ["Le principe, et sa limite"],
+  ["On ne corrige jamais", "", "la vraie valeur est inconnaissable, l'inventer serait pire que le trou"],
+  ["On neutralise", "date vidée", "la date convertie est vidée, donc elle n'entre plus dans aucun calcul"],
+  ["On trace", "un drapeau", "la date d'origine reste visible, personne ne peut la prendre pour vraie"],
+  ["On ne touche jamais aux événements", "", "c'est la fiabilité de la DATE qui est jugée, pas l'activité du contact"],
+  ["Ce qui a été trouvé"],
+  ["Contacts créés dans le futur", "6 321", "neutralisés"],
+  ["Contacts ayant REÇU des emails avant leur création", "414", "impossible, donc date corrompue"],
+  ["Contacts avec seulement des visites avant création", "20", "attribution rétroactive plausible, bénéfice du doute"],
+  ["Comptes à dernière activité dans le futur", "3", "neutralisés aussi"]],
+ body:"La distinction entre les 414 et les 20 n'était pas dans ma première version. Elle est née d'une question posée pendant la revue : <b>et si c'était juste de l'attribution rétroactive ?</b> J'ai vérifié sur les données, et la réponse dépend du type d'événement. C'est pour ça que les deux cas ne sont plus traités pareil.",
+ q:"Des événements avant la création du contact, c'est peut-être juste de l'attribution rétroactive, non ?",
+ r:"Exact, et pour les visites web c'est même plausible : l'outil rattache rétroactivement les visites anonymes après un formulaire. J'ai séparé ces cas, <b>20 contacts</b>, bénéfice du doute.<br><br>Mais <b>414 sur 434</b> ont <b>reçu des emails</b> avant leur date de création. On ne peut pas recevoir rétroactivement un email. Ceux-là, c'est de la date corrompue.<br><br>Et dans les deux cas, je ne déclasse que <b>la date</b>, jamais les événements : la récence du scoring vient des événements, pas de ce champ."
+},
+{
+ p:"3 · Reconstruire", t:"Étape 7 : la fusion", court:true, h:"30 000 fiches, 20 519 entreprises", vue:"data",
+ say:"2 808 entreprises, soit 20,8 % des comptes actifs, ont leurs signaux éclatés sur plusieurs fiches. Trois d'entre elles ne passent le seuil qu'après fusion. Sans cette étape, elles restent trois fiches tièdes.",
+ pb:"Sans table des entreprises, un commercial appelle deux fois la même boîte, le chiffre d'affaires est compté deux fois, et l'activité reste éclatée sur trois fiches qui semblent toutes tièdes. C'est la table que ce CRM n'a jamais eue.",
+ bareme:[
+  ["Reconnaître un doublon : trois clés, jamais une seule"],
+  ["Clé 1, la racine du domaine", "99,6 % du CRM", "produite à l'étape 3, déductions incluses et tracées"],
+  ["Clé 2, le nom normalisé", "20 519 distincts", "produite à l'étape 4, elle couvre les 133 fiches sans racine"],
+  ["Clé 3, le domaine des emails des contacts", "témoin", "le vivant contrôle le déclaratif"],
+  ["Égalité exigée", "exacte", "garde-fou réel : Roccaviaforge n'est pas Roccaviafood"],
+  ["Élire la fiche de référence : une cascade, dans cet ordre"],
+  ["1. Jamais une fiche étiquetée (old), - import ou « 2 »", "critère d'exclusion", "elle est écartée avant tout le reste"],
+  ["2. Le statut le plus avancé", "client, ex-client, négo, prospect, lead, perdu", "dans cet ordre"],
+  ["3. À égalité, celle qui porte le chiffre d'affaires", "", ""],
+  ["4. Encore à égalité, la plus ancienne", "", ""]],
+ kpi:[["20 519","entreprises réelles"],["9 481","fiches absorbées, aucune supprimée"],
+      ["52,0 M€","d'ARR actif, sur 3 246 clients"],["14,6 M€","d'ARR ex-client, sur 2 094 churnés"]],
+ body:"<b>Les conflits ne sont jamais tranchés en silence.</b> 5 947 sur le pays, 251 sur le chiffre d'affaires, 5 067 sur le commercial, 6 858 sur le statut : chacun porte un drapeau et part en revue. Les cases vides se complètent depuis les fiches jumelles, avec la provenance écrite dans une colonne.<br><br>Deux pièges vérifiés nommément dans la table. <b>Grimodormobility</b> : un client à 40 000 € qui se réveille, donc de l'expansion, plus jamais de la prospection à froid. <b>BelfonexMedia</b> : trois fiches recollées, dont celle étiquetée « perdue » qui portait le formulaire.",
+ q:"Comment vous savez que vous n'avez pas fusionné deux entreprises différentes ?",
+ r:"Pas parce que ma clé est bonne. Parce que <b>deux clés indépendantes donnent la même partition, fiche par fiche, zéro écart sur 20 519 groupes</b>. L'une part du nom normalisé, l'autre du domaine et des emails des contacts : elles ne partagent aucune hypothèse.<br><br>Derrière, quatre contrôles :<br>• aucun groupe au-dessus de <b>4 fiches</b><br>• chaque fiche dans exactement <b>une</b> entité<br>• un équilibre arithmétique qui surveille la seule dépendance cachée de la clé : <b>20 753 moins 234 égale 20 519</b><br>• une corroboration : chaque fusion déclenchée par une étiquette de doublon a une seconde preuve indépendante, <b>234 sur 234</b><br><br>Et tout est réversible : chaque doublon garde un lien vers sa fiche de référence, rien n'est supprimé.",
+ qs:[["Et les fusions en chaîne ? A ressemble à B, B ressemble à C, et vous fusionnez A avec C sans preuve directe.","Structurellement absentes avec ma clé, parce que l'égalité exigée est exacte, pas approchante. Et ça a été stress-testé indépendamment par la seconde implémentation : <b>zéro faux positif</b>. La seule dépendance qui existe, le retrait des étiquettes de doublon, est sous contrôle automatique."],
+     ["Un ex-client élu fiche de référence alors qu'une négociation est en cours, vous enterrez le deal.","L'étiquette ne décide de rien. Le routage lit <b>deux colonnes de faits</b>, a-t-il été client et y a-t-il un deal en cours, jamais le statut affiché. Et les <b>80 cas exacts</b> où ça se produit partent dans une liste d'arbitrage dédiée. Sur un champ que votre propre brief déclare peu fiable, je neutralise le problème au lieu de le trancher en silence."],
+     ["Votre chiffre d'affaires consolidé, il vaut combien ?","À l'euro près, et je le publie en <b>deux lignes</b> : <b>52,0 M€ d'ARR actif</b> sur 3 246 clients, et <b>14,6 M€ d'ARR ex-client</b> sur 2 094 churnés, qui dimensionne le pool de reconquête et ne se facture pas.<br><br>Les additionner, c'est le piège que j'ai trouvé dans la base de départ : <b>100 % des churnés y gardent leur chiffre d'affaires</b>, donc 21,9 % du total est fantôme. La séparation est verrouillée par trois contrôles, pas seulement documentée. Et la vérité comptable ne vit pas dans le CRM : elle vit dans la facturation, synchronisée en lecture seule."]]
+},
+{
+ p:"3 · Reconstruire", t:"Étape 8 : le ré-attachement", h:"Fusionner sans ré-attacher ne sert à rien", vue:"data",
+ say:"C'est ici que les signaux se recollent. Un tiers des événements change de maison.",
+ pb:"La table des entreprises ne vaut rien si les contacts et les événements restent accrochés aux anciennes fiches. Un formulaire posé sur une fiche doublon est un signal qui compte pour une entreprise qui n'existe pas.",
+ bareme:[
+  ["Ce qui a bougé"],
+  ["Contacts rattachés par leur compte", "76 599", ""],
+  ["Contacts orphelins récupérés par le domaine de leur email", "547", "même geste et même prudence qu'à l'étape 3 : unanimité exigée"],
+  ["Vrais inconnus, mis de côté", "53", "aucun événement : ils partent dans une liste de comptes à créer, pas rangés au hasard"],
+  ["Événements rattachés", "90 838", "plus 4 000 anonymes conservés tels quels : on retombe sur 94 838"],
+  ["Événements qui changent d'entreprise", "29 184", "32,1 % du total : c'est la mesure de ce que la fusion a réparé"],
+  ["Doublons de personnes signalés", "105", "99 par la clé email, 6 par la clé nom"]],
+ body:"<b>Le moment qui prouve que la surveillance sert à quelque chose.</b> J'attendais 97 doublons de personnes. Le pipeline en a trouvé 99, et c'est une alarme du filet de contrôles qui a signalé l'écart, pas moi. Explication : <b>le ré-attachement lui-même a révélé 2 doublons</b> qui étaient invisibles avant, parce que les deux fiches ne vivaient pas encore dans la même entreprise. L'écart a été expliqué, puis verrouillé.<br><br>Au passage, 11 contacts ont récupéré un titre depuis leur copie, dont un directeur des ressources humaines qui était sans fonction connue. Il repasse de multiplicateur 0,5 à multiplicateur 1 dans le comité d'achat.",
+ q:"32 % des événements changent de compte, ça ne vous inquiète pas ?",
+ r:"Au contraire, c'est exactement ce que j'allais mesurer. Ces <b>29 184</b> événements étaient rattachés à des fiches doublons : ils existaient, mais ils comptaient pour une entreprise qui n'existe pas. Les recoller, c'est la moitié du travail de détection.<br><br>Et rien n'a été perdu : <b>90 838 rattachés plus 4 000 anonymes conservés font 94 838</b>, le compte exact du fichier de départ."
+},
+{
+ p:"4 · Assainir et classer", t:"Étape 9 : les doublons d'événements", h:"Trois ouvertures du même email ne font pas trois signaux", vue:"ops",
+ say:"Sans cette étape, les comptes les plus arrosés par le marketing paraissent les plus engagés. Et je flague, je ne supprime pas.",
+ pb:"Un même envoi ouvert trois fois dans la journée gonfle le score d'un compte qui n'a rien fait de plus qu'un autre. C'est du bruit de pixel de tracking, pas de l'intérêt.",
+ bareme:[
+  ["La clé de doublon, et pourquoi elle est stricte"],
+  ["Même contact", "", ""],
+  ["Même type d'événement", "", ""],
+  ["Même campagne", "", ""],
+  ["Même PAGE", "indispensable",
+   "sans la page dans la clé, quelqu'un qui visite les tarifs puis la démo le même jour perd la moitié de son parcours"],
+  ["Même jour", "", "la première occurrence est conservée, les suivantes sont signalées"],
+  ["Le résultat"],
+  ["Lignes signalées comme doublons", "1 988", "réparties en 1 860 groupes"],
+  ["Dont des ouvertures d'email", "88 %", "c'est bien du bruit de tracking"],
+  ["Conversions touchées", "0", "aucun rendez-vous, aucun formulaire"],
+  ["Événements supprimés", "0", "signalés seulement"]],
+ body:"Les <b>4 000 visites anonymes ne sont pas touchées</b>, et ce n'est pas un oubli : c'est chiffré. Leur appliquer la même clé supprimerait <b>2 872 lignes à tort</b>, parce que deux visiteurs différents peuvent voir la même page le même jour sans être la même personne. Une règle juste sur une population peut être fausse sur l'autre.",
+ q:"Vous supprimez des événements ?",
+ r:"Jamais. Ils sont <b>signalés</b>, pas retirés : le scoring les ignore, le fichier les garde. Si la règle se révèle mauvaise, on l'annule sans avoir rien perdu. C'est la règle du chantier entier : rien n'est jamais supprimé ni écrasé."
+},
+{
+ p:"4 · Assainir et classer", t:"Étape 10 : le robot", court:true, h:"Ce n'est pas le volume qui trahit, c'est le chronomètre", vue:"data",
+ say:"C'est une horloge, pas un humain. Et je le flague, je ne le supprime pas : un scanner de sécurité est une information sur le compte.",
+ pb:"Un contact porte 420 événements. C'est le contact le plus actif de toute la base, et n'importe quel scoring naïf met son compte en tête de la liste d'appels. Un commercial aurait passé le coup de fil.",
+ bareme:[
+  ["Ce qui trahit la machine"],
+  ["Délai médian entre l'envoi et l'ouverture", "4 secondes", "et le motif : plus 2, plus 4, plus 6 secondes, soixante fois de suite"],
+  ["Le même délai chez l'humain le plus actif de la base", "23,4 heures", "il n'est pas signalé, et il fait sept fois moins d'événements"],
+  ["Pages du site vues par le robot", "0", "il ouvre et il clique, il ne visite rien"],
+  ["Événements neutralisés", "420", "signalés from_bot, pas supprimés"],
+  ["Deux précisions de méthode qui comptent"],
+  ["La détection tourne sur le flux BRUT", "avant la dédup",
+   "la déduplication efface justement le motif mécanique : trois ouvertures plus trois clics deviennent un plus un"],
+  ["La définition est verrouillée", "médiane ≤ 60 s",
+   "délai entre une ouverture et le dernier envoi antérieur de la même campagne"]],
+ body:"<b>La leçon que je raconte volontiers.</b> Trois façons différentes d'apparier les envois et les ouvertures donnaient trois chiffres pour le même humain témoin : 3,9 heures, 23,4 heures, 64,8 heures. Aucun n'était faux, ils ne mesuraient pas la même chose. Une métrique sans sa définition n'est pas un chiffre : c'est pour ça que la définition est écrite dans la configuration, à côté du seuil.",
+ q:"Et si un humain très réactif se faisait attraper ?",
+ r:"Il faudrait qu'il ouvre en moins d'une minute, en médiane, sur au moins cinq emails. Sur cette base, le contact humain le plus actif est à <b>23,4 heures</b>. L'écart n'est pas serré, il y a un facteur <b>21 000</b> entre les deux.<br><br>Et même si ça arrivait : je flague, je ne supprime pas. La ligne reste dans le fichier, le drapeau se retire en une exécution."
+},
+{
+ p:"4 · Assainir et classer", t:"Étape 11 : la segmentation", h:"On ne prospecte pas un client, on ne relance pas un mort", vue:"data",
+ say:"Avant de scorer, je sais qui est quoi. Et ma liste d'appels traverse les segments : c'est le play qui change, pas la liste.",
+ pb:"Un client actif et un prospect froid peuvent porter le même score d'engagement. Ce n'est pas le même appel, pas le même interlocuteur, pas la même séquence. Scorer avant de savoir à qui on parle produit des appels absurdes.",
+ bareme:[
+  ["Onze états factuels, partition complète 20 519 sur 20 519"],
+  ["Clients actifs", "3 037", "fidélisation"],
+  ["Renouvellements déjà échus", "209", "risque, à traiter en premier"],
+  ["Churns contradictoires", "36", "audit : ex-clients qui portent un renouvellement futur"],
+  ["Ex-clients réactifs", "870", "reconquête"],
+  ["Ex-clients silencieux", "1 188", "reconquête froide"],
+  ["Prospects chauds", "22", "le cœur de la liste d'appels"],
+  ["Prospects tièdes", "5 232", "à travailler"],
+  ["Perdus qui redonnent signe", "769", "réactivation"],
+  ["Email seulement, morts, dormants", "3 763 · 3 474 · 1 919", "les dormants sortent du champ déclaré du CRM, signalés comme tels"]],
+ body:"Ces onze états se traduisent en <b>9 plays</b>, qui sont des actions commerciales, pas des étiquettes. Le champ « mort » déclaré dans le CRM n'est utilisé qu'en dernier recours, et chaque ligne dans ce cas porte la mention <b>segment_evidence=declared_field</b> : le champ est disqualifié, son usage est assumé et visible.",
+ q:"Pourquoi une seule liste d'appels et pas une par segment ?",
+ r:"Parce que la mesure m'a montré le contraire de ce que j'avais prévu. Il y a bien <b>22 prospects chauds</b>, mais aussi <b>3 entreprises tout aussi chaudes qui vivent chez les clients actifs et les ex-clients réactifs</b>. Une liste par segment les aurait laissées de côté.<br><br>Donc la liste est <b>unique, tous segments confondus</b>, avec une colonne play. Le segment ne décide pas de l'entrée dans la liste, il décide de <b>ce qu'on dit</b> en appelant. Les files par segment existent, mais ce sont des vues.",
+ qs:[["Deux de vos pièges disparaissent tout seuls avec cette étape, non ?","Oui, et c'est voulu. Le robot tombe en « email seulement » parce qu'il ne lui reste que 3 événements humains. Et un ex-client résilié ne peut jamais devenir prospect chaud, par construction de la cascade.<br><br>Je signale quand même la fragilité : cette deuxième garantie devient <b>paramétrique</b>, elle dépend des poids négatifs. Elle est donc surveillée sur le paramètre, parce que 14 événements sur 94 838 font une dérive statistiquement invisible."]]
+},
+{
+ p:"4 · Assainir et classer", t:"Étape 12 : l'audit", h:"Ce que je remonte de moi-même", vue:"ops",
+ say:"Chaque décision de nettoyage est auditable poste par poste. Et chaque euro écarté a sa raison, verrouillée par un contrôle.",
+ pb:"Un rapport écrit à la main devient faux dès la première correction. Celui-là est produit par le code à chaque exécution, à partir des fichiers : il ne peut pas mentir sur un état ancien.",
+ bareme:[
+  ["Ce que je remonte sans qu'on me le demande"],
+  ["Emails partis vers des gens qui avaient demandé à ne plus être contactés", "2 015",
+   "1 107 personnes concernées : c'est un risque de conformité, pas un sujet de performance"],
+  ["Emails partis vers des adresses incapables de les recevoir", "1 607",
+   "912 contacts sans aucune adresse : le processus d'envoi est cassé"],
+  ["Paires contact et campagne qui reçoivent le même envoi 2 à 7 fois", "1 976", ""],
+  ["Les 3 025 000 € de chiffre d'affaires écartés, poste par poste"],
+  ["Conflits entre deux fiches clientes", "1 420 000 €", "89 groupes : le sous-total le plus discutable, donc le premier que je donne"],
+  ["Ex-clients absorbés sous une fiche cliente", "1 081 000 €", ""],
+  ["Doublons d'ex-clients entre eux", "356 000 €", ""],
+  ["Doublons portant le même montant", "168 000 €", ""],
+  ["Ce que la règle coûte, et je le dis", "616 000 €",
+   "garder « le contrat le plus tardif » affiche 616 000 € de MOINS qu'une règle « le montant le plus élevé ». On suit le contrat en cours, on ne gonfle pas"]],
+ body:"Le rapport ouvre sur un <b>avant et après</b> : 30 000 fiches devenues 20 519 entreprises, le chiffre d'affaires en deux lignes, les segments, les pièges neutralisés. Puis chaque règle avec son volume touché, ses exemples, et ce qu'elle n'a pas résolu. <b>Zéro ligne supprimée</b> sur les trois fichiers reçus.",
+ q:"Personne ne vous demandait de chercher des problèmes de conformité.",
+ r:"Non. Mais quelqu'un qui nettoie un CRM, qui voit <b>2 015</b> emails partis vers des gens ayant demandé à ne plus être contactés, et qui ne le dit pas, a mal fait son travail. Ce n'est pas dans la grille de notation de l'exercice, c'est dans celle du métier.",
+ qs:[["Comment vous savez que votre nettoyage n'a rien cassé ailleurs ?","<b>95 contrôles</b> tournent à chaque exécution : conservation des lignes, cohérence, bornes de sanité, non-régression sur les pièges. Toutes les familles sont armées. Un seul au rouge et le pipeline refuse de continuer. Si une règle casse quelque chose à l'autre bout de la base, je le sais avant même de regarder la liste d'appels."],
+     ["Comment vous garantissez que vos règles sont vraiment appliquées, et pas seulement écrites ?","Chaque décision a une ligne dans une table : la règle, où elle est implémentée, et le contrôle qui prouve qu'elle tourne. Aujourd'hui <b>18 règles sur 28</b> sont garanties par un contrôle automatique, 10 s'armeront avec le scoring, et une ligne sans contrôle s'affiche en rouge.<br><br>Cette table est née d'un vrai bug : une règle actée, documentée, jamais implémentée, avec les 88 contrôles de l'époque tous au vert. Le code faisait exactement ce qui était écrit ; c'est ce qui était écrit qui ne disait pas ce qu'on avait décidé. D'où le verrou : <b>un statut ne se déclare pas, il se constate</b>."]]
+},
+{
+ p:"5 · Scorer", phase:"5", t:"— Scorer —", h:"Scorer",
+ say:"Le CRM est propre. Maintenant il faut sortir les comptes qui valent un appel, et pouvoir expliquer chaque point."
+},
+{
+ p:"5 · Scorer", t:"Ce que « chaud » veut dire", h:"On n'entre pas en Tier 1 aux points, on y entre par une preuve", court:true,
+ say:"La note dit qui appeler en premier. La porte dit pourquoi il est dans la liste. Ce ne sont pas les mêmes objets, et c'est toute la différence avec un classement.",
+ bareme:[
+  ["Deux portes, et il n'en existe pas de troisième"],
+  ["Porte 1, une demande explicite", "25 comptes",
+   "un rendez-vous ou un formulaire dans les 45 derniers jours. Aucun calcul nécessaire : 45 jours sans qu'on l'ait rappelé, ça n'arrive pas"],
+  ["Porte 2, un comité qui s'agite", "1 compte",
+   "au moins 3 personnes distinctes actives sur 14 jours, dont un décideur, sans aucune demande"],
+  ["Porte 3, l'accumulation de points", "0 compte",
+   "elle existe en garde-fou, elle ne se déclenche jamais sur ce fichier. Je le dis plutôt que de le cacher"]],
+ pb:"Un classement par points rate le compte où trois personnes s'agitent sans jamais remplir un formulaire. Et il fait passer devant un compte qui a beaucoup cliqué sans intention. Le volume et l'intention ne sont pas la même chose.",
+ body:"Pourquoi des portes et pas un seuil, en deux raisons.<br><br><b>Un</b> : bougez tous mes poids de plus ou moins 30 %, la liste Tier 1 ne change pas. Elle n'est pas faite de points, elle est faite de faits.<br><b>Deux</b> : chaque compte de la liste s'explique en une phrase à un commercial. Pas « il a 42 points », mais « le 17 juillet, cette personne a réservé une démo ».<br><br>Une décision B2B est collective : 3 personnes en 2 semaines, c'est un comité qui bouge ; 3 personnes en 3 ans, c'est du hasard. C'est pour ça que la fenêtre du comité est courte et ancrée.",
+ q:"Pourquoi pas simplement un seuil de points ?",
+ r:"Parce qu'un seuil de points ne sait pas faire la différence entre l'intention et le volume. Les deux portes sont <b>sémantiques</b> : elles décrivent ce qui s'est passé, pas combien ça pèse.<br><br>Et c'est ce qui rend le résultat robuste : le test de sensibilité fera varier tous les poids de plus ou moins 30 %, et l'appartenance au Tier 1 ne devra pas bouger. Je précise que ce test est <b>prévu</b>, pas encore exécuté."
+},
+{
+ p:"5 · Scorer", t:"Le barème", h:"Ce qui monte, ce qui descend", court:true,
+ say:"Chaque signal a un poids déclaré, avec sa raison. Rien n'est appris, rien n'est optimisé : ce sont des choix qu'on peut me reprocher un par un.",
+ bareme:[
+  ["Les preuves : plein poids, quel que soit le porteur"],
+  ["Rendez-vous pris", 40, "il demande à nous parler"],
+  ["Formulaire rempli", 35, "il se déclare, c'est nous qui rappelons"],
+  ["Les gestes : pondérés par qui les fait"],
+  ["Visite /pricing ou /demo", 10, "il regarde les prix"],
+  ["Clic dans un email", 8, "l'ouverture ne prouve rien, le clic si"],
+  ["Commentaire LinkedIn", 6, "écrire coûte : trois fois le pouce"],
+  ["Page produit ou intégrations", 4, "il étudie l'offre"],
+  ["Like LinkedIn", 2, "un pouce, une seconde"],
+  ["Ouverture d'email", 0, "un pixel : la moitié des ouvertures mondiales sont du préchargement"],
+  ["Email envoyé", 0, "notre activité, pas la sienne"],
+  ["Ce qui fait descendre"],
+  ["Page de résiliation", -15, "il cherche la porte"],
+  ["Export de ses données", -15, "il récupère ses données pour partir"],
+  ["Consultation de facture", 0, "chercher sa facture n'est pas partir"],
+  ["Page carrières", 0, "des candidats, pas des prospects"]],
+ pb:"Un barème appris sur les données colle aux données. Ici chaque poids est un choix défendable, et le jour où il est faux, il se change dans un fichier de configuration : pas dans le code.",
+ q:"Pourquoi l'ouverture d'email vaut zéro ?",
+ r:"Parce qu'elle ne prouve rien. La moitié des ouvertures mondiales sont déclenchées par un préchargement automatique, pas par un humain. Le clic, lui, demande un geste. C'est aussi le piège classique du scoring naïf : compter les ouvertures met en tête les comptes les plus arrosés par les campagnes, pas les plus intéressés."
+},
+{
+ p:"5 · Scorer", t:"Qui fait le geste", h:"Les 9 rendez-vous ont tous été pris par un non-décideur", court:true,
+ say:"Un geste ne vaut pas la même chose selon qui le fait. Mais une preuve, si, et c'est ce qui m'a évité de me tirer une balle dans le pied.",
+ bareme:[
+  ["Le multiplicateur, sur les GESTES uniquement"],
+  ["Décideur", "×1,0", "celui qui achète le module"],
+  ["Champion", "×0,8", "celui qui peut porter le sujet en interne"],
+  ["Utilisateur", "×0,6", "celui qui s'en servira"],
+  ["Sans titre connu", "×0,5", "on ne punit pas un trou de données"],
+  ["Bruit", "×0", "stagiaire, candidat, assistant de direction"],
+  ["Les preuves ne sont JAMAIS pondérées"],
+  ["Rendez-vous et formulaire", "×1,0", "plein poids, quel que soit celui qui l'a fait, et un contrôle le vérifie à chaque exécution"],
+  ["Mon périmètre de décideurs suit le PRODUIT, pas l'ancienneté"],
+  ["Module recrutement", "Head of Talent Acquisition", "c'est lui qui achète un logiciel de recrutement"],
+  ["Module performance", "CHRO · CPO · Head of People · VP People", ""],
+  ["Module paie et SIRH", "DRH · HR Director · VP HR · Head of HR Operations",
+   "c'est le responsable des opérations RH qui possède les systèmes : sur un achat SIRH, il mène la sélection, le CHRO signe"],
+  ["Transverse", "CEO · COO", ""],
+  ["Total du périmètre", "16 562 contacts",
+   "et deux périmètres construits sans hypothèse commune, l'un par séniorité, l'autre par produit, tombent sur exactement le même ensemble"]],
+ kpi:[["9 / 9","des rendez-vous pris par quelqu'un qui n'est pas décideur"],
+      ["13 / 16","des formulaires remplis par un décideur, 3 par un champion"],
+      ["16 562","décideurs · 19 705 champions · 25 576 utilisateurs · 10 802 bruit · 4 554 sans titre"]],
+ pb:"Si le multiplicateur s'appliquait aux preuves, je décotais cent pour cent des rendez-vous de l'exercice. Le décideur déclare l'intention, l'opérationnel organise la logistique.",
+ q:"Donc un stagiaire qui réserve un rendez-vous compte moins ?",
+ r:"Non. <b>Un rendez-vous pris est un rendez-vous pris</b> : c'est un fait, pas une opinion pondérée. L'entreprise a engagé du temps commercial, peu importe qui a cliqué sur le créneau.<br><br>Le multiplicateur ne touche que les <b>gestes</b> : un clic, une visite, un like. Et la mesure renforce l'argument au lieu de l'affaiblir : sur les 16 formulaires, <b>13 sont remplis par des décideurs</b>. Sur les 9 rendez-vous, <b>zéro décideur</b>. Le décideur déclare, l'opérationnel prend le créneau. Pondérer les preuves aurait effacé la totalité des rendez-vous.",
+ qs:[["Pourquoi ce périmètre de décideurs et pas un autre ?","Parce qu'il suit le <b>produit</b>, pas la séniorité. Cette entreprise vend trois modules, et chaque acheteur a une raison : le recrutement s'achète par un responsable acquisition de talents, la performance par un CHRO ou un responsable des ressources humaines, la paie et le SIRH par une direction RH ou un responsable des opérations RH, parce que c'est lui qui possède les systèmes.<br><br>Un directeur financier est un décideur dans l'absolu ; il n'achète aucun de ces trois modules. Chaque titre inclus a une raison produit, chaque titre exclu aussi. Et le périmètre vit en configuration : le jour où la gamme change, il change en une ligne."],
+     ["Et un Head of Communication, par exemple ?","Il n'existe pas dans cette base, je l'ai vérifié. Et même s'il existait, il n'achète aucun des trois modules. Ce n'est pas un oubli, c'est une exclusion motivée."]]
+},
+{
+ p:"5 · Scorer", t:"Le temps efface", h:"Un clic d'il y a deux mois n'est pas un clic d'hier", courbe:true,
+ say:"Un geste s'évapore, une preuve se travaille. Une démo, ça ne meurt pas tout seul.",
+ pb:"Sans décroissance, un compte actif il y a trois mois reste devant un compte actif hier. Un dirigeant peut parcourir tout le site un soir et ne plus rien faire : sans décroissance, il reste en tête de liste pour toujours.",
+ bareme:[
+  ["Deux vitesses, parce que deux choses différentes"],
+  ["Un geste : clic, visite, like, commentaire", "demi-vie 10 jours",
+   "une intention qu'on ne relance pas retombe en deux semaines"],
+  ["Une preuve : rendez-vous, formulaire", "demi-vie 30 jours",
+   "une demande de démo se travaille pendant un mois, elle ne s'éteint pas comme un clic"],
+  ["Le plancher", "25 % pendant 21 jours",
+   "aucun signal de moins de trois semaines ne descend sous le quart de sa valeur"],
+  ["Le calcul, en clair, sur un cas réel"],
+  ["Un clic dans un email", "8 points", "le poids de base du geste"],
+  ["Fait par un champion", "×0,8", "le multiplicateur du porteur"],
+  ["Il y a 10 jours, soit une demi-vie", "×0,5", "la décroissance"],
+  ["Ce que la ligne pèse aujourd'hui", "3,2 points", "8 × 0,8 × 0,5 : le calcul se refait de tête, ligne par ligne, dans la vue Logique"]],
+ body:"Conséquence directe, et c'est voulu : <b>un Tier 1 silencieux redescend tout seul</b>. Personne n'a besoin de nettoyer la liste à la main, elle se vide d'elle-même si le compte cesse de bouger.",
+ q:"Vous avez choisi ces demi-vies comment ?",
+ r:"À la main, et je l'assume : ce sont des valeurs <b>argumentées</b>, pas optimisées. Dix jours pour un geste parce qu'une intention non relancée retombe en deux semaines. Trente pour une preuve parce qu'une demande de démo se travaille pendant un mois.<br><br>Je n'ai pas pu les apprendre : il n'y a dans ce CRM ni table d'opportunités, ni historique de statut, donc <b>aucun deal gagné sur lequel calibrer</b>. Tout poids ici est raisonné, aucun n'est appris. Je préfère le dire avant qu'on me le demande. Et elles se changent dans un fichier de configuration si l'expérience les dément."
+},
+{
+ p:"5 · Scorer", t:"Le double étage", h:"On score des personnes, on appelle des entreprises", court:true, vue:"logic",
+ say:"Le score d'un compte n'existe pas en soi. Il est la somme de ce que ses personnes ont fait, chacune avec son poids.",
+ pb:"Faire une moyenne dilue : quatre passifs écrasent un actif, et le compte où une seule personne s'agite vraiment disparaît derrière trois comptes tièdes.",
+ body:"Chaque personne a son score, calculé événement par événement. Le compte est <b>la somme</b>, jamais la moyenne. C'est ce qui rend le score démontable à l'écran : on voit qui a fait quoi, quel jour, et combien ça pèse, <b>35 × 1,00 × 0,933 = 32,7</b>. Un score qu'on peut refaire de tête devant quelqu'un n'est plus un score, c'est une démonstration.",
+ q:"Pourquoi une somme et pas une moyenne ?",
+ r:"Parce qu'une moyenne punit les comptes où beaucoup de monde est inscrit mais où une seule personne bouge. Or c'est souvent celle-là qui compte. La somme récompense l'activité réelle ; le nombre de personnes actives est traité séparément, par la porte du comité."
+},
+{
+ p:"5 · Scorer", t:"La deuxième porte", h:"Zéro point, et pourtant le plus urgent", court:true, vue:"logic",
+ say:"Cette boîte est dans ma liste, mais pas comme prospect. Mon système a vu que c'était un départ en cours, et il dit appel de rétention, pas de vente. Je n'ai pas ignoré le piège, je l'ai transformé en action utile.",
+ pb:"Un ex-client dont quatre personnes visitent les pages « résilier mon abonnement » et « exporter mes données » sur quatorze jours. Ses visites négatives le plombent à moins 76 avant plancher. Un filtre sur le score ne le verra jamais, et un scoring naïf le classe chaud : un commercial appelle pour VENDRE à une boîte qui PART.",
+ bareme:[
+  ["L'histoire en quatre lignes"],
+  ["Son score final", "0,0", "les pages de sortie annulent tout ce qu'il a accumulé"],
+  ["Personnes actives sur 14 jours", "4", "dont un décideur : la porte du comité se déclenche"],
+  ["Ce que le système en fait", "file risque", "pas la file prospection"],
+  ["Comptes que seule cette porte fait remonter", "1 sur 20 519", "et c'est celui-là"]],
+ body:"C'est la preuve vivante que les portes ne sont pas des points. Un scoring à seuil l'aurait enterré à zéro. La porte du comité le rattrape sur un <b>fait</b> : quatre personnes de la même boîte, en deux semaines, dont un décideur.<br><br>Et la fiche ne dit pas seulement « chaud ». Elle dit <b>quoi faire</b> : appel de rétention. Le play compte autant que le score.",
+ q:"Un seul compte, ça valait le coup de coder une deuxième porte ?",
+ r:"Si cette porte n'existait pas, ce compte serait dans les vingt mille froids. Un ex-client qui exporte ses données pendant que quatre personnes regardent comment résilier, c'est exactement le coup de fil qu'on regrette de ne pas avoir passé.<br><br>Le nombre n'est pas l'argument. L'argument, c'est qu'<b>aucun score ne pouvait le trouver</b> : son score est nul par construction, puisque ses signaux sont négatifs."
+},
+{
+ p:"5 · Scorer", t:"Le désabonnement", h:"Le désabonnement change le canal, pas la chaleur", court:true,
+ say:"Un opt-out interdit d'écrire. Il ne dit pas que la personne est fermée à l'offre. Fermer un canal, ce n'est pas fermer la porte.",
+ pb:"La proposition sur la table était de retirer 20 points à un compte qui compte des désabonnés. Elle décotait le compte le plus évident du fichier : son rendez-vous du 17 juillet avait été pris par une personne désinscrite. Une règle de bon sens qui détruit le meilleur signal de la base.",
+ bareme:[
+  ["La règle finale, en trois cas"],
+  ["Un client dont des contacts se sont désabonnés", "aucun impact",
+   "il en a assez de la newsletter, il n'a pas résilié son contrat"],
+  ["Un prospect désabonné, mais d'autres preuves vivantes", "plein poids",
+   "les signaux comptent normalement, seul le play change : appel ou LinkedIn au lieu de l'email"],
+  ["Jamais client, plus rien qui vit, aucun contact joignable", "perdu, canal mort",
+   "environ 9 comptes, montrés à part, hors des files de travail"],
+  ["Ce que la mesure a dit"],
+  ["Comptes concernés par un désabonnement examinés un par un", "118",
+   "98 % n'ont qu'un seul cliqueur, et 51 gardent un décideur joignable"],
+  ["Comptes où d'autres personnes restent joignables", "108 sur 118",
+   "un exemple : seule la personne qui a cliqué est désabonnée, un VP People et un responsable recrutement restent joignables"],
+  ["Impact du désabonnement sur le score", "0",
+   "ni malus, ni plafond. La règle a été supprimée après cette anatomie"],
+  ["Adresse manquante", "≠ refus",
+   "une case vide n'est pas un non : ces contacts partent dans une file d'enrichissement"]],
+ body:"C'est l'une des décisions qui a changé le résultat, et elle allait contre la proposition initiale. La leçon vaut au-delà de ce cas : <b>un signal d'absence de canal n'est pas un signal de désintérêt</b>. Les confondre coûte les meilleurs comptes de la liste.",
+ q:"Vous allez faire appeler des gens qui ont demandé qu'on les laisse tranquilles ?",
+ r:"Non, et la distinction est nette. Un désabonnement email interdit <b>l'email</b>, il n'interdit pas le téléphone ni LinkedIn, et il ne concerne que la personne, pas l'entreprise.<br><br>Dans 108 cas sur 118, d'autres personnes du même compte sont parfaitement joignables : c'est celles-là qu'on contacte. Et quand plus personne n'est joignable et que rien d'autre ne vit, le compte sort des files avec l'étiquette <b>perdu, canal mort</b>. Il n'est pas caché, il est montré à part, avec sa raison.<br><br>Enfin, aucun désabonné n'entre jamais dans une liste d'envoi : c'est un contrôle automatique, pas une bonne intention."
+},
+{
+ p:"5 · Scorer", t:"Les deux seuils", h:"Huit pour entrer, trente comme garde-fou", court:true, vue:"ops",
+ say:"Deux seuils, deux rôles différents, et il ne faut pas les confondre. Et surtout : ce sont des seuils absolus, jamais un top vingt-cinq.",
+ kpi:[["8","le seuil d'entrée dans la file de travail"],["30","le garde-fou d'accumulation"],
+      ["20,4","le meilleur score d'un compte sans porte : il ne l'atteint pas"]],
+ pb:"Un top N ment le jour où tout est froid : il sort toujours vingt-cinq comptes, même quand il n'y en a aucun. Il remplit la liste pour la remplir, et le commercial perd sa confiance dans l'outil au troisième appel inutile.",
+ bareme:[
+  ["Ce que chaque seuil fait, exactement"],
+  ["Tier 2, à partir de 8 points", "l'entrée",
+   "au moins un vrai geste récent. Le chiffre est posé sur la rupture visible dans la courbe des scores, pas sur un chiffre rond"],
+  ["Tier 1, pas un montant mais une porte", "un fait",
+   "une demande explicite, ou un comité actif. Les points ne font pas entrer"],
+  ["Le garde-fou à 30 points", "jamais déclenché",
+   "il ferait entrer un compte qui accumule énormément sans jamais rien demander. Le meilleur candidat plafonne à 20,4"],
+  ["Tier 3, tout le reste", "seuils absolus", "jamais un classement, jamais un top N"],
+  ["Et ce que chaque tier reçoit, côté email"],
+  ["La newsletter", "toute la base", "peu importe le score, sauf désabonnés et adresses mortes"],
+  ["Les séquences de vente", "activité récente + score", "on ne vend pas à qui ne bouge pas"],
+  ["Trois mois sans nouvelles", "sortie des séquences", "la newsletter continue, la prospection s'arrête"]],
+ body:"La phrase qui résume les deux : <b>la note dit qui appeler en premier, la porte dit pourquoi il est dans la liste</b>. Et l'ordre compte : le barème et les seuils ont été figés <b>avant</b> toute mesure de résultat, jamais réglés dessus.",
+ q:"Trente, mais personne ne l'atteint. Donc ça ne sert à rien ?",
+ r:"Aujourd'hui, non. C'est une protection, pas une entrée : si un jour un compte accumule assez de gestes pour dépasser trente sans jamais rien demander, il mérite un appel et la règle le sortira.<br><br>Sur ce fichier, l'accumulation pure n'atteint jamais le Tier 1 sans conversion. Le chemin existe pour un vrai CRM, ici il ne se déclenche pas. Une protection qui ne s'est jamais déclenchée, je préfère l'annoncer que la laisser découvrir dans le code."
+},
+{
+ p:"6 · Le résultat", phase:"6", t:"— Le résultat —", h:"Le résultat",
+ say:"Vingt mille cinq cent dix-neuf entreprises. Voilà où va chacune, et ce qu'on en fait."
+},
+{
+ p:"6 · Le résultat", t:"La photo", h:"Chaque entreprise du CRM a une ligne", court:true, vue:"macro",
+ say:"Vingt-six à appeler cette semaine. Trente-quatre à travailler. Et le compte est bon : aucune entreprise ne disparaît en route.",
+ geant:["26 + 34 + 9 + 5 741 + 14 709 = 20 519","chaque entreprise du CRM est quelque part, et un contrôle automatique le vérifie à chaque exécution"],
+ bareme:[
+  ["Tier 1 : à appeler cette semaine", "26", "une demande explicite, ou un comité qui bouge"],
+  ["Tier 2 : à travailler", "34", "ça chauffe, sans demande"],
+  ["Perdus : injoignables", "9", "dont 2 qui valaient vraiment le coup, 7 déjà froids"],
+  ["Tier 3 : nurture", "5 741", "un signal faible mais réel"],
+  ["Silencieuses", "14 709", "aucun signal en quatre-vingt-dix jours"]],
+ pb:"La question qu'on ne pose jamais dans ce genre d'exercice, et les vingt mille autres ? Sans réponse, la liste ressemble à une sélection arbitraire.",
+ q:"Et les quatorze mille silencieuses, vous en faites quoi ?",
+ r:"Rien, et c'est un choix assumé. Sept mille six cent quatre-vingt-six ont reçu des emails sans jamais réagir : elles sortent de séquence. Sept mille vingt-trois n'ont <b>aucune trace</b> dans le CRM : elles partent à l'enrichissement, pas à la relance. Les arroser serait de l'emailing de masse sur une liste froide : ce n'est pas du nurturing, et ça abîme la délivrabilité de tout le reste."
+},
+{
+ p:"6 · Le résultat", t:"Ce que je ne fais pas", h:"Six protections qui ne se sont jamais déclenchées", vue:"ops",
+ say:"Un moteur qui ne montre que ce qui marche cache ce qu'il ne sait pas faire. Voilà ce qui n'a jamais servi.",
+ kpi:[["6","règles qui n'ont produit aucun cas"],["1","dont je peux démontrer qu'elle est mathématiquement inatteignable"],["24","contrôles automatiques, tous verts"]],
+ body:"Le cap anti-abus, la priorité du rendez-vous sur les pages négatives, l'invalidation des clics robots, l'alerte sur notre propre silence, le libellé de repli, et le plancher de décroissance appliqué aux preuves. Ce dernier ne peut <b>pas</b> se déclencher : à vingt-et-un jours, une demi-vie de trente jours vaut encore 0,616, bien au-dessus du plancher de 0,25.",
+ q:"Pourquoi montrer des règles qui ne servent à rien ?",
+ r:"Parce qu'une protection qu'on n'annonce pas est une protection qu'on cache. Si vous les découvrez vous-même dans le code, vous vous demandez ce que je cache d'autre. Et pour l'une d'elles, je sais démontrer pourquoi elle ne peut pas servir : ce qui vaut mieux que de la présenter comme active."
+},
+{
+ p:"6 · Le résultat", t:"La liste d'appels", h:"Qui appeler, avec la preuve datée", court:true, vue:"logic",
+ say:"Une seule liste, tous segments confondus. Pour chaque compte : la personne à appeler, ce qu'elle a fait, quel jour, et par quel canal la joindre.",
+ kpi:[["60","comptes dans la liste"],["47","avec un décideur identifié comme sponsor"],["12","injoignables par email : téléphone ou LinkedIn"]],
+ pb:"Une liste de comptes sans nom ni preuve, un commercial ne l'utilise pas. Il veut savoir qui décrocher et quoi dire dans les dix premières secondes.",
+ body:"On appelle <b>celui qui a levé la main</b>, pas l'organigramme. Si c'est un chargé de recrutement qui a pris le rendez-vous, c'est lui qu'on rappelle : s'il l'a fait, il y a une raison. Et douze comptes sortent avec un canal alternatif : le canal est mort, pas l'intérêt.",
+ q:"Vous appelez un opérationnel plutôt que le décideur ?",
+ r:"Oui. Celui qui a pris le rendez-vous attend l'appel : le rappeler est la seule chose cohérente. Le décideur, on le trouve <b>pendant</b> l'appel, il est identifié dans la fiche. Passer par-dessus la tête de celui qui a levé la main, c'est le meilleur moyen de perdre les deux."
+},
+{
+ p:"6 · Le résultat", t:"Là où l'équipe travaille", h:"La liste ne sert à rien dans un fichier", court:true,
+ say:"Un CSV que personne n'ouvre n'a réveillé aucun CRM. La liste part dans Slack, avec les preuves.",
+ kpi:[["1","message quotidien"],["0","secret dans le dépôt : l'adresse d'envoi vit dans l'environnement"]],
+ body:"Chaque ligne porte qui appeler, son titre, la preuve datée, le canal, le nombre de personnes actives et le sponsor. Les comptes à signaux négatifs partent avec la mention <b>appel de rétention, pas de prospection</b> : un compte qui s'en va ne s'appelle pas comme un compte qui arrive. Et un garde-fou refuse d'écrire le mot « comité » quand il n'y a pas trois personnes derrière.",
+ q:"Pourquoi Slack et pas le CRM ?",
+ r:"Parce que le CRM est l'endroit où l'information dort : c'est le problème qu'on vient de résoudre, pas la solution. Le message arrive là où l'équipe est déjà, avec un bouton vers le tableau de bord pour ceux qui veulent creuser. Ce qui ne se voit pas ne se travaille pas."
+}
+];
+
+var PI=0;
+
+function procList(){
+  var h="", part=null;
+  PROC.forEach(function(x,k){
+    if(x.p!==part){ part=x.p; h+='<div class="ppart">'+esc(part)+'</div>'; }
+    h+='<div class="pitem'+(k===PI?" on":"")+'" data-i="'+k+'"><i>'+(k+1)+'</i><b>'+esc(x.t)+'</b></div>';
+  });
+  document.getElementById("pList").innerHTML=h;
+}
+function procDots(){
+  var h="";
+  for(var k=0;k<PROC.length;k++)
+    h+='<i class="'+(k===PI?"on":(k<PI?"done":""))+'" data-i="'+k+'" title="'+esc(PROC[k].t)+'"></i>';
+  document.getElementById("pDots").innerHTML=h;
+}
+function loopSVG(){
+  /* Un canal = deux voies : ce qui monte vers la personne, ce qui en repart.
+     Rien ne passe d'un modèle à l'autre — il n'y a pas de trait entre eux. */
+  function boite(x,y,w,h,nom,role,mid){
+    return '<rect class="lbox'+(mid?" mid":"")+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h
+      +'" rx="10"/><text class="lnom'+(mid?" on":"")+'" x="'+(x+w/2)+'" y="'+(y+h/2-3)
+      +'" text-anchor="middle">'+nom+'</text>'
+      +'<text class="lrole'+(mid?" on":"")+'" x="'+(x+w/2)+'" y="'+(y+h/2+16)
+      +'" text-anchor="middle">'+role+'</text>';
+  }
+  /* ── horizontal ── */
+  var H='<svg class="lh" viewBox="0 0 620 150" role="img" aria-label="Fable 5 et Opus 5 envoient chacun leur travail à Romain, qui décide">';
+  H+=boite(4,42,150,66,"Fable 5","modèle");
+  H+=boite(235,42,150,66,"Romain","décide",1);
+  H+=boite(466,42,150,66,"Opus 5","modèle");
+  [[158,231],[389,462]].forEach(function(c,k){
+    var x1=c[0], x2=c[1];
+    H+='<path class="lflux a" d="M'+x1+' 64 H'+x2+'"/>';
+    H+='<path class="lflux b" d="M'+x2+' 86 H'+x1+'"/>';
+    H+='<polygon class="lpuce" points="'+(x2-1)+',60 '+(x2+6)+',64 '+(x2-1)+',68"/>';
+    H+='<polygon class="lpuce" points="'+(x1+1)+',82 '+(x1-6)+',86 '+(x1+1)+',90"/>';
+  });
+  H+='</svg>';
+  /* ── vertical, pour les petits écrans ── */
+  var V='<svg class="lv" viewBox="0 0 230 380" role="img" aria-label="Fable 5 et Opus 5 envoient chacun leur travail à Romain, qui décide">';
+  V+=boite(40,4,150,66,"Fable 5","modèle");
+  V+=boite(40,157,150,66,"Romain","décide",1);
+  V+=boite(40,310,150,66,"Opus 5","modèle");
+  [[74,153],[227,306]].forEach(function(c){
+    var y1=c[0], y2=c[1];
+    V+='<path class="lflux a" d="M100 '+y1+' V'+y2+'"/>';
+    V+='<path class="lflux b" d="M130 '+y2+' V'+y1+'"/>';
+    V+='<polygon class="lpuce" points="96,'+(y2-1)+' 100,'+(y2+6)+' 104,'+(y2-1)+'"/>';
+    V+='<polygon class="lpuce" points="126,'+(y1+1)+' 130,'+(y1-6)+' 134,'+(y1+1)+'"/>';
+  });
+  V+='</svg>';
+  return '<div class="loop">'+H+V
+    +'<div class="lrule">Les deux modèles ne se parlent jamais : <b>tout passe par une seule '
+    +'personne</b>, qui compare et tranche. Dès que l\'un construisait, l\'autre reprenait '
+    +'depuis les fichiers bruts.</div></div>';
+}
+
+/* Une scène = un titre, une phrase, trois nombres. Tout le reste se déplie
+   seulement si on le demande : à l'écran, devant quelqu'un, ce qui compte est
+   ce qu'on peut lire d'un coup d'œil. */
+
+function baremeHTML(rows){
+  var h='<div class="sbar"><table>';
+  rows.forEach(function(r){
+    if(r.length===1){ h+='<tr class="sep"><td colspan="2">'+esc(r[0])+'</td></tr>'; return; }
+    var v=r[1], cls = (typeof v==="number") ? (v>0?"pos":(v<0?"neg":"nul")) : "";
+    var aff = (typeof v==="number") ? ((v>0?"+":"")+v) : v;
+    /* une valeur en lettres se met en forme comme une phrase, pas comme un score */
+    if(typeof v==="string" && /[a-zéèêà]{3}/.test(v)) cls+=" mot";
+    h+='<tr><td><div class="lb">'+esc(r[0])+'</div>'
+      +(r[2]?'<div class="wy">'+esc(r[2])+'</div>':'')+'</td>'
+      +'<td class="pt2 '+cls+'">'+esc(aff)+'</td></tr>';
+  });
+  return h+'</table></div>';
+}
+/* la décroissance, dessinée depuis les demi-vies réelles du moteur */
+function courbeHTML(){
+  function ligne(hl){
+    var p=[];
+    for(var t=0;t<=60;t+=1){
+      var v=Math.pow(0.5,t/hl);
+      if(t<=21) v=Math.max(v,0.25);            /* le plancher des 21 jours */
+      p.push((t/60*100).toFixed(1)+","+((1-v)*100).toFixed(1));
+    }
+    return p.join(" ");
+  }
+  return '<div class="scourbe"><svg viewBox="0 0 100 100" preserveAspectRatio="none">'
+    +'<line x1="0" y1="75" x2="100" y2="75" stroke="var(--line)" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>'
+    +'<line x1="35" y1="0" x2="35" y2="100" stroke="var(--line-2)" stroke-width="1" vector-effect="non-scaling-stroke"/>'
+    +'<polyline points="'+ligne(30)+'" fill="none" stroke="var(--violet)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
+    +'<polyline points="'+ligne(10)+'" fill="none" stroke="var(--warn)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
+    +'</svg><div class="lg2">'
+    +'<span><i style="background:var(--violet)"></i>une preuve : demi-vie <b>30 j</b></span>'
+    +'<span><i style="background:var(--warn)"></i>un geste : demi-vie <b>10 j</b></span>'
+    +'<span>plancher <b>25 %</b> jusqu\'à J21</span></div></div>';
+}
+/* le chemin court : les temps qu'on joue vraiment devant quelqu'un */
+function majChemin(){
+  var x=PROC[PI], b=document.getElementById("sPath");
+  if(b) b.classList.toggle("on", !!x.court);
+  document.querySelectorAll("#pDots i").forEach(function(d,k){
+    d.classList.toggle("key", !!PROC[k].court);
+  });
+}
+function suivantCourt(sens){
+  var i=PI;
+  for(;;){
+    i+=sens;
+    if(i<0||i>=PROC.length) return;
+    if(PROC[i].court){ procShow(i); return; }
+  }
+}
+
+function procShow(i){
+  PI=Math.max(0,Math.min(PROC.length-1,i));
+  var x=PROC[PI];
+  if(x.phase){
+    document.getElementById("pBody").innerHTML=
+      '<div class="sphase"><div class="pn">'+esc(x.phase)+'</div><div class="pt">'+esc(x.h)+'</div>'
+      +'<div class="pl">'+esc(x.say)+'</div></div>';
+    document.getElementById("sScroll").scrollTop=0;
+    document.getElementById("pPrev").disabled=PI===0;
+    document.getElementById("pNext").disabled=PI===PROC.length-1;
+    procDots(); procList(); majChemin();
+    return;
+  }
+  var h='<div class="skick">'+esc(x.p)+'</div><h1 class="sh1">'+esc(x.h)+'</h1>'
+       +'<div class="ssay">'+esc(x.say)+'</div>';
+  /* le schéma passe AVANT le grand chiffre : il illustre la phrase dite, le
+     chiffre est la conclusion */
+  if(x.loop) h+=loopSVG();
+  if(x.geant) h+='<div class="sgeant'+(x.geant[0].length>9?" long":"")+'">'+esc(x.geant[0])
+                +'</div><div class="sgeant-l">'+x.geant[1]+'</div>';
+  if(x.bareme) h+=baremeHTML(x.bareme);
+  if(x.courbe) h+=courbeHTML();
+  if(x.kpi){
+    h+='<div class="snum">';
+    x.kpi.forEach(function(k){ h+='<div><b>'+esc(k[0])+'</b><span>'+esc(k[1])+'</span></div>'; });
+    h+='</div>';
+  }
+  if(x.pb||x.body||x.q){
+    h+='<button class="smore" id="sMore">▾ le détail</button>'
+      +'<div class="sdet" id="sDet"><div class="sdet-in">';
+    if(x.pb)   h+='<h5>Le problème</h5><p>'+x.pb+'</p>';
+    if(x.body) h+='<h5>Ce qui a été fait</h5><p>'+x.body+'</p>';
+    var Q=[]; if(x.q) Q.push([x.q,x.r]); if(x.qs) Q=Q.concat(x.qs);
+    Q.forEach(function(z){
+      h+='<div class="sask"><div class="aq">🎤 '+esc(z[0])+'</div><div class="ar">'+z[1]+'</div></div>';
+    });
+    if(x.vue)  h+='<button class="sgo" data-go="'+x.vue+'">Le montrer dans le tableau de bord →</button>';
+    h+='</div></div>';
+  }
+  document.getElementById("pBody").innerHTML=h;
+  document.getElementById("sScroll").scrollTop=0;
+  document.getElementById("pPrev").disabled=PI===0;
+  document.getElementById("pNext").disabled=PI===PROC.length-1;
+  procDots(); procList(); majChemin();
+  var m=document.getElementById("sMore");
+  if(m) m.onclick=function(){
+    var d=document.getElementById("sDet");
+    d.classList.toggle("on");
+    this.textContent=d.classList.contains("on")?"▴ replier":"▾ le détail";
+    if(d.classList.contains("on")) setTimeout(function(){ d.scrollIntoView({behavior:"smooth",block:"nearest"}); },120);
+  };
+}
+
+function initProc(){
+  procShow(0);
+  document.getElementById("pPrev").onclick=function(){ procShow(PI-1); };
+  document.getElementById("pNext").onclick=function(){ procShow(PI+1); };
+  document.getElementById("pDots").onclick=function(e){
+    var d=e.target.closest("i[data-i]"); if(d) procShow(+d.dataset.i);
+  };
+  document.getElementById("pBody").onclick=function(e){
+    var g=e.target.closest("[data-go]"); if(g) showView(g.dataset.go);
+  };
+  var menu=document.getElementById("pMenu");
+  document.getElementById("pPlan").onclick=function(){ menu.classList.add("on"); };
+  menu.onclick=function(e){
+    var b=e.target.closest(".pitem");
+    if(b) procShow(+b.dataset.i);
+    menu.classList.remove("on");
+  };
+  document.addEventListener("keydown",function(e){
+    if(VIEW!=="proc") return;
+    var tag=(e.target.tagName||"").toLowerCase();
+    if(tag==="input"||tag==="textarea") return;
+    if(e.key==="ArrowRight"){ e.preventDefault(); e.shiftKey?suivantCourt(1):procShow(PI+1); }
+    else if(e.key==="ArrowLeft"){ e.preventDefault(); e.shiftKey?suivantCourt(-1):procShow(PI-1); }
+    else if(e.key==="Escape"){ menu.classList.remove("on"); }
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   OPS — statut du dernier run + alarmes
+   ══════════════════════════════════════════════════════════════ */
+function renderOps(){
+  var S=D.steps, done=S.filter(function(s){return s.status==="done";}).length;
+  var allC=[], fails=[];
+  S.forEach(function(s){ (s.controls||[]).forEach(function(c){ if(s.status==="done"){ allC.push(c); if(c.pass===false) fails.push([s,c]); } }); });
+  var h='<div class="oph"><h2>Statut du pipeline</h2>'
+    +'<div class="st" style="'+(fails.length?"background:var(--danger-soft);color:var(--danger)":"")+'"><i></i>'
+    +(fails.length? fails.length+' contrôle(s) en échec' : 'dernier run OK · '+allC.length+' contrôles verts')+'</div></div>';
+
+  h+='<div class="kpis">'
+    +'<div class="kpi"><b>'+nf(D.counts.accounts)+'</b><span>records bruts</span><em>3 CSV, 8 ans d\'historique</em></div>'
+    +'<div class="kpi"><b>'+nf(D.counts.entities)+'</b><span>entités réelles</span><em>−'+nf(D.counts.merged)+' doublons fusionnés</em></div>'
+    +'<div class="kpi"><b>'+nf(D.counts.events)+'</b><span>events / 90 j</span><em>'+nf(D.counts.anon_events)+' non rattachables</em></div>'
+    +'<div class="kpi hi"><b>'+D.counts.hot+'</b><span>comptes hot</span><em>seuil '+D.config.thresholds.hot+' pts</em></div>'
+    +'<div class="kpi"><b>'+D.counts.warm+'</b><span>warm</span><em>seuil '+D.config.thresholds.warm+' pts</em></div>'
+    +'<div class="kpi al"><b>'+nf(D.counts.risk)+'</b><span>perdus : canal mort</span><em>le score y est, le canal n\'y est plus</em></div>'
+    +'<div class="kpi"><b>'+done+' / '+S.length+'</b><span>étapes cleanup</span><em>phase '+(S[Math.min(done,S.length-1)].phase||"—")+'</em></div>'
+    +'<div class="kpi"><b>'+nf(D.counts.dormant)+'</b><span>entités muettes</span><em>0 event sur la fenêtre</em></div>'
+    +'</div>';
+
+  if(fails.length){
+    h+='<div class="warnbox" style="margin-bottom:20px"><div><b>Alarme</b> : '
+      +fails.map(function(f){ return 'étape '+f[0].step+' · '+esc(f[1].name)+' : attendu '+f[1].expected+', obtenu '+f[1].actual; }).join('<br>')
+      +'</div></div>';
+  }
+
+  /* justification empirique du seuil */
+  (function(){
+    var c=D.curve, n=c.length, mx=Math.max.apply(null,c), lg=function(v){ return Math.log10(v+1)/Math.log10(mx+1); };
+    var pts=c.map(function(v,i){ return (i/(n-1)*100).toFixed(2)+","+((1-lg(v))*100).toFixed(2); }).join(" ");
+    var hy=(1-lg(D.config.thresholds.hot))*100, wy=(1-lg(D.config.thresholds.warm))*100;
+    var hx=0; for(var i=0;i<n;i++){ if(c[i]<D.config.thresholds.hot){ hx=i/(n-1)*100; break; } }
+    h+='<div class="sec" style="margin-bottom:20px"><div class="sec-h"><h3>Pourquoi le seuil est à '+D.config.thresholds.hot+'</h3>'
+      +'<em>400 premiers comptes, échelle log</em></div><div class="card curve">'
+      +'<svg viewBox="0 0 100 100" preserveAspectRatio="none">'
+      +'<line x1="0" y1="'+hy.toFixed(2)+'" x2="100" y2="'+hy.toFixed(2)+'" stroke="var(--violet)" stroke-width="1" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>'
+      +'<line x1="0" y1="'+wy.toFixed(2)+'" x2="100" y2="'+wy.toFixed(2)+'" stroke="var(--warn)" stroke-width="1" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>'
+      +'<line x1="'+hx.toFixed(2)+'" y1="0" x2="'+hx.toFixed(2)+'" y2="100" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>'
+      +'<polyline points="'+pts+'" fill="none" stroke="var(--text)" stroke-width="1.8" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>'
+      +'</svg><div class="curve-lg">'
+      +'<span><i style="background:var(--violet)"></i>seuil hot <b>'+D.config.thresholds.hot+' pts</b></span>'
+      +'<span><i style="background:var(--warn)"></i>seuil warm <b>'+D.config.thresholds.warm+' pts</b></span>'
+      +'<span>rang 20 <b>'+c[19]+'</b> → rang 40 <b>'+c[39]+'</b></span>'
+      +'<span>max <b>'+c[0]+'</b> · médiane base <b>6,2</b></span></div>'
+      +'<div class="note" style="margin-top:14px">Le seuil n\'est pas une note sur 100 : le score est une somme de points non bornée. '
+      +'Il est posé <b>sur la rupture</b> : entre le 20<sup>e</sup> et le 40<sup>e</sup> compte le score s\'effondre de '+c[19]+' à '+c[39]+'. '
+      +'Couper à '+D.config.thresholds.hot+' revient à couper dans le vide : déplacer le seuil de ±20 points ne change quasiment pas la liste. '
+      +'C\'est ce qui le rend défendable : pas le chiffre, la falaise.</div>'
+      +'</div></div>';
+  })();
+
+  h+='<div class="steps">';
+  S.forEach(function(s){
+    var cs=s.controls||[], ok=cs.filter(function(c){return c.pass!==false;}).length;
+    var cls=s.status==="done"?"done":(s.status==="next"?"next":"");
+    var ck = s.status==="done" ? '<div class="stp-ck '+(ok===cs.length?"ok":"ko")+'">'+ok+'/'+cs.length+' ✓</div>'
+          : '<div class="stp-ck na">en attente</div>';
+    h+='<div class="stp '+cls+'" data-s="'+s.step+'"><div class="stp-h">'
+      +'<div class="stp-n">'+s.step+'</div>'
+      +'<div class="stp-t"><b>'+esc(s.name)+'</b><span>'+esc((s.insight||"").slice(0,96))+'</span></div>'
+      +'<div class="stp-ph">'+esc(s.phase)+'</div>'+ck+'</div>'
+      +'<div class="stp-body">'
+      +(s.insight?'<div class="stp-ins">'+esc(s.insight)+'</div>':'');
+    if((s.rules||[]).length){
+      h+='<table class="mini"><tr><th>Règle appliquée</th><th class="num">Volume</th><th>Exemple</th></tr>';
+      s.rules.forEach(function(r){ h+='<tr><td>'+esc(r.rule)+'</td><td class="num">'+nf(r.volume)+'</td><td>'+esc(r.example||"—")+'</td></tr>'; });
+      h+='</table>';
+    }
+    if(cs.length){
+      h+='<table class="mini"><tr><th>Contrôle</th><th class="num">Attendu</th><th class="num">Obtenu</th><th class="num">État</th></tr>';
+      cs.forEach(function(c){ h+='<tr><td>'+esc(c.name)+'</td><td class="num">'+esc(String(c.expected))+'</td><td class="num">'+esc(String(c.actual))+'</td>'
+        +'<td class="num '+(c.pass===false?"ko":"ok")+'">'+(s.status==="done"?(c.pass===false?"KO":"OK"):"—")+'</td></tr>'; });
+      h+='</table>';
+    }
+    if(s.unresolved&&s.unresolved.count){
+      h+='<div class="note"><b>Non résolu : '+nf(s.unresolved.count)+'</b> : '+esc(s.unresolved.reason)+'</div>';
+    }
+    h+='</div></div>';
+  });
+  h+='</div>';
+
+  /* les gardes du moteur de scoring — greffées depuis dashboard_data.json */
+  if(D.sops){
+    var S2=D.sops, ko2=S2.gardes.filter(function(g){return !g.ok;});
+    h+='<div class="sec" style="margin-top:24px"><div class="sec-h"><h3>Les gardes du scoring</h3>'
+      +'<em>'+esc(S2.gardes_vertes)+' · run du '+esc((S2.genere_le||"").slice(0,10))
+      +' · fenêtre ancrée au '+esc(S2.reference_date)+'</em></div>'
+      +'<div class="card"><div class="grd">';
+    S2.gardes.forEach(function(g){
+      h+='<div class="grdr'+(g.ok?"":" ko")+'"><i></i><b>'+esc(g.libelle)+'</b>'
+        +'<span>'+esc(String(g.obtenu))+' / '+esc(String(g.attendu))+'</span></div>';
+    });
+    h+='</div></div></div>';
+    if(ko2.length) h+='<div class="warnbox" style="margin:14px 0"><div><b>Alarme scoring</b> : '
+      +ko2.map(function(g){return esc(g.libelle)+' : attendu '+g.attendu+', obtenu '+g.obtenu;}).join('<br>')+'</div></div>';
+
+    h+='<div class="sec" style="margin-top:20px"><div class="sec-h"><h3>Les règles qui ne se sont jamais déclenchées</h3>'
+      +'<em>'+S2.regles_dormantes.length+' protections, 0 cas : annoncées, pas cachées</em></div>'
+      +'<div class="card"><div class="drm">';
+    S2.regles_dormantes.forEach(function(r){
+      h+='<div class="drmr"><b>'+esc(r.regle)+'</b><span>'+esc(r.mesure)+'</span></div>';
+    });
+    h+='</div></div></div>';
+  }
+
+  h+='<div class="note" style="margin-top:24px"><b>Ce que ce tableau de bord montre, et ce qu\'il ne montre pas.</b> '
+    +'Le scoring est la config <b>'+esc(D.config.version)+'</b>, calibrée à la main : chaque poids est un choix assumé, pas un réglage sorti d\'une optimisation. '
+    +'La mesure de précision et de rappel a été faite <b>une seule fois, en fin de course</b> : jamais pour régler les poids : '
+    +'chaque poids est justifié <b>avant</b> d\'être mesuré, pas après. '
+    +'Les scores affichés sont arrondis au dixième et <b>chaque total est la somme de ce qui est montré au-dessus</b> ; '
+    +'le moteur, lui, travaille en précision pleine et c\'est lui seul qui décide du tier.</div>';
+  document.getElementById("opsBody").innerHTML=h;
+  document.getElementById("opsBody").onclick=function(e){
+    var hd=e.target.closest(".stp-h"); if(hd) hd.parentNode.classList.toggle("open");
+  };
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   DONNÉES — l'explorateur de tables. Chargé à la demande.
+   ══════════════════════════════════════════════════════════════ */
+var T={}, TCUR="companies", TSORT=null, TDESC=false, TBUSY={};
+/* colonnes d'ORIGINE (celles de Gab) — tout le reste a été ajouté par le nettoyage.
+   companies et hot_list n'existaient pas : ces deux tables sont 100 % produites. */
+/* Chaque table a sa propre dichotomie, et sa propre légende. Mettre « colonnes
+   d'origine, jamais modifiées » sur la table des entreprises serait faux : cette
+   table n'existait pas, et les 8 champs qui viennent des fiches y sont consolidés
+   (élection de la fiche de référence, vote majoritaire) — repris, pas intacts. */
+var ORIG={
+ companies:["name","domain","country","industry","employee_range","arr_eur","renewal_date","owner"],
+ accounts:["account_id","account_name","domain","industry","employee_range","country",
+           "lifecycle_stage","created_date","last_activity_date","owner","arr_eur","renewal_date"],
+ contacts:["contact_id","account_id","first_name","last_name","email","job_title","opted_out","created_date"],
+ events:"*",  /* "*" = tout est d'origine : le fichier est publié tel quel */
+ hot_list:[]
+};
+var LEGENDE={
+ companies:["champ repris de vos fiches, consolidé","champ produit par le nettoyage"],
+ accounts :["colonnes d'origine, jamais modifiées","colonnes ajoutées par le nettoyage"],
+ contacts :["colonnes d'origine, jamais modifiées","colonnes ajoutées par le nettoyage"],
+ events  :["le fichier tel que vous nous l'avez donné : rien ajouté, rien retiré, rien trié",null],
+ hot_list :[null,"table entièrement produite : elle n'existait pas"]
+};
+var TLABEL={companies:"entreprises",accounts:"fiches CRM",contacts:"contacts",
+            events:"événements",hot_list:"lignes"};
+
+function loadTables(){
+  if(T[TCUR]) { renderTable(); return; }
+  if(TBUSY[TCUR]) return;
+  TBUSY[TCUR]=1;
+  var want=TCUR;
+  document.getElementById("dtable").innerHTML='<tr><td class="dload">Chargement de la table…</td></tr>';
+  document.getElementById("dcount").textContent="";
+  fetch("tables/"+want+".json").then(function(r){return r.json();}).then(function(j){
+    T[want]=j; TBUSY[want]=0; if(TCUR===want) renderTable();
+  }).catch(function(e){
+    TBUSY[want]=0;
+    document.getElementById("dtable").innerHTML='<tr><td class="dload">Erreur : '+e+'</td></tr>';
+  });
+}
+/* ─────────────────────────────────────────────────────────────────────────
+   TOUTES LES LIGNES, VRAIMENT.
+
+   Il n'y a plus de plafond d'affichage. 94 838 lignes × 8 colonnes feraient
+   758 000 cellules dans la page : aucun navigateur ne tient. On dessine donc
+   uniquement la tranche visible, et on remplace le reste par deux cales de la
+   bonne hauteur. La barre de défilement fait la hauteur des 94 838 lignes,
+   le défilement va jusqu'à la dernière, et la page ne contient jamais plus
+   d'une centaine de lignes.
+
+   Conséquence : les largeurs de colonnes ne peuvent plus être déduites du
+   contenu affiché — elles changeraient à chaque défilement. Elles sont donc
+   calculées UNE FOIS sur l'intégralité de la table, puis figées.
+   ───────────────────────────────────────────────────────────────────────── */
+var VROWS=[], TADD=[], VH=31, VMARGE=12, VD=-1, VF=-1, VMES=0;
+/* VH : hauteur d'une ligne. Posée à 31 px, puis MESURÉE au premier rendu et
+   corrigée si le navigateur en décide autrement — une hauteur supposée fait
+   dériver la position de défilement sur 94 838 lignes. */
+
+function peindre(force){
+  var tb=document.getElementById("dbody"), sc=document.getElementById("dscroll");
+  if(!tb||!sc) return;
+  var n=VROWS.length, nc=TADD.length;
+  var vis=Math.ceil((sc.clientHeight||620)/VH)+VMARGE*2;
+  var d=Math.max(0, Math.floor(sc.scrollTop/VH)-VMARGE), f=Math.min(n, d+vis);
+  if(!force && d===VD && f===VF) return;
+  VD=d; VF=f;
+  var h='';
+  if(d>0) h+='<tr class="dcale"><td colspan="'+nc+'" style="height:'+(d*VH)+'px"></td></tr>';
+  for(var i=d;i<f;i++){
+    var r=VROWS[i];
+    h+='<tr>';
+    for(var c=0;c<nc;c++){
+      var v=r[c]===undefined?"":r[c];
+      var num = v!=="" && !isNaN(parseFloat(v)) && String(v).length<12;
+      h+='<td class="'+(TADD[c]?"add ":"")+(num?"num":"")+'" title="'+esc(v)+'">'+esc(v)+'</td>';
+    }
+    h+='</tr>';
+  }
+  if(f<n) h+='<tr class="dcale"><td colspan="'+nc+'" style="height:'+((n-f)*VH)+'px"></td></tr>';
+  tb.innerHTML=h;
+  if(!VMES && f>d){
+    var tr=tb.querySelector("tr:not(.dcale)");
+    if(tr){
+      VMES=1;
+      var mesure=tr.offsetHeight;
+      if(mesure && Math.abs(mesure-VH)>0.5){ VH=mesure; peindre(true); }
+    }
+  }
+}
+
+function largeurs(t){
+  if(t.w) return t.w;
+  var w=[];
+  for(var c=0;c<t.cols.length;c++) w.push(t.cols[c].length+2);
+  for(var i=0;i<t.rows.length;i++){
+    var r=t.rows[i];
+    for(var c2=0;c2<r.length;c2++){ var n=String(r[c2]).length; if(n>w[c2]) w[c2]=n; }
+  }
+  /* 6,6 px par caractère + les marges internes, borné comme l'était le CSS */
+  t.w=w.map(function(n){ return Math.max(74, Math.min(292, Math.round(n*6.6)+24)); });
+  return t.w;
+}
+
+function renderTable(){
+  var t=T[TCUR]; if(!t) return;
+  var q=(document.getElementById("dq").value||"").trim().toLowerCase();
+  var rows=t.rows;
+  if(q){
+    /* plus de plafond de résultats non plus : la recherche voit tout le fichier */
+    rows=[];
+    for(var i=0;i<t.rows.length;i++){
+      var r=t.rows[i], hit=false;
+      for(var c=0;c<r.length;c++){ if(String(r[c]).toLowerCase().indexOf(q)>=0){hit=true;break;} }
+      if(hit) rows.push(r);
+    }
+  }
+  if(TSORT!==null){
+    var k=TSORT, sg=TDESC?-1:1;
+    rows=rows.slice().sort(function(a,b){
+      var x=a[k],y=b[k], nx=parseFloat(x),ny=parseFloat(y);
+      if(!isNaN(nx)&&!isNaN(ny)) return (nx-ny)*sg;
+      return String(x).localeCompare(String(y))*sg;
+    });
+  }
+  VROWS=rows;
+  var og=ORIG[TCUR]||[], tout=(og==="*");
+  /* tout===true : la table est le fichier reçu, aucune colonne n'est de nous */
+  TADD=[];
+  for(var c3=0;c3<t.cols.length;c3++)
+    TADD.push(tout ? false : og.indexOf(t.cols[c3])<0);
+  var w=largeurs(t), tot=0;
+  var h='<colgroup>';
+  for(var c4=0;c4<w.length;c4++){ tot+=w[c4]; h+='<col style="width:'+w[c4]+'px">'; }
+  h+='</colgroup><thead><tr>';
+  for(var c5=0;c5<t.cols.length;c5++){
+    var ar = (TSORT===c5) ? '<span class="ar">'+(TDESC?"▾":"▴")+'</span>' : '';
+    h+='<th class="'+(TADD[c5]?"add":"")+'" data-c="'+c5+'">'+esc(t.cols[c5])+ar+'</th>';
+  }
+  h+='</tr></thead><tbody id="dbody"></tbody>';
+  var tb=document.getElementById("dtable");
+  tb.style.width=tot+"px";
+  tb.innerHTML=h;
+  document.getElementById("dscroll").scrollTop=0;
+  peindre(true);
+  var nadd=0;
+  for(var c6=0;c6<TADD.length;c6++) if(TADD[c6]) nadd++;
+  document.getElementById("dcount").textContent =
+     nf(rows.length)+" "+(TLABEL[TCUR]||"lignes")
+     + (q ? " sur "+nf(t.rows.length) : "")
+     + (tout    ? " · "+t.cols.length+" colonnes, toutes d’origine"
+     : og.length ? " · "+nadd+" colonnes produites sur "+t.cols.length
+                 : " · "+t.cols.length+" colonnes, toutes produites");
+  /* la légende suit la table : elle doit décrire ce qu'on voit, pas un cas général */
+  var L=LEGENDE[TCUR]||LEGENDE.accounts, lg=document.getElementById("dlegend");
+  var src = (TCUR==="events") ? "events.csv (le fichier brut)" : "dashboard_data/";
+  if(lg) lg.innerHTML =
+      (L[0] ? '<span><i class="og"></i>'+esc(L[0])+'</span>' : '')
+    + (L[1] ? '<span><i class="ad"></i>'+esc(L[1])+'</span>' : '')
+    + '<span style="margin-left:auto">source : <b>'+src+'</b> · branche <b>cleanup-pipeline</b></span>';
+}
+function initData(){
+  document.getElementById("dtabs").onclick=function(e){
+    var b=e.target.closest("button[data-t]"); if(!b) return;
+    TCUR=b.dataset.t; TSORT=null; TDESC=false;
+    this.querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x===b);});
+    document.getElementById("dscroll").scrollTop=0;
+    document.getElementById("dq").value=""; loadTables();
+  };
+  /* la recherche balaie les 94 838 lignes : on attend la fin de la frappe */
+  var minuteur=null;
+  document.getElementById("dq").oninput=function(){
+    clearTimeout(minuteur);
+    minuteur=setTimeout(function(){ TSORT=null; renderTable(); }, 140);
+  };
+  document.getElementById("dtable").onclick=function(e){
+    var th=e.target.closest("th[data-c]"); if(!th) return;
+    var c=+th.dataset.c;
+    if(TSORT===c) TDESC=!TDESC; else { TSORT=c; TDESC=false; }
+    renderTable();
+  };
+  /* le défilement virtuel : on redessine la tranche visible, jamais toute la table */
+  document.getElementById("dscroll").addEventListener("scroll", function(){
+    peindre(false);
+  }, {passive:true});
+  window.addEventListener("resize", function(){ if(VROWS.length) peindre(true); });
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+function showView(v){
+  VIEW=v;
+  document.querySelectorAll("#tabs button").forEach(function(b){ b.classList.toggle("on",b.dataset.v===v); });
+  document.getElementById("vMacro").classList.toggle("on",v==="macro");
+  document.getElementById("vLogic").classList.toggle("on",v==="logic");
+  document.getElementById("vOps").classList.toggle("on",v==="ops");
+  document.getElementById("vData").classList.toggle("on",v==="data");
+  document.getElementById("vProc").classList.toggle("on",v==="proc");
+  if(v==="macro") G.resize();
+  if(v==="data") loadTables();
+}
+function boot(){
+  document.getElementById("tabs").onclick=function(e){
+    var b=e.target.closest("button[data-v]"); if(b) showView(b.dataset.v);
+  };
+  /* le nom ramène toujours à l'accueil, d'où qu'on vienne */
+  function accueil(){
+    var m=document.getElementById("pMenu"); if(m) m.classList.remove("on");
+    showView("macro");
+  }
+  document.getElementById("brand").onclick=accueil;
+  document.getElementById("brand").onkeydown=function(e){
+    if(e.key==="Enter"||e.key===" "){ e.preventDefault(); accueil(); }
+  };
+  document.getElementById("themeBtn").onclick=function(){
+    document.body.classList.toggle("dark");
+    try{ localStorage.setItem("wtc_theme",document.body.classList.contains("dark")?"1":"0"); }catch(e){}
+    if(G.theme) G.theme();          /* la poussière change de couleur avec le thème */
+  };
+  try{ if(localStorage.getItem("wtc_theme")==="1") document.body.classList.add("dark"); }catch(e){}
+  document.getElementById("q").oninput=renderRows;
+  document.getElementById("filters").onclick=function(e){
+    var b=e.target.closest("button[data-f]"); if(!b) return;
+    FILT=b.dataset.f;
+    this.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x===b); });
+    renderRows();
+  };
+  document.getElementById("rows").onclick=function(e){
+    var r=e.target.closest(".lrow"); if(!r) return;
+    SEL=+r.dataset.i;
+    this.querySelectorAll(".lrow").forEach(function(x){ x.classList.toggle("on",x===r); });
+    renderDetail(SEL);
+  };
+  G.init(); renderRows(); renderOps(); initData(); initProc();
+  if(D.top.length){ SEL=D.top[0]; renderRows(); renderDetail(SEL); }
+}
+
+fetch("wtc.json").then(function(r){ return r.json(); }).then(function(j){
+  D=j;
+  document.getElementById("spInfo").innerHTML=
+    '<b>'+nf(j.counts.accounts)+'</b> comptes · <b>'+nf(j.counts.contacts)+'</b> contacts · <b>'+nf(j.counts.events)+'</b> events'
+    +'<br>'+nf(j.counts.entities)+' entités réelles après dédoublonnage';
+  runSplash(boot);
+}).catch(function(err){
+  document.getElementById("spInfo").textContent="Erreur de chargement : "+err;
+});
+</script>
+</body>
+</html>
