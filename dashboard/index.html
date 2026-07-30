@@ -686,9 +686,9 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
             <div class="mk-sub" id="mSub">—</div>
           </div>
           <div class="mstats">
-            <div class="mstat"><b id="sAwake">0</b><span>comptes réveillés</span></div>
-            <div class="mstat hot"><b id="sHot">0</b><span>hot</span></div>
-            <div class="mstat warm"><b id="sWarm">0</b><span>warm</span></div>
+            <div class="mstat"><b id="sAwake">0</b><span>comptes qui ont bougé</span></div>
+            <div class="mstat hot"><b id="sHot">0</b><span>tier 1 : à appeler</span></div>
+            <div class="mstat warm"><b id="sWarm">0</b><span>tier 2 : à travailler</span></div>
             <div class="mstat risk"><b id="sRisk">0</b><span>perdus : canal mort</span></div>
           </div>
           <div class="ticker" id="ticker"></div>
@@ -1146,7 +1146,7 @@ var G=(function(){
     var t=new Date(D.d0+"T00:00:00"); t.setDate(t.getDate()+day);
     var MON=["janv","févr","mars","avr","mai","juin","juil","août","sept","oct","nov","déc"];
     document.getElementById("mDate").textContent=t.getDate()+" "+MON[t.getMonth()]+" "+t.getFullYear();
-    document.getElementById("mSub").textContent=fmt(D.counts.entities)+" entités · "+fmt(D.counts.events)+" events sur 90 jours";
+    document.getElementById("mSub").textContent=fmt(D.counts.entities)+" entreprises · "+fmt(D.counts.events)+" événements sur 90 jours · "+fmt(D.counts.entities-14709)+" avec un signal qui compte";
     document.getElementById("sAwake").textContent=fmt(awake);
     document.getElementById("sHot").textContent=fmt(nHot);
     document.getElementById("sWarm").textContent=fmt(nWarm);
@@ -1377,14 +1377,15 @@ function renderDetail(i){
             risque:"⚠️ risque",reactivation:"⚡ réactivation",nurture:"🌱 nurturing"};
   var h='<div class="dh"><div class="dh-t">'
     +'<h2>'+esc(d.name)+'</h2>'
-    +'<div class="dh-sub">'+esc(d.segment)+' · fit '+esc(d.fit)+' · '+esc(PLAY[d.play]||d.play)+'</div></div>'
+    +'<div class="dh-sub">'+esc(d.segment)+' · fit '+esc(d.fit)+' · '
+    +esc(d.porte ? (PLAY[d.play]||d.play) : 'hors file : canal mort')+'</div></div>'
     +'<div class="verdict"><div class="n" style="color:var(--'+col+')">'+d.score+'</div>'
     +'<div class="l" style="color:var(--'+col+')">'+esc(d.tier)
     +(d.brut&&d.brut>d.score+0.05?' · brut '+d.brut.toFixed(1):'')+'</div></div></div>';
 
   h+='<div class="facts">'
     +'<div class="fact">'+(d.porte==="conversion"?'entré par <b>une demande</b>':d.porte==="comite"?'entré par <b>le comité</b>':'<b>aucune porte</b> : sorti des files')+'</div>'
-    +'<div class="fact"><b>'+esc(d.comite)+'</b> personnes actives / 14 j</div>'
+    +'<div class="fact"><b>'+esc(d.comite)+'</b> personne'+(+d.comite>1?'s actives':' active')+' / 14 j</div>'
     +'<div class="fact">sponsor décideur <b>'+esc(d.sponsor)+'</b></div>'
     +(e[9]>1?'<div class="fact"><b>'+e[9]+'</b> fiches fusionnées</div>':'')
     +(e[5]?'<div class="fact">ARR <b>'+nf(e[5])+' €</b></div>':'')
@@ -1932,27 +1933,41 @@ var PROC=[
 },
 {
  p:"5 · Scorer", t:"Les deux seuils", h:"Huit pour entrer, trente comme garde-fou", court:true, vue:"ops",
- say:"Deux seuils, deux rôles différents, et il ne faut pas les confondre. Et surtout : ce sont des seuils absolus, jamais un top vingt-cinq.",
- kpi:[["8","le seuil d'entrée dans la file de travail"],["30","le garde-fou d'accumulation"],
-      ["20,4","le meilleur score d'un compte sans porte : il ne l'atteint pas"]],
- pb:"Un top N ment le jour où tout est froid : il sort toujours vingt-cinq comptes, même quand il n'y en a aucun. Il remplit la liste pour la remplir, et le commercial perd sa confiance dans l'outil au troisième appel inutile.",
+ say:"Deux seuils, deux rôles différents. Et surtout : ce sont des seuils fixes, jamais un top vingt-cinq.",
+ kpi:[["8","le nombre de points pour entrer dans la file de travail"],
+      ["30","le garde-fou, qui ne s'est jamais déclenché"],
+      ["20,4","le meilleur score d'un compte qui n'a rien demandé"]],
+ pb:"Un classement en « top vingt-cinq » sort toujours vingt-cinq comptes, même la semaine où aucun n'est intéressant. Il remplit la liste pour la remplir, et le commercial cesse d'y croire au troisième appel inutile.",
  bareme:[
   ["Ce que chaque seuil fait, exactement"],
-  ["Tier 2, à partir de 8 points", "l'entrée",
-   "au moins un vrai geste récent, posé sur la rupture de la courbe"],
-  ["Tier 1, pas un montant mais une porte", "un fait",
-   "une demande explicite, ou un comité actif"],
+  ["Entrer dans la file de travail", "8 points",
+   "il faut au moins un vrai geste récent. Le chiffre est posé là où la courbe des scores s'effondre"],
+  ["Entrer dans la liste d'appels", "un fait, pas un score",
+   "une demande explicite, ou plusieurs personnes actives en même temps"],
   ["Le garde-fou à 30 points", "jamais déclenché",
-   "jamais atteint : le meilleur compte sans porte plafonne à 20,4"],
-  ["Tier 3, tout le reste", "seuils absolus", "jamais un classement, jamais un top N"]],
- bareme2:[
-  ["Et ce que chaque tier reçoit, côté email"],
-  ["La newsletter", "toute la base", "peu importe le score, sauf désabonnés et adresses mortes"],
-  ["Les séquences de vente", "activité récente + score", "on ne vend pas à qui ne bouge pas"],
-  ["Trois mois sans nouvelles", "sortie des séquences", "la newsletter continue, la prospection s'arrête"]],
- body:"La phrase qui résume les deux : <b>la note dit qui appeler en premier, la porte dit pourquoi il est dans la liste</b>. Et l'ordre compte : le barème et les seuils ont été figés <b>avant</b> toute mesure de résultat, jamais réglés dessus.",
+   "il existe pour le compte qui accumulerait énormément sans jamais rien demander. Aucun ne l'atteint ici"]],
+ body:"Et l'ordre compte : le barème et les seuils ont été fixés <b>avant</b> de regarder le résultat, jamais réglés dessus.<br><br>Côté email, chaque niveau reçoit autre chose. La newsletter part à toute la base, quel que soit le score, sauf aux désabonnés et aux adresses mortes. Les séquences de vente ne partent qu'aux comptes qui bougent. Et trois mois sans nouvelles font sortir des séquences, la newsletter continue.",
  q:"Trente, mais personne ne l'atteint. Donc ça ne sert à rien ?",
- r:"Aujourd'hui, non. C'est une protection, pas une entrée : si un jour un compte accumule assez de gestes pour dépasser trente sans jamais rien demander, il mérite un appel et la règle le sortira.<br><br>Sur ce fichier, l'accumulation pure n'atteint jamais le Tier 1 sans conversion. Le chemin existe pour un vrai CRM, ici il ne se déclenche pas. Une protection qui ne s'est jamais déclenchée, je préfère l'annoncer que la laisser découvrir dans le code."
+ r:"Aujourd'hui, non, et je préfère le dire que le laisser découvrir dans le code. C'est une protection, pas une porte d'entrée : si un jour un compte accumule assez de gestes pour dépasser trente sans jamais rien demander, il mérite un appel et la règle le sortira.<br><br>Sur ce fichier, personne n'y arrive : le meilleur compte qui n'a rien demandé plafonne à <b>20,4</b>."
+},
+{
+ p:"5 · Scorer", t:"Où vit le moteur", h:"Pas de base de données, et c'est un choix", court:true,
+ say:"Sur ce fichier, il n'y a pas de base de données. Ce n'est pas un manque d'ambition, c'est que le fichier ne bouge plus.",
+ bareme:[
+  ["Ici, et pourquoi"],
+  ["Des fichiers et une configuration, versionnés", "pas de base",
+   "le fichier est figé, personne n'écrit dedans, il n'y a rien à mettre à jour en temps réel"],
+  ["Les 20 519 entreprises tiennent en mémoire", "un script, un fichier de réglages",
+   "ça se rejoue partout, sur n'importe quelle machine, sans rien installer"],
+  ["Sur un vrai CRM, la réponse change"],
+  ["Une vraie base de données", "Postgres, ou l'entrepôt déjà en place",
+   "parce qu'il y a du flux qui rentre en continu, plusieurs commerciaux, et un besoin de garder l'historique des scores"],
+  ["Le calcul se déclenche sur l'événement", "pas une fois par nuit",
+   "le CRM prévient quand quelque chose bouge, et seul ce qui a bougé est recalculé"]],
+ pb:"« Pas de base de données » peut s'entendre comme « il n'a pas su faire ». C'est l'inverse : une base ici n'ajouterait que de la complexité, sans rien résoudre.",
+ body:"Ce qui ne change pas dans les deux cas : <b>le moteur nous appartient</b>. Le code et les réglages sont dans le dépôt, chaque poids est commenté, et personne ne loue une boîte noire qui décide qui on appelle.",
+ q:"Pourquoi pas de base de données ?",
+ r:"Parce que le choix d'infrastructure suit le besoin, pas l'inverse.<br><br><b>Ici</b> : le fichier ne bouge plus, il n'y a rien à écrire, personne d'autre à servir. Une base serait un décor.<br><br><b>En production</b> : du flux qui rentre en continu, plusieurs commerciaux qui lisent la même liste, un historique des scores à garder pour voir qui monte et qui descend. Là, je pose une vraie base et je recalcule au fil de l'eau, déclenché par le CRM lui-même.<br><br>Et dans les deux cas le moteur reste chez nous : ce n'est pas un abonnement qui décide qui vos commerciaux appellent."
 },
 {
  p:"6 · Le résultat", phase:"6", t:"· Le résultat ·", h:"Le résultat",
@@ -1960,17 +1975,51 @@ var PROC=[
 },
 {
  p:"6 · Le résultat", t:"La photo", h:"Chaque entreprise du CRM a une ligne", court:true, vue:"macro",
- say:"Vingt-six à appeler cette semaine. Trente-quatre à travailler. Et le compte est bon : aucune entreprise ne disparaît en route.",
- geant:["26 + 34 + 9 + 5 741 + 14 709 = 20 519","chaque entreprise du CRM est quelque part, et un contrôle automatique le vérifie à chaque exécution"],
+ say:"Vingt-six à appeler cette semaine, trente-quatre à travailler. Et le compte est bon : aucune entreprise ne disparaît en route.",
+ geant:["26 + 34 + 9 + 5 741 + 14 709 = 20 519","un contrôle automatique le revérifie à chaque exécution"],
  bareme:[
-  ["Tier 1 : à appeler cette semaine", "26", "une demande explicite, ou un comité qui bouge"],
-  ["Tier 2 : à travailler", "34", "ça chauffe, sans demande"],
-  ["Perdus : injoignables", "9", "dont 2 qui valaient vraiment le coup, 7 déjà froids"],
-  ["Tier 3 : nurture", "5 741", "un signal faible mais réel"],
-  ["Silencieuses", "14 709", "aucun signal en quatre-vingt-dix jours"]],
- pb:"La question qu'on ne pose jamais dans ce genre d'exercice, et les vingt mille autres ? Sans réponse, la liste ressemble à une sélection arbitraire.",
+  ["À appeler cette semaine", "26", "une demande explicite, ou plusieurs personnes qui bougent en même temps"],
+  ["À travailler", "34", "ça chauffe, mais personne n'a encore rien demandé"],
+  ["Injoignables", "9", "plus aucun contact qu'on ait le droit d'appeler ou d'écrire"],
+  ["Signal faible", "5 741", "quelque chose bouge, trop peu pour un appel"],
+  ["Silencieuses", "14 709", "rien depuis quatre-vingt-dix jours"]],
+ pb:"La question qu'on ne pose jamais dans ce genre d'exercice : et les vingt mille autres ? Sans réponse, une liste de vingt-six comptes ressemble à une sélection arbitraire.",
  q:"Et les quatorze mille silencieuses, vous en faites quoi ?",
- r:"Rien, et c'est un choix assumé. Sept mille six cent quatre-vingt-six ont reçu des emails sans jamais réagir : elles sortent de séquence. Sept mille vingt-trois n'ont <b>aucune trace</b> dans le CRM : elles partent à l'enrichissement, pas à la relance. Les arroser serait de l'emailing de masse sur une liste froide : ce n'est pas du nurturing, et ça abîme la délivrabilité de tout le reste."
+ r:"Rien, et c'est un choix assumé.<br><br><b>7 686</b> ont reçu des emails sans jamais réagir : elles sortent des séquences de vente, la newsletter continue.<br><b>7 023</b> n'ont laissé <b>aucune trace</b> dans le CRM : elles partent à l'enrichissement, pas à la relance.<br><br>Les arroser reviendrait à envoyer en masse sur une liste froide. Ce n'est pas du travail commercial, et ça abîme la délivrabilité de tout ce qu'on envoie par ailleurs."
+},
+{
+ p:"6 · Le résultat", t:"Ce qui a cassé", h:"Trois erreurs, et la règle que chacune a produite", court:true,
+ say:"Je préfère vous les raconter moi-même. Chacune a laissé une règle derrière elle, et c'est la règle qui vaut, pas l'erreur.",
+ bareme:[
+  ["Ce qui a cassé, et ce que ça a produit"],
+  ["Une règle décidée, écrite, jamais codée", "1 407 entreprises",
+   "elles sortaient sans commercial alors qu'une fiche jumelle en portait un. Depuis, chaque règle a une ligne dans une table qui dit où elle est appliquée et quel contrôle le prouve"],
+  ["Un chiffre juste, mesuré trois façons différentes", "3,9 h · 23,4 h · 64,8 h",
+   "trois résultats pour le même contact, aucun faux, ils ne mesuraient pas la même chose. Depuis, chaque mesure porte sa définition à côté d'elle"],
+  ["Une des deux IA a avancé seule sur un lot", "des modifications non validées",
+   "elle a poussé du travail que je n'avais pas relu. Depuis, rien ne part sans mon accord, et un accord ne vaut que pour ce qu'il décrit"]],
+ pb:"Un dossier qui ne montre que ce qui a marché n'apprend rien à personne, et il donne surtout envie de chercher ce qu'il cache.",
+ body:"Le point commun des trois : <b>aucune n'a été trouvée par un test</b>. Un test vérifie ce qu'on a pensé à vérifier. La première a été trouvée parce qu'une seconde implémentation refaisait le calcul de son côté. La deuxième parce que deux chiffres ne tombaient pas pareil. La troisième parce que je regardais.",
+ q:"Vous en avez eu combien en tout ?",
+ r:"Plus que trois, et je ne vais pas vous donner un chiffre que vous ne pouvez pas vérifier. Ce qui compte, c'est que <b>je peux vous raconter chacune, ce qu'elle a produit, et où voir la correction dans le dépôt</b>. Ces trois-là sont les plus instructives.<br><br>Et aucune n'est restée : elles ont toutes été trouvées avant d'atteindre ce que vous avez sous les yeux."
+},
+{
+ p:"6 · Le résultat", t:"La vérité terrain", h:"Oui, j'ai vu les réponses", court:true,
+ say:"Votre énoncé dit que les comptes chauds ont été plantés dans les données. J'ai trouvé leur trace. Je vous le dis moi-même, parce que la question suivante est légitime.",
+ bareme:[
+  ["Ce à quoi elle a servi, et ce à quoi elle n'a jamais servi"],
+  ["Une mesure, une seule fois", "à la fin",
+   "quand le barème et les seuils étaient déjà fixés et poussés dans le dépôt"],
+  ["Jamais une règle", "aucun poids ne la regarde",
+   "le tri se fait sur les pages visitées, les personnes qui bougent, la récence, les signaux de départ"],
+  ["Jamais un réglage", "on ne rattrape pas un compte",
+   "ajuster les poids jusqu'à tomber juste, c'est apprendre par cœur un fichier qu'on ne reverra pas"],
+  ["Ce qu'elle voit de la base", "82 comptes sur 20 519",
+   "le reste, le nettoyage, les fusions, la conformité, est garanti par les contrôles automatiques, pas par elle"]],
+ pb:"Vous pourriez me dire : vous aviez les réponses sous les yeux, pourquoi je vous croirais ? C'est la bonne question, et elle mérite mieux qu'un « je vous promets ».",
+ body:"La preuve n'est pas une promesse, elle est dans l'ordre des choses. <b>Les poids ont été fixés et poussés dans le dépôt avant la mesure</b>, l'historique le montre commit par commit. Et le test de robustesse le confirme d'un autre côté : en secouant tous les poids de plus ou moins 30 %, sur 38 essais, la liste à appeler ne change pas. Une liste réglée à la main sur un corrigé n'aurait pas cette stabilité.",
+ q:"Et si je vous donne un deuxième fichier, votre configuration tient ?",
+ r:"C'est exactement la question que je me suis posée, et c'est pour ça que rien dans les règles ne cite ce fichier. Aucun poids ne mentionne un numéro de ligne, un identifiant, une plage. Tout est écrit en langage métier : cette page vaut plus que celle-là, une demande explicite prime sur du volume, un signal vieux de deux mois ne vaut plus grand-chose.<br><br>Et je l'ai vérifié plutôt que de l'affirmer : <b>38 variations, chaque poids secoué de plus ou moins 30 %</b>, la liste à appeler est identique dans les 38. Elle n'est pas faite de points, elle est faite de faits."
 },
 {
  p:"6 · Le résultat", t:"Ce que je ne fais pas", h:"Six protections qui ne se sont jamais déclenchées", vue:"ops",
@@ -1991,11 +2040,28 @@ var PROC=[
 },
 {
  p:"6 · Le résultat", t:"Là où l'équipe travaille", h:"La liste ne sert à rien dans un fichier", court:true,
- say:"Un CSV que personne n'ouvre n'a réveillé aucun CRM. La liste part dans Slack, avec les preuves.",
- kpi:[["1","message quotidien"],["0","secret dans le dépôt : l'adresse d'envoi vit dans l'environnement"]],
- body:"Chaque ligne porte qui appeler, son titre, la preuve datée, le canal, le nombre de personnes actives et le sponsor. Les comptes à signaux négatifs partent avec la mention <b>appel de rétention, pas de prospection</b> : un compte qui s'en va ne s'appelle pas comme un compte qui arrive. Et un garde-fou refuse d'écrire le mot « comité » quand il n'y a pas trois personnes derrière.",
+ say:"Un fichier que personne n'ouvre n'a jamais réveillé un CRM. La liste part dans Slack, avec les preuves.",
+ kpi:[["1","message par jour"],["0","mot de passe dans le dépôt : l'adresse d'envoi vit ailleurs"]],
+ body:"Chaque ligne porte qui appeler, sa fonction, ce qu'il a fait et quand, par quel canal le joindre, combien de personnes bougent chez lui, et quel décideur est derrière. Les comptes qui montrent des signes de départ partent avec la mention <b>appel de rétention, pas de prospection</b> : un compte qui s'en va ne s'appelle pas comme un compte qui arrive.<br><br>Et un garde-fou refuse d'écrire le mot « comité » quand il n'y a pas au moins trois personnes derrière.",
  q:"Pourquoi Slack et pas le CRM ?",
- r:"Parce que le CRM est l'endroit où l'information dort : c'est le problème qu'on vient de résoudre, pas la solution. Le message arrive là où l'équipe est déjà, avec un bouton vers le tableau de bord pour ceux qui veulent creuser. Ce qui ne se voit pas ne se travaille pas."
+ r:"Parce que le CRM est l'endroit où l'information s'endort : c'est le problème qu'on vient de résoudre, pas la solution. Le message arrive là où l'équipe est déjà, avec un lien vers le tableau de bord pour ceux qui veulent creuser. Ce qui ne se voit pas ne se travaille pas."
+},
+{
+ p:"6 · Le résultat", t:"Aller chercher ce qui manque", h:"On n'enrichit jamais 20 519 comptes à l'aveugle", court:true, vue:"data",
+ say:"Un CRM de huit ans a des trous. Je les ai comptés, et je ne paie pas pour les combler tous.",
+ bareme:[
+  ["Ce qui manque, compté"],
+  ["Contacts sans adresse exploitable", "5 371", "ils sont dans une file d'attente, prêts à être complétés"],
+  ["Contacts dont on ignore la fonction", "4 554", "ils comptent à moitié dans le score, faute de mieux"],
+  ["Qui on complète, et quand"],
+  ["Les comptes à appeler", "tout de suite", "ce sont eux qu'on va joindre cette semaine"],
+  ["Les comptes à travailler", "une fois par semaine", "l'adresse et la fonction, rien d'autre"],
+  ["Tout le reste", "jamais",
+   "sauf si le compte se réveille et passe une porte. Un compte froid ne mérite pas qu'on paie pour lui"]],
+ pb:"L'enrichissement se facture au contact. Vider la file d'un coup coûterait entre 110 et 800 euros selon le fournisseur, pour des données qui dormiront. Le tri vaut plus cher que l'outil.",
+ body:"Le plus gros trou n'est pas une adresse manquante, c'est l'intention anonyme : <b>la grande majorité des visites de la page tarifs n'est rattachée à personne</b>. La façon la moins chère de la récupérer, c'est de mettre un identifiant dans les liens des emails qu'on envoie déjà : dès qu'une personne clique, toutes ses visites passées et futures portent son nom. Ça ne coûte rien de plus, les envois partent déjà.<br><br>Et une règle qui ne bouge pas : l'enrichissement peut trouver une nouvelle personne, il ne rend jamais joignable quelqu'un qui a demandé qu'on le laisse tranquille.",
+ q:"Vous n'avez rien enrichi, en fait ?",
+ r:"Non, et c'est volontaire : les entreprises de ce fichier sont fictives, aucun fournisseur ne trouvera quoi que ce soit sur elles. Ce que j'ai construit, c'est la partie qui coûte cher à concevoir et qui ne dépend pas des données : <b>la file, la règle qui décide qui mérite d'être complété, et la trace de ce qui a été ajouté</b>.<br><br>Pour la brancher en vrai, il manque trois adresses de fournisseur à renseigner. Le reste tourne."
 },
 {
  p:"7 · Becca", phase:"7", t:"· Becca ·", h:"Becca",
@@ -2402,8 +2468,8 @@ function renderOps(){
     +'<div class="kpi"><b>'+nf(D.counts.accounts)+'</b><span>records bruts</span><em>3 CSV, 8 ans d\'historique</em></div>'
     +'<div class="kpi"><b>'+nf(D.counts.entities)+'</b><span>entités réelles</span><em>−'+nf(D.counts.merged)+' doublons fusionnés</em></div>'
     +'<div class="kpi"><b>'+nf(D.counts.events)+'</b><span>events / 90 j</span><em>'+nf(D.counts.anon_events)+' non rattachables</em></div>'
-    +'<div class="kpi hi"><b>'+D.counts.hot+'</b><span>comptes hot</span><em>seuil '+D.config.thresholds.hot+' pts</em></div>'
-    +'<div class="kpi"><b>'+D.counts.warm+'</b><span>warm</span><em>seuil '+D.config.thresholds.warm+' pts</em></div>'
+    +'<div class="kpi hi"><b>'+D.counts.hot+'</b><span>tier 1 : à appeler</span><em>deux portes, pas un seuil de points</em></div>'
+    +'<div class="kpi"><b>'+D.counts.warm+'</b><span>tier 2 : à travailler</span><em>à partir de '+D.config.thresholds.warm+' points</em></div>'
     +'<div class="kpi al"><b>'+nf(D.counts.risk)+'</b><span>perdus : canal mort</span><em>le score y est, le canal n\'y est plus</em></div>'
     +'<div class="kpi"><b>'+done+' / '+S.length+'</b><span>étapes cleanup</span><em>phase '+(S[Math.min(done,S.length-1)].phase||"·")+'</em></div>'
     +'<div class="kpi"><b>'+nf(D.counts.dormant)+'</b><span>entités muettes</span><em>0 event sur la fenêtre</em></div>'
@@ -2429,11 +2495,11 @@ function renderOps(){
       +'<line x1="'+hx.toFixed(2)+'" y1="0" x2="'+hx.toFixed(2)+'" y2="100" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>'
       +'<polyline points="'+pts+'" fill="none" stroke="var(--text)" stroke-width="1.8" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>'
       +'</svg><div class="curve-lg">'
-      +'<span><i style="background:var(--violet)"></i>seuil hot <b>'+D.config.thresholds.hot+' pts</b></span>'
-      +'<span><i style="background:var(--warn)"></i>seuil warm <b>'+D.config.thresholds.warm+' pts</b></span>'
+      +'<span><i style="background:var(--violet)"></i>garde-fou <b>'+D.config.thresholds.hot+' points</b>, jamais atteint</span>'
+      +'<span><i style="background:var(--warn)"></i>entrée en tier 2 <b>'+D.config.thresholds.warm+' points</b></span>'
       +'<span>rang 20 <b>'+vf(c[19])+'</b> → rang 40 <b>'+vf(c[39])+'</b></span>'
       +'<span>max <b>'+vf(c[0])+'</b> · médiane des comptes qui portent un signal <b>0,6</b> · <b>14 709</b> à zéro</span></div>'
-      +'<div class="note" style="margin-top:14px">Le seuil n\'est pas une note sur 100 : le score est une somme de points non bornée. '
+      +'<div class="note" style="margin-top:14px">Le score n\'est pas une note sur 100 : c\'est une somme de points. L\'affichage s\'arrête à 100, le classement travaille sur le total réel. '
       +'Il est posé <b>sur la rupture</b> : entre le 20<sup>e</sup> et le 40<sup>e</sup> compte le score s\'effondre de '+vf(c[19])+' à '+vf(c[39])+'. '
       +'Et le seuil de points n\'est pas ce qui fait entrer en Tier 1 : ça, c\'est une porte, une demande explicite ou un comité actif. '
       +'Le 30 est un garde-fou d\'accumulation qui ne s\'est jamais déclenché, le meilleur compte sans porte plafonne à <b>20,4</b>. '

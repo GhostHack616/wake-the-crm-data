@@ -3,15 +3,25 @@
 """
 L'INTERDIT D'ÉCRAN, vérifié plutôt qu'annoncé.
 
-Trois familles ne doivent jamais atteindre le tableau de bord, quel que soit
-le build :
+Ce qui ne doit jamais atteindre le tableau de bord :
 
-  1. tout ce qui touche au générateur du jeu de données — mécanisme, colonne,
-     seuil, bloc. Cela se dit de vive voix, au moment choisi, jamais à l'écran.
-  2. les antisèches d'oral : formulations préparées, réponses apprises.
-  3. les notes internes de travail : brouillons, versions rejetées.
+  1. la CLÉ qui permet d'extraire la vérité terrain du jeu de données : le
+     numéro seuil, la colonne technique, la plage d'identifiants. Le fait
+     qu'elle existe est assumé à l'écran (voir plus bas) ; la clé pour la
+     reconstituer n'a pas à être distribuée.
+  2. les notes internes de travail : brouillons, versions rejetées, jargon de
+     chantier.
 
-Le registre des erreurs, lui, est assumé : il montre ce qui a été corrigé.
+CE QUI EST AU CONTRAIRE ASSUMÉ, décidé par Romain le 30/07 :
+
+  - Le registre des erreurs. Il montre ce qui a été corrigé, et c'est le
+    critère « alertes-tu toi-même sur où ça casse » du barème.
+  - Le fait d'avoir trouvé la trace de la vérité terrain, et l'ordre dans
+    lequel les choses ont été faites. L'énoncé de Gab écrit lui-même que les
+    comptes chauds « ont ete plantes dans les donnees » : le cacher serait
+    protéger un secret que l'auteur du sujet annonce dans son propre brief.
+  - Les formulations préparées pour l'oral. La vue Process EST le support de
+    présentation : les phrases qu'elle porte sont faites pour être dites.
 
 Ce contrôle lit le fichier tel qu'il est dans le dépôt. Il ne dépend d'aucun
 chemin absolu et se rejoue depuis n'importe quel checkout :
@@ -31,12 +41,8 @@ CIBLES = [os.path.join(RACINE, "index.html")]
 INTERDITS = [
     (r"\bevent_id\b",
      "nomme la colonne technique du jeu de données"),
-    (r"corrig[ée]s?\s+(plant|du\s+g[ée]n[ée]rateur|dans\s+le\s+jeu)",
-     "nomme le bloc de référence planté dans les données"),
-    (r"\bplant[ée]e?s?\s+dans\s+(le\s+jeu|les\s+donn[ée]es)\b",
-     "décrit le mécanisme du générateur"),
     (r"\bantis[èe]che",
-     "une antisèche d'oral n'a rien à faire à l'écran"),
+     "le mot lui-même n'a rien à faire à l'écran, même si la préparation est assumée"),
     (r"\b92\s?969\b",
      "le seuil du bloc de référence"),
     (r"\bbrouillon\s+(interne|de\s+travail)\b",
