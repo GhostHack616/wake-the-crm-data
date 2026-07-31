@@ -2772,6 +2772,40 @@ var PROC=[
  body:"Ce que je retiens du chantier : la valeur n'est pas dans le modèle, elle est dans le cadre autour. Le point d'entrée unique, la porte de validation, la règle des 100 lignes, le cadre commercial par client. C'est ce qui sépare une démo d'un agent qui tourne depuis avril.",
  q:"Qu'est-ce qui prouve que ça tourne vraiment, et pas seulement chez toi le jour de la démo ?",
  r:"Le pipeline dont je vous ai parlé a tourné <b>le lendemain de la mise en production</b>, sur un vrai client, et la campagne est partie derrière. Depuis, l'agent est le point d'entrée de mes opérations tous les jours. Et les trois casses que je vous ai citées sont la preuve la plus solide qu'il tourne : un système qui n'a jamais cassé est un système qui n'a jamais servi."
+},
+{
+ p:"8 · L'outil", phase:"8", t:"· L'outil ·", h:"L'outil",
+ say:"Dernière partie : l'outil qui me manque, celui que personne n'a construit pour moi. Il sort directement de cette semaine."
+},
+{
+ p:"8 · L'outil", t:"Le détecteur de fumée", h:"Un CRM peut mentir sans que rien ne s'allume", court:true,
+ say:"Cette semaine, j'ai passé cinq jours dans un fichier qui mentait, et rien nulle part ne l'avait jamais signalé. C'est ça, l'outil qui manque.",
+ geant:["8 ans","de mensonge silencieux dans le jeu de données de ce challenge. Aucune erreur, aucune alerte : le CRM s'ouvrait, les filtres répondaient, les chiffres s'affichaient. Et ils étaient faux."],
+ bareme:[
+  ["Ce que personne n'avait vu, dans le fichier du challenge"],
+  ["Fiches en double", "32 %", "30 000 fiches pour 20 519 entreprises réelles"],
+  ["Écritures de date mélangées dans la même colonne", "3", "et se tromper ne déclenchait aucune erreur"],
+  ["Chiffre d'affaires fantôme", "21,9 %", "100 % des clients partis y comptaient encore comme s'ils payaient"],
+  ["Alertes déclenchées par tout ça, en 8 ans", "0", "il n'existe aucun outil dont c'est le métier"]],
+ pb:"Il y a des dizaines d'outils pour nettoyer un CRM. Il n'y en a pas un seul dont le métier est de vous PRÉVENIR que vos données sont en train de pourrir. On découvre toujours après, en cherchant autre chose.",
+ body:"<b>Ce que fait l'outil : il ne nettoie rien. Il surveille, et il gueule.</b><br><br>Chaque matin, un message : « Hier, 400 fiches sont entrées. 60 sont des doublons. Ton chiffre d'affaires a pris 200 000 € alors que tu n'as signé personne. »<br><br>Et pour les fautes qui ne se discutent pas, il ne gueule pas, <b>il bloque</b>. Un robot qui entre dans les scores : bloqué. Un client parti avec une négociation en cours qui part en prospection à froid : bloqué, il va en arbitrage humain. Un désabonné qu'on s'apprête à remettre dans une liste d'envoi : bloqué aussi, et celui-là est dans mon plan, pas encore dans le code.",
+ q:"Pourquoi maintenant, et pas il y a cinq ans ?",
+ r:"Parce que tout le monde branche de l'intelligence artificielle sur son CRM en ce moment.<br><br>Avant, une donnée fausse produisait une erreur humaine, une à la fois, et quelqu'un finissait par la voir. Aujourd'hui elle produit <b>une erreur automatique, répétée des milliers de fois, avec assurance</b>. Une machine qui note des comptes sur des données fausses ne se trompe pas un peu : elle se trompe partout, vite, et sans jamais hésiter.<br><br>Plus on automatise, plus une donnée pourrie coûte cher. C'est exactement pour ça que le détecteur devient nécessaire maintenant, et pas avant."
+},
+{
+ p:"8 · L'outil", t:"Ce qui le rend crédible", h:"Je l'ai déjà construit en miniature", court:true, vue:"ops",
+ say:"Ce n'est pas une idée sur une diapositive. La version zéro tourne dans le dépôt que vous allez lire, et c'est elle qui m'a empêché de vous livrer des chiffres faux.",
+ bareme:[
+  ["Ce qui tourne déjà, et se rejoue à chaque exécution"],
+  ["Contrôles sur le nettoyage", "95", "chacun avec son attendu et son mesuré. Un seul au rouge et la chaîne s'arrête"],
+  ["Contrôles sur le scoring", "28", "les promesses du moteur, vérifiées à chaque calcul"],
+  ["Total sur la chaîne", "123", "et c'est ce filet qui a attrapé mes propres erreurs, pas moi"],
+  ["Contrôles en plus sur la fabrication de l'écran", "10",
+   "c'est un troisième programme : il refuse de publier si l'écran ne dit pas la même chose que le moteur"]],
+ pb:"Une idée d'outil qu'on n'a jamais fait tourner est une intention. La question qu'on me posera est simple : qu'est-ce qui prouve que tu sais le faire ?",
+ body:"La preuve la plus honnête, c'est <b>ce que ce filet a attrapé chez moi</b>. Il attendait 97 personnes en double, il en a trouvé 99, et c'est lui qui a signalé l'écart, pas moi. Il a refusé de publier un écran où un compteur ne tombait pas juste. Un système qui n'a jamais rien arrêté est un système qui n'a jamais servi.<br><br><b>Ce qu'il resterait à faire</b>, et ce n'est pas énorme : brancher la chose sur un vrai CRM plutôt que sur des fichiers, et transformer les compteurs figés en compteurs qui se comparent à hier. Deux semaines, et quelqu'un s'en sert le lundi suivant.",
+ q:"Où est-ce que ça casse ?",
+ r:"Trois endroits, et je préfère les donner avant qu'on me les trouve.<br><br><b>Un, il crie trop au début.</b> Tant que les seuils ne sont pas réglés sur les habitudes de la boîte, tout mouvement ressemble à une anomalie. On passe deux semaines à le calmer, sinon les gens s'habituent à l'ignorer et l'outil est mort.<br><br><b>Deux, il ne sert à rien si personne ne lit l'alerte.</b> C'est le vrai risque, et il n'est pas technique. C'est pour ça que le message arrive là où l'équipe est déjà, et pas dans un tableau de bord de plus.<br><br><b>Trois, bloquer à tort coûte cher.</b> Un blocage injustifié arrête le travail de quelqu'un. Donc le blocage reste réservé aux fautes sans aucun doute possible, et tout le reste se contente d'alerter. C'est un arbitrage, pas une limite technique."
 }
 ];
 
