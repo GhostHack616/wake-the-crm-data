@@ -612,10 +612,10 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
    Même grammaire que les deux autres schémas : boîtes sobres, flux animés. */
 .chaine{margin:30px auto 0;max-width:980px}
 .chaine .ch{width:100%;height:auto;display:block} .chaine .cv{display:none}
-.cnom{font-family:var(--display);font-size:12.5px;font-weight:600;fill:var(--text);letter-spacing:.04em}
-.crole{font-size:9.5px;fill:var(--text-3)}
-.cdet{font-size:9.5px;fill:var(--text-3);opacity:.85}
-.ctit{font-size:9px;letter-spacing:.16em;fill:var(--text-3);font-weight:700}
+.cnom{font-family:var(--display);font-size:15px;font-weight:600;fill:var(--text);letter-spacing:.04em}
+.crole{font-size:11.5px;fill:var(--text-3)}
+.cdet{font-size:11.5px;fill:var(--text-3);opacity:.9}
+.ctit{font-size:10.5px;letter-spacing:.14em;fill:var(--text-3);font-weight:700}
 .cbox{fill:var(--panel);stroke:var(--line);stroke-width:1}
 .cbox.t1{fill:rgba(227,166,72,.13);stroke:rgba(227,166,72,.5)}
 .cbox.t2{fill:var(--violet-soft);stroke:rgba(154,141,255,.45)}
@@ -625,7 +625,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .cnom.inv{fill:var(--on-ink)} .crole.inv,.cdet.inv{fill:var(--on-ink);opacity:.66}
 .cdet.b{fill:var(--text);font-weight:600}
 .cnom.off,.cdet.off{opacity:.38}
-.cscore{font-family:var(--display);font-size:19px;font-weight:600;fill:var(--violet)}
+.cscore{font-family:var(--display);font-size:22px;font-weight:600;fill:var(--violet)}
 .cbig{font-family:var(--display);font-size:30px;font-weight:600;fill:var(--on-ink)}
 /* ce qui est écarté avant le calcul : barré, jamais caché */
 .cbox.out{fill:transparent;stroke:var(--line-2);stroke-dasharray:4 4}
@@ -3174,7 +3174,7 @@ function chaineSVG(){
        +'aria-label="De quatre personnes jusqu\'à la conversation, sur un cas réel">';
 
   /* ① les personnes */
-  S+=txt("ctit",6,16,"1 · CHAQUE PERSONNE MARQUE DES POINTS");
+  S+=txt("ctit",6,16,"1 · CHAQUE PERSONNE, SES POINTS");
   GENS.forEach(function(p,k){
     var y=26+k*88;
     S+=boite(2,y,268,74,p.s==="0,0"?"t3":"");
@@ -3186,7 +3186,7 @@ function chaineSVG(){
   S+=txt("cdet",6,398,"Un stagiaire compte pour zéro : ses gestes sont multipliés par 0.");
 
   /* ② l'addition */
-  S+=txt("ctit",300,16,"2 · ON ADDITIONNE");
+  S+=txt("ctit",312,16,"2 · ON ADDITIONNE");
   [63,151,239,327].forEach(function(y){ S+='<path class="cflux" d="M274 '+y+' C300 '+y+' 306 195 330 195"/>'; });
   S+=puce(328,195);
   S+=txt("cdet",300,272,"jamais une moyenne :");
@@ -3218,8 +3218,7 @@ function chaineSVG(){
 
   /* ⑤ l'étiquette */
   S+=txt("ctit",818,16,"4 · SON ÉTIQUETTE");
-  S+='<path class="cflux" d="M546 240 H800 V196"/>'
-    +'<polygon class="cpuce" points="791,200 809,200 800,186"/>';
+  S+='<path class="cflux" d="M792 55 H803 V183 H808"/>'+puce(806,183);
   S+=boite(816,26,238,58);
   S+=txt("cnom off",830,50,"JAMAIS CLIENT");
   S+=txt("cdet off",830,68,"elle n'a jamais rien payé");
@@ -3235,9 +3234,9 @@ function chaineSVG(){
   /* le croisement, en bas */
   S+='<line x1="570" y1="340" x2="1054" y2="340" stroke="var(--line-2)"/>';
   S+=txt("ctit",572,362,"5 · ON CROISE LES DEUX, ET ÇA DONNE LA CONVERSATION");
-  S+='<path class="cflux" d="M680 322 V386 H752"/>';
-  S+='<path class="cflux" d="M935 322 V386 H868"/>';
-  S+=puce(752,386);
+  S+='<path class="cflux" d="M935 216 V388"/>';
+  
+  S+='<polygon class="cpuce" points="926,388 944,388 935,400"/>';
   S+=boite(620,396,434,58,"act");
   S+=txt("cnom inv",640,422,"TIER 1  +  EX-CLIENT  =  RECONQUÊTE");
   S+=txt("crole inv",640,442,"on l'appelle en premier, et on va le rechercher");
