@@ -724,7 +724,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
   .logic{flex-direction:column}.llist{width:100%;height:44%;border-right:0;border-bottom:1px solid var(--line)}
   .tabs button{padding:6px 11px;font-size:11.5px}.brand span{display:none}
   .transport{gap:10px;padding:0 12px}.tcount{min-width:0;font-size:11.5px}
-  /* la barre du haut doit tenir dans l'écran : 4 onglets depuis l'ajout de « Données » */
+  /* la barre du haut doit tenir dans l'écran : 6 onglets depuis l'ajout d'« Automatisation » */
   .top{gap:8px;padding:0 10px}
   .brand b{font-size:13.5px}
   .tabs{min-width:0;overflow-x:auto;scrollbar-width:none}
@@ -732,6 +732,65 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
   .tbtn{flex:0 0 auto}
 }
 @media(max-width:420px){ .brand b{display:none} }
+/* ── l'onglet Automatisation ─────────────────────────────────────────────
+   Une page qui se lit, pas un tableau de bord : large, aérée, quatre colonnes
+   qui deviennent quatre blocs empilés sur mobile. */
+.auto{position:absolute;inset:0;overflow:auto;background:var(--bg)}
+.auto-in{max-width:1180px;margin:0 auto;padding:44px 26px 90px}
+.auto-hd h2{font-family:var(--display);font-size:34px;font-weight:600;letter-spacing:-.02em;margin:0 0 8px}
+.auto-hd p{font-size:15px;color:var(--text-2);max-width:640px;margin:0 0 34px;line-height:1.6}
+.auto-regles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:42px}
+.auto-regle{position:relative;padding:22px 24px 22px 60px;border-radius:var(--r-md);
+  background:var(--panel);border:1px solid var(--line)}
+.auto-regle i{position:absolute;left:22px;top:21px;width:24px;height:24px;border-radius:50%;
+  background:var(--ink);color:var(--on-ink);font-style:normal;font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center}
+.auto-regle h3{font-size:15px;font-weight:600;margin:0 0 7px;line-height:1.35}
+.auto-regle p{font-size:13px;color:var(--text-2);line-height:1.65;margin:0}
+.auto-regle p b{color:var(--text);font-weight:600}
+
+.auto-fam{margin-bottom:34px;border-radius:var(--r-md);border:1px solid var(--line);
+  background:var(--panel);overflow:hidden}
+.auto-fh{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.auto-fh b{font-family:var(--display);font-size:20px;font-weight:600}
+.auto-sous{font-size:12.5px;color:var(--text-3)}
+.tagl.lhyg{background:var(--soft-2);color:var(--text-2)}
+
+.auto-t{width:100%;border-collapse:collapse;font-size:13px}
+.auto-t th{text-align:left;padding:11px 18px;font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--text-3);font-weight:700;border-bottom:1px solid var(--line-2)}
+.auto-t td{padding:15px 18px;border-bottom:1px solid var(--line-2);vertical-align:top;line-height:1.6}
+.auto-t tr:last-child td{border-bottom:0}
+.auto-t td.ad{font-weight:600;color:var(--text);width:20%}
+.auto-t td.aq{width:13%}
+.auto-t td.aq span{display:inline-block;padding:3px 9px;border-radius:var(--r-pill);
+  background:var(--soft);color:var(--text-2);font-size:11px;white-space:nowrap}
+.auto-t td.aa{color:var(--text-2);width:32%}
+.auto-t td.am{color:var(--text-2);width:35%;font-style:italic}
+.auto-t td b{color:var(--text);font-weight:600;font-style:normal}
+
+.auto-hy{display:grid;grid-template-columns:repeat(auto-fit,minmax(206px,1fr))}
+.auto-hx{padding:18px 20px;border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
+.auto-hx .hv{font-family:var(--display);font-size:23px;font-weight:600;letter-spacing:-.01em}
+.auto-hx .ht{font-size:11.5px;color:var(--text-3);margin:2px 0 10px;line-height:1.4}
+.auto-hx .ha{font-size:12.5px;color:var(--text-2);line-height:1.6}
+.auto-hx .ha b{color:var(--text);font-weight:600}
+
+.auto-fin{margin-top:14px;padding:26px 28px;border-radius:var(--r-md);
+  background:var(--ink);color:var(--on-ink);font-size:15px;line-height:1.7}
+.auto-fin b{color:#fff;font-weight:600}
+
+@media(max-width:900px){
+  .auto-regles{grid-template-columns:1fr}
+  .auto-t thead{display:none}
+  .auto-t tr{display:block;border-bottom:1px solid var(--line);padding:6px 0}
+  .auto-t tr:last-child{border-bottom:0}
+  .auto-t td{display:block;width:auto !important;border:0;padding:5px 18px}
+  .auto-t td.ad{padding-top:14px;font-size:14px}
+  .auto-t td.aa::before{content:"Ce qui part tout seul : ";color:var(--text-3);font-weight:600}
+  .auto-t td.am::before{content:"Ce qu'on dit : ";color:var(--text-3);font-weight:600;font-style:normal}
+  .auto-hx{border-right:0}
+}
 </style>
 </head>
 <body>
@@ -773,6 +832,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
       <button data-v="ops">Ops</button>
       <button data-v="data">Données</button>
       <button data-v="proc">Process</button>
+      <button data-v="auto">Automatisation</button>
     </nav>
     <button class="tbtn" id="themeBtn" title="Thème" aria-label="Basculer le thème">
       <svg viewBox="0 0 20 20" fill="none" id="thIcon"><path d="M16 11.2A6.6 6.6 0 0 1 8.8 4a6.6 6.6 0 1 0 7.2 7.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -860,6 +920,7 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 
     <!-- ─────── OPS ─────── -->
     <section class="view" id="vOps"><div class="ops" id="opsBody"></div></section>
+    <section class="view" id="vAuto"><div class="auto" id="autoBody"></div></section>
 
     <!-- ─────── DONNÉES ─────── -->
     <!-- ─────── PROCESS ─────── -->
@@ -3499,6 +3560,143 @@ function initData(){
 }
 
 /* ══════════════════════════════════════════════════════════════ */
+/* ─────────────────────────────────────────────────────────────────────────
+   AUTOMATISATION : ce qui se déclenche si on branche le CRM demain.
+
+   Deux règles gouvernent toute la carte, et elles sont écrites en haut parce
+   que chaque ligne du tableau en découle :
+     1. plus c'est chaud, plus c'est un humain ;
+     2. on n'écrit jamais au client ce qu'on a vu de lui.
+   ───────────────────────────────────────────────────────────────────────── */
+var AUTO_REGLES=[
+ ["Plus c'est chaud, plus c'est un humain",
+  "La machine <b>prépare</b> le chaud (elle alerte et elle documente), <b>travaille</b> le tiède (séquences signées par le commercial), <b>entretient</b> le froid (du contenu), et <b>verrouille</b> l'hygiène. Elle n'appelle jamais à votre place un compte qui vient de demander une démo."],
+ ["On ne dit jamais ce qu'on a vu",
+  "Un email qui dit « nous avons remarqué que vous consultiez la page export », c'est de la surveillance, et c'est la fin de la relation. <b>On agit sur ce qu'on sait, on ne le montre pas.</b> La détection change ce qu'on fait, jamais ce qu'on écrit."]
+];
+
+var AUTO_FAMILLES=[
+ {cle:"acquisition", nom:"Acquisition", sous:"des entreprises qui n'ont jamais rien acheté",
+  n:"@acquisition", tag:"lacquisition",
+  lignes:[
+   {d:"Un formulaire est rempli", q:"machine + humain",
+    a:"Email de confirmation immédiat, <b>le seul envoi automatique légitime à chaud</b>, parce qu'il est attendu. En même temps : alerte au commercial et tâche « rappeler sous 1 h ».",
+    m:"« Bien reçu. Un membre de l'équipe vous rappelle avant la fin de journée. En attendant, voici deux cas clients proches de votre contexte. »"},
+   {d:"Un rendez-vous est pris", q:"machine",
+    a:"Confirmation et informations pratiques. Puis, <b>une heure avant</b>, un briefing automatique au commercial : qui, sa note, les pages vues, qui d'autre bouge dans l'entreprise.",
+    m:"Le briefing : « Margaux Ferrari, HR Business Partner, formulaire le 19 juillet, 3 personnes actives, un décideur identifié. »"},
+   {d:"Trois personnes bougent ensemble, sans que personne ait rien demandé", q:"humain seul",
+    a:"<b>Aucun email.</b> Une alerte « ça s'agite chez X », un enrichissement immédiat de la fiche, et une tâche d'appel le jour même.",
+    m:"L'alerte : « 4 personnes bougent chez X dont le DRH, et personne n'a rien demandé. Appelle avant qu'ils le demandent à un concurrent. »"},
+   {d:"L'entreprise passe au-dessus de 8 points", q:"machine, validée à la main",
+    a:"Entrée en séquence d'emails <b>au nom du commercial</b>, validée par fournée chaque matin. Jamais envoyée toute seule.",
+    m:"Premier email : un cas client du même secteur et de la même taille, puis une question ouverte. Pas de demande de démo, pas de lien de prise de rendez-vous dès le premier message."},
+   {d:"Elle s'est éteinte depuis 14 jours", q:"machine",
+    a:"Sortie de séquence, bascule en entretien long.",
+    m:"Rien. Un silence propre vaut mieux qu'une relance de trop."}]},
+
+ {cle:"expansion", nom:"Expansion", sous:"des clients qui pourraient prendre plus",
+  n:"@expansion", tag:"lexpansion",
+  lignes:[
+   {d:"Un client actif consulte les tarifs, redemande une démo, ou remplit à nouveau un formulaire", q:"humain",
+    a:"Alerte au commercial qui suit le compte, avec le briefing : ce qu'il paie, depuis quand, ce qu'il utilise.",
+    m:"<b>Un appel, pas un email.</b> Un client a déjà un interlocuteur, lui écrire un mail de prospection est une régression. « Je fais le point avec vous ce trimestre ? On a sorti quelque chose qui touche votre usage. »"}]},
+
+ {cle:"retention", nom:"Rétention", sous:"des clients sur le point de partir. La famille la plus chère",
+  n:"@retention", tag:"lretention",
+  lignes:[
+   {d:"Quelqu'un consulte les pages de résiliation ou exporte ses données", q:"humain, priorité maximale",
+    a:"Alerte en temps réel au responsable du compte et tâche d'appel le jour même. Si plusieurs personnes le font, escalade au manager. <b>Jamais d'email automatique.</b>",
+    m:"L'appel prend des nouvelles et fait le point sur la santé du compte, <b>sans jamais mentionner les pages consultées</b>. Si c'est un email : « Ça fait un moment qu'on n'a pas fait le point, je vous propose 20 minutes cette semaine. »"},
+   {d:"Le contrat arrive à échéance dans 90 jours", q:"machine, légitimement",
+    a:"Tâche pour le responsable du compte, et un email de bilan annuel au sponsor.",
+    m:"« Votre renouvellement approche. Avant d'en parler, voici ce que vos équipes ont utilisé cette année. On cale un point ? »"},
+   {d:"Plus que 60 jours, et pas de réponse", q:"machine + alerte",
+    a:"Relance du bilan, et alerte au manager si le contrat est important.",
+    m:"Relance courte, même angle. On ne change pas d'histoire en cours de route."},
+   {d:"Plus que 30 jours, ou déjà échu", q:"humain",
+    a:"<b>Fin des emails.</b> Une tâche d'appel par jour jusqu'à ce que quelqu'un décroche.",
+    m:"Le téléphone. À trente jours d'une fin de contrat, un email est une façon polie de ne rien faire."},
+   {d:"Un client actif est muet depuis 60 jours", q:"machine puis humain",
+    a:"Un email utile (une astuce produit, une nouveauté). Toujours muet à 90 jours : tâche d'appel de santé du compte.",
+    m:"« Une fonctionnalité que 80 % de nos clients RH n'utilisent pas encore. Trois minutes de lecture. »"}]},
+
+ {cle:"reconquete", nom:"Reconquête", sous:"des entreprises qui ont déjà payé et qui sont parties",
+  n:"@reconquete", tag:"lreconquete",
+  lignes:[
+   {d:"Un ex-client redonne signe de vie", q:"machine, validée à la main",
+    a:"Alerte de reconquête avec l'historique : ce qu'il payait, depuis combien de temps il était là, pourquoi il est parti si on le sait. Puis séquence au nom du commercial.",
+    m:"« Depuis votre départ, deux choses ont changé chez nous. Si le sujet redevient d'actualité, je vous montre en 15 minutes. » Et <b>jamais</b> « on a vu que vous étiez revenu »."},
+   {d:"Un ex-client reste froid", q:"machine",
+    a:"Entretien trimestriel : nouveautés, cas clients. L'objectif n'est pas de vendre, c'est de le faire bouger. Dès qu'il clique, la ligne du dessus s'applique.",
+    m:"Du contenu, pas de vente. Un ex-client qu'on relance trop tôt devient un ex-client définitif."}]}
+];
+
+/* L'hygiène : les automatisations qu'on ne voit pas, et qui empêchent
+   exactement les dégâts qu'on a comptés dans ce fichier. */
+var AUTO_HYGIENE=[
+ {v:"2 015", t:"envois partis vers des gens désabonnés",
+  a:"Un désabonnement retire la personne de <b>toutes</b> les listes d'envoi immédiatement, bascule son canal en téléphone ou LinkedIn, et c'est irréversible. Le verrou <b>bloque l'envoi</b> ; il ne compte pas les dégâts après coup."},
+ {v:"1 607", t:"envois partis vers une adresse qui n'existe pas",
+  a:"Adresse absente ou invalide : l'envoi est bloqué et la personne part dans une file d'enrichissement. Aujourd'hui ces envois partent, et personne ne le sait."},
+ {v:"7 023", t:"entreprises sans le moindre signal, jamais",
+  a:"Aucun envoi vers elles avant enrichissement. Arroser des adresses mortes abîme la réputation de votre domaine, donc la délivrabilité de <b>tous</b> les autres emails."},
+ {v:"1", t:"contact qui est une machine, déjà détecté",
+  a:"Robot repéré ou garde au rouge : alarme immédiate à l'équipe. C'est la seule de ces cinq qui tourne déjà dans ce dossier."},
+ {v:"jour 1", t:"enrichissement à l'entrée, pas trois mois après",
+  a:"Un nouveau contact est enrichi dès son arrivée. Sa fonction connue le premier jour, c'est son poids juste dans le score dès le premier geste, au lieu d'être compté à moitié pendant des mois."}
+];
+/* ── l'onglet Automatisation. Une page qui se lit de haut en bas : les deux
+   règles, les quatre familles, les verrous d'hygiène, la phrase de fin. */
+function autoHTML(){
+  var L=(D.counts&&D.counts.listes)||{};
+  function nombre(v){
+    if(typeof v==="string" && v.charAt(0)==="@"){
+      var k=v.slice(1); return L[k]!=null?nf(L[k]):"?";
+    }
+    return v;
+  }
+  var h='<div class="auto-in">';
+  h+='<div class="auto-hd"><h2>Si on branchait le CRM demain</h2>'
+    +'<p>Chaque fait que la machine détecte a une réaction définie. Voilà laquelle, '
+    +'et surtout qui agit : elle, ou vous.</p></div>';
+
+  h+='<div class="auto-regles">';
+  AUTO_REGLES.forEach(function(r,i){
+    h+='<div class="auto-regle"><i>'+(i+1)+'</i><h3>'+esc(r[0])+'</h3><p>'+r[1]+'</p></div>';
+  });
+  h+='</div>';
+
+  AUTO_FAMILLES.forEach(function(f){
+    h+='<div class="auto-fam '+f.cle+'">'
+      +'<div class="auto-fh"><span class="tagl '+f.tag+'">'+esc(f.nom)+'</span>'
+      +'<b>'+nombre(f.n)+'</b><span class="auto-sous">'+esc(f.sous)+'</span></div>'
+      +'<table class="auto-t"><thead><tr>'
+      +'<th>Ce qui se passe</th><th>Qui agit</th><th>Ce qui part tout seul</th><th>Ce qu\'on dit</th>'
+      +'</tr></thead><tbody>';
+    f.lignes.forEach(function(l){
+      h+='<tr><td class="ad">'+esc(l.d)+'</td>'
+        +'<td class="aq"><span>'+esc(l.q)+'</span></td>'
+        +'<td class="aa">'+l.a+'</td><td class="am">'+l.m+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  });
+
+  h+='<div class="auto-fam hyg"><div class="auto-fh"><span class="tagl lhyg">Hygiène</span>'
+    +'<b>5</b><span class="auto-sous">les automatisations qu\'on ne voit pas, et qui empêchent '
+    +'exactement ce qu\'on a compté dans vos fichiers</span></div><div class="auto-hy">';
+  AUTO_HYGIENE.forEach(function(x){
+    h+='<div class="auto-hx"><div class="hv">'+esc(x.v)+'</div>'
+      +'<div class="ht">'+esc(x.t)+'</div><div class="ha">'+x.a+'</div></div>';
+  });
+  h+='</div></div>';
+
+  h+='<div class="auto-fin">« Chaque fait que la machine détecte a une réaction définie : '
+    +'le chaud déclenche un humain informé, le tiède une séquence signée, le froid du contenu, '
+    +'et l\'hygiène des verrous. <b>Rien ne part sans règle, et rien de ce qu\'on a vu '
+    +'n\'est jamais dit au client.</b> »</div>';
+  return h+'</div>';
+}
 function showView(v){
   VIEW=v;
   document.querySelectorAll("#tabs button").forEach(function(b){ b.classList.toggle("on",b.dataset.v===v); });
@@ -3507,8 +3705,12 @@ function showView(v){
   document.getElementById("vOps").classList.toggle("on",v==="ops");
   document.getElementById("vData").classList.toggle("on",v==="data");
   document.getElementById("vProc").classList.toggle("on",v==="proc");
+  document.getElementById("vAuto").classList.toggle("on",v==="auto");
   if(v==="macro") G.resize();
   if(v==="data") loadTables();
+  /* la page se peint à la première ouverture : elle lit les compteurs du moteur */
+  if(v==="auto"){ var b=document.getElementById("autoBody");
+    if(b && !b.dataset.peint){ b.innerHTML=autoHTML(); b.dataset.peint="1"; } }
 }
 function boot(){
   document.getElementById("tabs").onclick=function(e){
