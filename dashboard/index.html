@@ -539,6 +539,48 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
   .ufus{max-width:270px}
   .ufus .uh{display:none} .ufus .uv{display:block}
 }
+/* ── le message Slack, montré tel qu'il part ────────────────────────────── */
+.dg{margin:30px auto 0;max-width:660px;text-align:left;border-radius:var(--r-md);
+  border:1px solid var(--line);background:var(--panel);overflow:hidden}
+.dg-hd{padding:14px 18px;border-bottom:1px solid var(--line);background:var(--soft)}
+.dg-hd b{display:block;font-size:14px;font-weight:600}
+.dg-hd span{display:block;font-size:11.5px;color:var(--text-3);margin-top:3px}
+.dg-s{padding:11px 18px 7px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.dg-s.red{color:var(--danger)} .dg-s.vio{color:var(--violet)} .dg-s.org{color:var(--warn)}
+.dg-c{padding:9px 18px 12px;border-left:3px solid var(--line);margin:0 18px 8px}
+.dg-c.vio{border-left-color:var(--violet);background:var(--violet-soft)}
+.dg-n{font-size:13px;font-weight:600}
+.dg-n span{font-weight:400;color:var(--text-3);font-size:11px;margin-left:8px}
+.dg-l{font-size:11.5px;color:var(--text-2);margin-top:4px;line-height:1.5}
+.dg-l b{color:var(--text);font-weight:600}
+.dg-more{padding:2px 18px 12px;font-size:11.5px;color:var(--text-3);font-style:italic}
+.dg-warn{margin:0 18px 8px;padding:8px 12px;border-radius:var(--r-sm,7px);
+  background:rgba(232,104,92,.1);color:var(--danger);font-size:11.5px;line-height:1.5}
+.dg-warn b{font-weight:600}
+.dg-note{margin:0 18px 14px;padding:10px 12px;border-radius:var(--r-sm,7px);
+  background:var(--soft);font-size:11.5px;color:var(--text-2);line-height:1.55}
+
+/* ── le schéma d'enrichissement ─────────────────────────────────────────── */
+.enr{margin:30px auto 0;max-width:1000px}
+.enr .eh{width:100%;height:auto;display:block} .enr .ev{display:none}
+.enom{font-size:12px;font-weight:600;fill:var(--text)}
+.edet{font-size:9.5px;fill:var(--text-3)}
+.edet.b{fill:var(--text);font-weight:600}
+.enom.inv{fill:var(--on-ink)} .edet.inv{fill:var(--on-ink);opacity:.62}
+.etit{font-size:9px;letter-spacing:.16em;fill:var(--text-3);font-weight:700}
+.ebox{fill:var(--panel);stroke:var(--line);stroke-width:1}
+.ebox.go{fill:rgba(63,174,111,.1);stroke:rgba(63,174,111,.45)}
+.ebox.go2{fill:var(--violet-soft);stroke:rgba(124,108,240,.35)}
+.ebox.non{fill:var(--soft);stroke:var(--line-2)}
+.ebox.ink{fill:var(--ink);stroke:var(--ink)}
+.eflux{stroke:var(--violet);stroke-width:1.8;fill:none;stroke-linecap:round;
+  stroke-dasharray:5 9;opacity:.75;animation:fluxA 1.15s linear infinite}
+.epuce{fill:var(--violet)}
+@media(prefers-reduced-motion:reduce){ .eflux{animation:none} }
+@media(max-width:860px){
+  .enr{max-width:270px}
+  .enr .eh{display:none} .enr .ev{display:block}
+}
 /* ── le schéma de la chaîne : cinq étages, de la personne à l'appel.
    Même grammaire que les deux autres schémas : boîtes sobres, flux animés. */
 .chaine{margin:30px auto 0;max-width:980px}
@@ -2475,6 +2517,34 @@ var PROC=[
  r:"C'est exactement la question que je me suis posée, et c'est pour ça que rien dans les règles ne cite ce fichier. Aucun poids ne mentionne un numéro de ligne, un identifiant, une plage. Tout est écrit en langage métier : cette page vaut plus que celle-là, une demande explicite prime sur du volume, un signal vieux de deux mois ne vaut plus grand-chose.<br><br>Et je l'ai vérifié plutôt que de l'affirmer : <b>38 variations, chaque poids secoué de plus ou moins 30 %</b>, la liste à appeler est identique dans les 38. Elle n'est pas faite de points, elle est faite de faits."
 },
 {
+ p:"6 · Le résultat", t:"Mon score au corrigé", h:"26 comptes proposés, 26 bons", court:true, vue:"logic",
+ say:"Puisque vous avez le corrigé, autant que je vous donne ma note moi-même. Sur les 26 comptes que je fais appeler, 26 sont les vôtres. Et je vais vous dire ce que je ne sors pas, et pourquoi.",
+ bareme:[
+  ["Ma note, les deux chiffres qu'on attend"],
+  ["Comptes que je fais appeler en premier", "26",
+   "ceux qui ont demandé quelque chose, ou chez qui plusieurs personnes bougent ensemble"],
+  ["Combien d'entre eux sont dans votre corrigé", "26 sur 26",
+   "aucun compte proposé à tort. Un commercial qui ouvre ma liste ne trouve aucune ligne inutile"],
+  ["Combien de votre corrigé je sors", "26 sur 79",
+   "il en reste 53 que je ne fais pas appeler, et c'est un choix, pas un oubli"],
+  ["En élargissant à toute la file de travail", "43 sur 60",
+   "60 comptes proposés, 43 sont les vôtres. Le prix à payer pour passer de 26 à 43 trouvés"]],
+ bareme2:[
+  ["Ce que font vraiment les 53 que je laisse de côté"],
+  ["Rendez-vous pris", "0", "pas un seul, sur les 53"],
+  ["Formulaires remplis", "0", "pas un seul non plus"],
+  ["Ce qu'elles font, alors", "elles ouvrent des emails",
+   "des ouvertures, des clics, quelques visites. Et une ouverture d'email vaut zéro point chez moi"],
+  ["Nombre de gestes, en médiane", "9 contre 25",
+   "9 gestes pour celles que je laisse, 25 pour celles que je sors. Ce ne sont pas les mêmes comptes"],
+  ["Combien des 43 que je sors ont demandé quelque chose", "25",
+   "un rendez-vous ou un formulaire, daté, qu'on peut lire dans la fiche"]],
+ pb:"C'est le premier critère de votre énoncé, et c'est celui qu'on ne peut pas maquiller : vous avez les réponses. Arriver sans mes propres chiffres reviendrait à vous laisser me les annoncer.",
+ body:"Le mot juste sur les 53, c'est <b>refusées</b>, pas ratées. Ma règle dit qu'on entre dans la liste en ayant demandé quelque chose, ou en s'agitant à plusieurs. Aucune des 53 ne fait ni l'un ni l'autre.<br><br>Et l'arbitrage est assumé : <b>je préfère donner 26 comptes sûrs à un commercial que 79 dont il en jettera 53.</b> Une liste dans laquelle on trouve deux lignes inutiles sur trois n'est plus ouverte à partir du mercredi.",
+ q:"Vous en laissez 53 de côté. Comment vous les récupérez ?",
+ r:"Je n'ai rien à récupérer : <b>elles sont déjà là</b>, dans la troisième file, et elles remontent toutes seules le jour où l'une d'elles demande quelque chose. Rien n'est jeté.<br><br>Si vous voulez les voir tout de suite, je baisse le seuil, et je vous les donne. Mais je l'ai mesuré : pour retrouver mes 26 comptes, un filtre large fait ouvrir <b>197 fiches</b> au commercial, contre <b>60</b> chez moi, dont 140 sans aucune valeur.<br><br>Je dis quand même où je suis moins à l'aise : <b>13 des 53 dépassent 4 points</b>. Elles cliquent beaucoup sans jamais rien demander. Ce sont celles que je surveillerais en premier sur un vrai CRM, parce que c'est là que mon choix pourrait se retourner contre moi."
+},
+{
  p:"6 · Le résultat", t:"Ce que je ne fais pas", h:"Six protections qui ne se sont jamais déclenchées", vue:"ops",
  say:"Un moteur qui ne montre que ce qui marche cache ce qu'il ne sait pas faire. Voilà ce qui n'a jamais servi.",
  kpi:[["6","règles qui n'ont produit aucun cas"],["1","dont je peux démontrer qu'elle est mathématiquement inatteignable"],["@gardes","contrôles automatiques sur le scoring, tous verts"]],
@@ -2492,29 +2562,57 @@ var PROC=[
  r:"Oui. Celui qui a pris le rendez-vous attend l'appel : le rappeler est la seule chose cohérente. Le décideur, on le trouve <b>pendant</b> l'appel, il est identifié dans la fiche. Passer par-dessus la tête de celui qui a levé la main, c'est le meilleur moyen de perdre les deux."
 },
 {
- p:"6 · Le résultat", t:"Là où l'équipe travaille", h:"Où l'équipe travaille la liste au quotidien", court:true,
- say:"Un fichier que personne n'ouvre n'a jamais réveillé un CRM. La liste part dans Slack, avec les preuves.",
- kpi:[["1","message par jour"],["0","mot de passe dans le dépôt : l'adresse d'envoi vit ailleurs"]],
- body:"Chaque ligne porte qui appeler, sa fonction, ce qu'il a fait et quand, par quel canal le joindre, combien de personnes bougent chez lui, et quel décideur est derrière. Les comptes qui montrent des signes de départ partent avec la mention <b>appel de rétention, pas de prospection</b> : un compte qui s'en va ne s'appelle pas comme un compte qui arrive.<br><br>Et un garde-fou refuse d'écrire le mot « comité » quand il n'y a pas au moins trois personnes derrière.",
+ p:"6 · Le résultat", t:"Là où l'équipe travaille", h:"Le message qui part chaque matin", court:true,
+ say:"Un fichier que personne n'ouvre n'a jamais réveillé un CRM. Voilà le message tel qu'il arrive, avec les preuves dedans.",
+ digest:true,
+ kpi:[["1","message par jour"],["60","comptes dedans, chacun avec sa preuve datée"],
+      ["0","mot de passe dans le dépôt : l'adresse d'envoi vit ailleurs"]],
+ pb:"Une liste d'appels dans un tableau de bord est une liste que personne n'ouvre. Elle doit arriver là où l'équipe est déjà, et se lire sans cliquer.",
+ body:"Chaque ligne porte <b>qui appeler, sa fonction, ce qu'il a fait et quand, par quel canal le joindre, combien de personnes bougent chez lui</b>, et si un décideur est derrière.<br><br>Les comptes qui montrent des signes de départ partent avec la mention <b>appel de rétention, pas de prospection</b> : un compte qui s'en va ne s'appelle pas comme un compte qui arrive. Et un garde-fou refuse d'écrire le mot « comité » s'il n'y a pas au moins trois personnes derrière.",
  q:"Pourquoi Slack et pas le CRM ?",
- r:"Parce que le CRM est l'endroit où l'information s'endort : c'est le problème qu'on vient de résoudre, pas la solution. Le message arrive là où l'équipe est déjà, avec un lien vers le tableau de bord pour ceux qui veulent creuser. Ce qui ne se voit pas ne se travaille pas."
+ r:"Parce que le CRM est l'endroit où l'information s'endort : c'est le problème qu'on vient de résoudre, pas la solution. Le message arrive là où l'équipe est déjà, avec un lien vers le tableau de bord pour ceux qui veulent creuser.<br><br>Et le format n'est pas un détail. Un commercial lit son téléphone entre deux appels : s'il doit ouvrir un outil, se connecter et filtrer une table, il ne le fait pas. Ce qui ne se voit pas ne se travaille pas."
 },
 {
- p:"6 · Le résultat", t:"Aller chercher ce qui manque", h:"On n'enrichit jamais 20 519 comptes à l'aveugle", court:true, vue:"data", table:"contacts",
- say:"Un CRM de huit ans a des trous. Je les ai comptés, et je ne paie pas pour les combler tous.",
+ p:"6 · Le résultat", t:"Aller chercher ce qui manque", h:"Quoi enrichir, avec quels outils, quand, et à quel prix", court:true, enrich:true,
+ say:"Un CRM de huit ans a des trous. Je les ai comptés, j'ai choisi mes fournisseurs, et je ne paie pas pour tout combler.",
  bareme:[
-  ["Ce qui manque, compté"],
-  ["Contacts sans adresse exploitable", "5 371", "ils sont dans une file d'attente, prêts à être complétés"],
-  ["Contacts dont on ignore la fonction", "4 554", "ils comptent à moitié dans le score, faute de mieux"],
-  ["Qui on complète, et quand"],
-  ["Les comptes à appeler", "tout de suite", "ce sont eux qu'on va joindre cette semaine"],
-  ["Les comptes à travailler", "une fois par semaine", "l'adresse et la fonction, rien d'autre"],
+  ["QUOI, par ordre de valeur mesurée"],
+  ["1. Les adresses email professionnelles", "5 371 contacts",
+   "dont 912 dont l'adresse a existé puis a été perdue par le CRM : ce sont les plus faciles à retrouver"],
+  ["2. Les fonctions manquantes", "4 554 contacts",
+   "sans fonction connue, leurs gestes ne comptent qu'à moitié. Chaque fonction retrouvée corrige leur poids ET le comité d'achat"],
+  ["3. Le signal d'intention anonyme", "97 % des visites qui comptent",
+   "sur les pages tarifs, démo et produit : 2 150 visites sur 2 220 ne sont rattachées à personne. Sur le blog et l'accueil, seulement 24 %. Autrement dit, on sait qui lit vos articles et on ignore qui regarde vos prix"],
+  ["4. Les effectifs et le secteur", "en dernier",
+   "utile pour savoir à qui on ressemble, jamais pour décider qui on appelle. 78 % des entreprises à plusieurs fiches se contredisent sur leur secteur, 6 734 sur 8 631"]],
+ bareme2:[
+  ["AVEC QUOI, et pourquoi ceux-là. On s'arrête au premier qui trouve"],
+  ["1. Dropcontact", "environ 0,02 € par contact",
+   "il ne revend pas une base achetée, il vérifie à la demande. C'est le seul choix défendable en Europe sur du contact professionnel"],
+  ["2. BetterContact ou Kaspr, en secours", "environ 0,15 €",
+   "ils interrogent plusieurs sources d'un coup. Sept fois plus cher, donc appelés seulement quand le premier échoue"],
+  ["3. LinkedIn Sales Navigator", "pour les fonctions",
+   "aucun fournisseur n'est fiable sur les intitulés de poste. Sur 60 comptes par semaine, ça se fait à la main"],
+  ["Pour l'intention anonyme", "n8n, et Leadfeeder ou Albacross",
+   "n8n pour poser un identifiant dans les liens des emails qu'on envoie déjà. La reconnaissance par adresse réseau tourne entre 30 et 75 % en vrai, pas les 90 % des plaquettes"],
+  ["QUAND, et c'est le gate qui protège le budget"],
+  ["Un compte entre dans la liste d'appels", "immédiatement, tout",
+   "26 comptes. On va les appeler cette semaine, c'est le seul moment où l'information vaut son prix"],
+  ["Un compte est dans la file de travail", "une fois par semaine",
+   "34 comptes, et seulement l'adresse et la fonction. Rien d'autre"],
   ["Tout le reste", "jamais",
-   "sauf si le compte se réveille et passe une porte. Un compte froid ne mérite pas qu'on paie pour lui"]],
- pb:"L'enrichissement se facture au contact. Vider la file d'un coup coûterait entre 110 et 800 euros selon le fournisseur, pour des données qui dormiront. Le tri vaut plus cher que l'outil.",
- body:"Le plus gros trou n'est pas une adresse manquante, c'est l'intention anonyme : <b>la grande majorité des visites de la page tarifs n'est rattachée à personne</b>. La façon la moins chère de la récupérer, c'est de mettre un identifiant dans les liens des emails qu'on envoie déjà : dès qu'une personne clique, toutes ses visites passées et futures portent son nom. Ça ne coûte rien de plus, les envois partent déjà.<br><br>Et une règle qui ne bouge pas : l'enrichissement peut trouver une nouvelle personne, il ne rend jamais joignable quelqu'un qui a demandé qu'on le laisse tranquille.",
+   "20 459 comptes. Sauf si l'un d'eux se réveille et passe une porte, et alors il bascule dans la ligne du dessus"],
+  ["COMBIEN ÇA COÛTE"],
+  ["Vider la file d'un coup", "entre 110 et 800 €",
+   "5 371 contacts. C'est ce qu'on ne fait pas : la donnée dormirait"],
+  ["En régime normal, avec les gates", "quelques euros par semaine",
+   "60 comptes. Le budget est borné dans le fichier de réglages et un compteur le surveille : un dépassement est une alarme, pas une surprise"],
+  ["Récupérer l'intention anonyme", "à peu près 0 €",
+   "les 41 087 emails partent déjà. Ajouter un identifiant dans leurs liens ne coûte rien de plus"]],
+ pb:"L'enrichissement se facture au contact. Le piège n'est pas de mal choisir son fournisseur, c'est de lancer le geste sur toute la base : le tri coûte moins cher que l'outil, et rapporte plus.",
+ body:"Le plus gros trou n'est pas une adresse manquante, c'est <b>l'intention anonyme</b>, et le détail qui fait mal est là : <b>vos pages de contenu sont identifiées à 76 %, vos pages de prix et de produit ne le sont qu'à 3 %</b>. Vous savez qui lit vos articles de blog, et vous ignorez qui regarde vos tarifs.<br><br>La façon la moins chère de le récupérer : mettre un identifiant dans les liens des emails qu'on envoie déjà. Dès qu'une personne clique une fois, <b>toutes ses visites, passées et futures, portent son nom</b>. Ça multiplie le signal identifié par 10 à 24, pour zéro euro de plus.<br><br>Et une règle qui ne bouge jamais : l'enrichissement peut <b>trouver une nouvelle personne</b> dans une entreprise, il ne rend <b>jamais</b> joignable quelqu'un qui a demandé qu'on le laisse tranquille. Un trou de données se répare, un refus se respecte.",
  q:"Vous n'avez rien enrichi, en fait ?",
- r:"Non, et c'est volontaire : les entreprises de ce fichier sont fictives, aucun fournisseur ne trouvera quoi que ce soit sur elles. Ce que j'ai construit, c'est la partie qui coûte cher à concevoir et qui ne dépend pas des données : <b>la file, la règle qui décide qui mérite d'être complété, et la trace de ce qui a été ajouté</b>.<br><br>Pour la brancher en vrai, il manque trois adresses de fournisseur à renseigner. Le reste tourne."
+ r:"Non, et c'est volontaire : les entreprises de ce fichier sont inventées, aucun fournisseur ne trouvera quoi que ce soit sur elles. Appeler Dropcontact ici, c'est payer pour zéro résultat et faire joli sur une démo.<br><br>Ce que j'ai construit, c'est la partie qui coûte cher à concevoir et qui ne dépend pas des données : <b>la file des 5 371 contacts, priorisée</b>, <b>la règle qui décide qui mérite d'être complété</b>, et <b>la trace de ce qui a été ajouté</b>, avec sa source et sa date, dans des colonnes neuves.<br><br>Pour la brancher en vrai, il manque trois clés de fournisseur à renseigner. Le reste tourne."
 },
 {
  p:"7 · Becca", phase:"7", t:"· Becca ·", h:"Becca",
@@ -2746,6 +2844,114 @@ function fusionSVG(){
   V+='</svg>';
 
   return '<div class="ufus">'+S+V+'</div>';
+}
+/* ── LE MESSAGE SLACK, tel qu'il part chaque matin.
+   Copié de slack/digest.txt sans retouche. On en montre le haut et le compte
+   à zéro point : c'est celui qui prouve qu'un tri par score l'aurait raté. */
+function digestHTML(){
+  function ligne(nom,meta,qui,preuve,cls){
+    return '<div class="dg-c'+(cls?" "+cls:"")+'"><div class="dg-n">'+nom
+      +'<span>'+meta+'</span></div>'
+      +'<div class="dg-l">📞 '+qui+'</div>'
+      +'<div class="dg-l">🔎 '+preuve+'</div></div>';
+  }
+  var h='<div class="dg"><div class="dg-hd">'
+   +'<b>☎️ La liste d\'appels du jour</b>'
+   +'<span>60 comptes à travailler sur 20 519 · Tier 1 : 26 · Tier 2 : 34</span></div>';
+  h+='<div class="dg-s red">Tier 1 : ils ont levé la main</div>';
+  h+=ligne("Juntonexworks","DE · 201-500","Anna Lambert, People Ops Manager",
+           "RDV pris le 07-20 · 6 personnes actives / 14 j · sponsor décideur ✅ · email");
+  h+=ligne("Iberirinlab","BE · 51-200","Greta Laurent, Head of People",
+           "formulaire le 07-20 · 4 personnes actives / 14 j · sponsor décideur ✅ · email");
+  h+=ligne("GrimodorMobility France","FR · 501-1000 · 40 000 €","Laura Rossi, Chargée de recrutement",
+           "RDV pris le 07-17 · 4 personnes actives / 14 j · sponsor décideur ✅ · téléphone ou LinkedIn (désabonné) · <b>rétention</b>");
+  h+='<div class="dg-more">…et 22 autres en Tier 1 dans le tableau de bord.</div>';
+  h+='<div class="dg-s vio">Personne n\'a rien demandé, et c\'est le plus urgent</div>';
+  h+=ligne("Sylvasolfinance Group","CH · 51-200","Hugo Petit, Responsable Recrutement",
+           "comité : 4 personnes actives / 14 j dont un décideur, sans demande · téléphone ou LinkedIn (désabonné)",
+           "vio");
+  h+='<div class="dg-warn">⛔ signaux de départ (moins 76 points) · ex-client réactif : '
+    +'<b>appel de rétention, pas de prospection</b></div>';
+  h+='<div class="dg-note">Aucun formulaire, aucun rendez-vous : son score est à <b>0,0</b>. '
+    +'C\'est le comité qui le sort. Un tri par score ne l\'aurait jamais vu.</div>';
+  h+='<div class="dg-s org">Tier 2 : ça chauffe, sans demande</div>';
+  h+='<div class="dg-more">34 comptes, même format.</div>';
+  return h+'</div>';
+}
+
+/* ── LE SCHÉMA D'ENRICHISSEMENT. Quatre temps, de gauche à droite : ce qui
+   manque, le filtre qui protège le budget, la cascade de fournisseurs, et
+   l'écriture. Le cinquième bloc, en bas, est le signal externe : c'est le
+   plus gros trou et il ne coûte presque rien. */
+function enrichSVG(){
+  function boite(x,y,w,hh,t1,t2,cl){
+    return '<rect class="ebox'+(cl?" "+cl:"")+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="9"/>'
+      +'<text class="enom'+(cl==="ink"?" inv":"")+'" x="'+(x+13)+'" y="'+(y+21)+'">'+t1+'</text>'
+      +(t2?'<text class="edet'+(cl==="ink"?" inv":"")+'" x="'+(x+13)+'" y="'+(y+37)+'">'+t2+'</text>':'');
+  }
+  function puce(x,y){ return '<polygon class="epuce" points="'+x+','+(y-4)+' '+(x+7)+','+y+' '+x+','+(y+4)+'"/>'; }
+  function fleche(x1,x2,y){ return '<path class="eflux" d="M'+x1+' '+y+' H'+(x2-3)+'"/>'+puce(x2-5,y); }
+
+  var S='<svg class="eh" viewBox="0 0 1000 330" role="img" '
+       +'aria-label="L\'architecture d\'enrichissement : détecter, filtrer, chercher, écrire">';
+
+  S+='<text class="etit" x="4" y="16">1 · CE QUI MANQUE, COMPTÉ</text>';
+  S+=boite(4,26,214,44,"5 371 contacts","sans adresse exploitable");
+  S+=boite(4,78,214,44,"4 554 contacts","sans fonction connue");
+  S+=boite(4,130,214,44,"97 % des visites","sur tarifs, démo et produit");
+  S+='<text class="edet" x="4" y="196">Gratuit : le nettoyage l\'a déjà</text>';
+  S+='<text class="edet" x="4" y="210">compté et rangé dans un fichier.</text>';
+
+  S+='<text class="etit" x="252" y="16">2 · LE FILTRE QUI PROTÈGE LE BUDGET</text>';
+  S+=fleche(222,250,100);
+  S+=boite(250,26,230,44,"Dans la liste d\'appels : 26","tout, tout de suite","go");
+  S+=boite(250,78,230,44,"Dans la file de travail : 34","adresse et fonction, chaque semaine","go2");
+  S+=boite(250,130,230,44,"Tout le reste : 20 459","jamais. Rien. Zéro euro","non");
+  S+='<text class="edet b" x="250" y="196">On n\'enrichit jamais 20 519 comptes</text>';
+  S+='<text class="edet b" x="250" y="210">à l\'aveugle : c\'est ici que le budget tient.</text>';
+
+  S+='<text class="etit" x="514" y="16">3 · LA CASCADE</text>';
+  S+='<text class="edet" x="514" y="30">on s\'arrête au premier qui trouve</text>';
+  S+='<path class="eflux" d="M484 48 C500 48 500 60 512 60"/>'+puce(510,60);
+  S+='<path class="eflux" d="M484 100 C500 100 500 60 512 60"/>';
+  S+=boite(512,44,222,44,"Dropcontact","≈ 0,02 € · vérifie à la demande");
+  S+='<path class="eflux" d="M623 92 V108"/><polygon class="epuce" points="617,108 629,108 623,116"/>';
+  S+=boite(512,120,222,44,"BetterContact ou Kaspr","≈ 0,15 € · seulement si le 1er échoue");
+  S+='<path class="eflux" d="M623 168 V184"/><polygon class="epuce" points="617,184 629,184 623,192"/>';
+  S+=boite(512,196,222,44,"LinkedIn Sales Navigator","les fonctions, à la main sur 60 comptes");
+
+  S+='<text class="etit" x="768" y="16">4 · CE QU\'ON ÉCRIT</text>';
+  S+=fleche(738,766,60);
+  S+=boite(766,38,230,52,"Une colonne neuve","la valeur, sa source, sa date","ink");
+  S+='<text class="edet" x="766" y="112">Rien n\'est jamais écrasé,</text>';
+  S+='<text class="edet b" x="766" y="126">exactement comme au nettoyage.</text>';
+  S+='<text class="edet" x="766" y="150">Un compteur surveille la dépense :</text>';
+  S+='<text class="edet" x="766" y="164">un dépassement est une alarme,</text>';
+  S+='<text class="edet" x="766" y="178">pas une surprise en fin de mois.</text>';
+
+  /* le cinquième bloc : le signal externe, celui qui ne coûte rien */
+  S+='<line x1="4" y1="238" x2="996" y2="238" stroke="var(--line-2)"/>';
+  S+='<text class="etit" x="4" y="262">5 · LE PLUS GROS TROU, ET IL NE COÛTE PRESQUE RIEN</text>';
+  S+=boite(4,274,306,46,"Un identifiant dans les liens des emails","41 087 envois partent déjà · coût ≈ 0","go");
+  S+='<path class="eflux" d="M314 297 H340"/>'+puce(338,297);
+  S+='<text class="edet" x="348" y="292">Dès qu\'une personne clique une fois, toutes ses visites, passées et futures, portent son nom.</text>';
+  S+='<text class="edet b" x="348" y="308">Le signal identifié est multiplié par 10 à 24. Reconnaissance par adresse réseau en complément : 30 à 75 % en vrai, pas les 90 % des plaquettes.</text>';
+  S+='</svg>';
+
+  /* vertical, pour les écrans étroits */
+  var V='<svg class="ev" viewBox="0 0 270 470" role="img" aria-label="L\'architecture d\'enrichissement">';
+  var et=[["1 · CE QUI MANQUE","5 371 sans adresse, 4 554 sans fonction",""],
+          ["2 · LE FILTRE","26 tout de suite · 34 par semaine · le reste jamais","go"],
+          ["3 · LA CASCADE","Dropcontact → BetterContact → LinkedIn",""],
+          ["4 · CE QU'ON ÉCRIT","une colonne neuve : valeur, source, date","ink"],
+          ["5 · LE SIGNAL EXTERNE","un identifiant dans les liens, coût ≈ 0","go"]];
+  et.forEach(function(b,k){
+    V+=boite(4,6+k*92,262,50,b[0],b[1],b[2]);
+    if(k<et.length-1){ V+='<path class="eflux" d="M135 '+(60+k*92)+' V'+(88+k*92)+'"/>'
+                        +'<polygon class="epuce" points="129,'+(88+k*92)+' 141,'+(88+k*92)+' 135,'+(96+k*92)+'"/>'; }
+  });
+  V+='</svg>';
+  return '<div class="enr">'+S+V+'</div>';
 }
 function chaineSVG(){
   function etage(x,y,w,h,t1,t2,cl){
@@ -3016,6 +3222,8 @@ function procShow(i){
   if(x.loop) h+=loopSVG();
   if(x.chaine) h+=chaineSVG();
   if(x.fusion) h+=fusionSVG();
+  if(x.digest) h+=digestHTML();
+  if(x.enrich) h+=enrichSVG();
   if(x.becca) h+=beccaSVG();
   if(x.geant) h+='<div class="sgeant'+(x.geant[0].length>9?" long":"")+'">'+esc(x.geant[0])
                 +'</div><div class="sgeant-l">'+x.geant[1]+'</div>';
