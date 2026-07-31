@@ -624,14 +624,14 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .cbox.win{fill:rgba(227,166,72,.13);stroke:rgba(227,166,72,.5)}
 .cnom.inv{fill:var(--on-ink)} .crole.inv,.cdet.inv{fill:var(--on-ink);opacity:.66}
 .cdet.b{fill:var(--text);font-weight:600}
+.cnom.off,.cdet.off{opacity:.38}
 .cscore{font-family:var(--display);font-size:19px;font-weight:600;fill:var(--violet)}
 .cbig{font-family:var(--display);font-size:30px;font-weight:600;fill:var(--on-ink)}
 /* ce qui est écarté avant le calcul : barré, jamais caché */
 .cbox.out{fill:transparent;stroke:var(--line-2);stroke-dasharray:4 4}
 .cflux.out{stroke:var(--text-3);opacity:.4;animation:none;stroke-dasharray:3 5}
-.cbox.act ~ .cnom{fill:var(--on-ink)}
-.cflux{stroke:var(--violet);stroke-width:1.8;stroke-linecap:round;fill:none;
-  stroke-dasharray:5 9;opacity:.75;animation:fluxA 1.15s linear infinite}
+.cflux{stroke:var(--violet);stroke-width:2.4;stroke-linecap:round;fill:none;
+  stroke-dasharray:6 7;opacity:1;animation:fluxA 1.15s linear infinite}
 .cflux.b{opacity:.5}
 .cpuce{fill:var(--violet)}
 /* le croisement se voit : chaque température peut tomber dans chaque relation */
@@ -3160,8 +3160,8 @@ function chaineSVG(){
   function txt(cl,x,y,t,anc){
     return '<text class="'+cl+'" x="'+x+'" y="'+y+'"'+(anc?' text-anchor="'+anc+'"':'')+'>'+t+'</text>';
   }
-  function puce(x,y){ return '<polygon class="cpuce" points="'+x+','+(y-4)+' '+(x+7)+','+y+' '+x+','+(y+4)+'"/>'; }
-  function fleche(x1,x2,y){ return '<path class="cflux" d="M'+x1+' '+y+' H'+(x2-3)+'"/>'+puce(x2-5,y); }
+  function puce(x,y){ return '<polygon class="cpuce" points="'+x+','+(y-6)+' '+(x+11)+','+y+' '+x+','+(y+6)+'"/>'; }
+  function fleche(x1,x2,y){ return '<path class="cflux" d="M'+x1+' '+y+' H'+(x2-5)+'"/>'+puce(x2-9,y); }
 
   var GENS=[
     {n:"Emma Lambert",    r:"Head of People · décideuse", g:"formulaire + 5 gestes", s:"58,3", c:"1"},
@@ -3207,11 +3207,11 @@ function chaineSVG(){
   S+=txt("cnom",584,50,"TIER 1");
   S+=txt("cdet",584,68,"elle a demandé quelque chose");
   S+=boite(570,96,220,50);
-  S+=txt("cnom",584,120,"TIER 2");
-  S+=txt("cdet",584,137,"au moins 8 points");
+  S+=txt("cnom off",584,120,"TIER 2");
+  S+=txt("cdet off",584,137,"au moins 8 points");
   S+=boite(570,158,220,50);
-  S+=txt("cnom",584,182,"TIER 3");
-  S+=txt("cdet",584,199,"tout le reste");
+  S+=txt("cnom off",584,182,"TIER 3");
+  S+=txt("cdet off",584,199,"tout le reste");
   S+=txt("cdet b",570,232,"Ici : Tier 1. Un formulaire");
   S+=txt("cdet",570,246,"le 18 juillet, c'est un fait,");
   S+=txt("cdet",570,260,"pas un nombre de points.");
@@ -3219,13 +3219,13 @@ function chaineSVG(){
   /* ⑤ l'étiquette */
   S+=txt("ctit",818,16,"4 · SON ÉTIQUETTE");
   S+='<path class="cflux" d="M548 218 H800 V194"/>'
-    +'<polygon class="cpuce" points="794,196 806,196 800,186"/>';
+    +'<polygon class="cpuce" points="791,198 809,198 800,184"/>';
   S+=boite(816,26,238,58);
-  S+=txt("cnom",830,50,"JAMAIS CLIENT");
-  S+=txt("cdet",830,68,"elle n'a jamais rien payé");
+  S+=txt("cnom off",830,50,"JAMAIS CLIENT");
+  S+=txt("cdet off",830,68,"elle n'a jamais rien payé");
   S+=boite(816,96,238,50);
-  S+=txt("cnom",830,120,"CLIENT");
-  S+=txt("cdet",830,137,"elle paie aujourd'hui");
+  S+=txt("cnom off",830,120,"CLIENT");
+  S+=txt("cdet off",830,137,"elle paie aujourd'hui");
   S+=boite(816,158,238,50,"win");
   S+=txt("cnom",830,182,"EX-CLIENT");
   S+=txt("cdet",830,199,"elle a payé, elle ne paie plus");
