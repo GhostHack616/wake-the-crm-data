@@ -16,8 +16,12 @@ from datetime import datetime
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IN_DIR = os.path.join(ROOT, "data_clean")
+# dashboard_data/ est le canonique : c'est ce que l'écran consomme.
+# (data_clean/ garde des copies d'étape qui peuvent retarder d'un run.)
+IN_DIR = os.path.join(ROOT, "dashboard_data")
 CFG = yaml.safe_load(open(os.path.join(ROOT, "filet", "filet_rules.yaml")))
+# Le NOW du dataset vit dans la config du scoring — jamais la date système.
+REF_DATE = yaml.safe_load(open(os.path.join(ROOT, "scoring", "scoring_config.yaml")))["reference_date"]
 
 ICONES = {"compter": "🧮", "sonner": "🔔", "bloquer": "⛔"}
 
@@ -29,6 +33,7 @@ def charge():
         "companies": lire("companies.csv"),
         "hot": lire("hot_list.csv"),
         "scores_persons": lire("scores_persons.csv"),
+        "scores_companies": lire("scores_companies.csv"),
     }
     d["contact_par_id"] = {c["contact_id"]: c for c in d["contacts"]}
     d["company_par_id"] = {c["entity_id"]: c for c in d["companies"]}
@@ -54,6 +59,15 @@ def saboter(d):
     for comp in d["companies"]:
         if comp["lifecycle_consolidated"] == "churned" and comp["deal_en_cours"] == "1":
             comp["review_churned_vs_opportunity"] = "0"
+            break
+    # (3) le bug Sylvasolfinance du 31/07, rejoué tel quel : un ex-client
+    # sans facturation rebasculé « à sauver » par un signal de départ.
+    comp_par_id = {c["entity_id"]: c for c in d["companies"]}
+    for s in d["scores_companies"]:
+        c = comp_par_id.get(s["entity_id"])
+        if (s["liste"] == "reconquete" and c and c["a_ete_client"] == "1"
+                and not c["arr_actif"]):
+            s["liste"] = "retention"
             break
 
 
@@ -109,9 +123,27 @@ def f6_orphelins(d, regle):
     return v, f"{n} orphelins ({pct:.2f} % — seuil {seuil} %)"
 
 
+def f7_on_ne_sauve_pas_un_parti(d, _):
+    # L'exception assumée du correctif moteur : un « parti » qui porte un
+    # renouvellement FUTUR reste en rétention (le perdre coûte de l'argent).
+    comp_par_id = {c["entity_id"]: c for c in d["companies"]}
+    v, n_exceptions = [], 0
+    for s in d["scores_companies"]:
+        c = comp_par_id.get(s["entity_id"])
+        if not (s["liste"] == "retention" and c and c["a_ete_client"] == "1"
+                and not c["arr_actif"]):
+            continue
+        if c["renewal_date"] and c["renewal_date"] >= REF_DATE:
+            n_exceptions += 1
+        else:
+            v.append(f"{s['entreprise']} : « à sauver » alors qu'il ne paie plus rien — sa place est en reconquête")
+    return v, f"{n_exceptions} exceptions assumées (renouvellement futur au contrat)"
+
+
 CHECKS = {"F1": f1_desabonne_jamais_emaille, "F2": f2_churne_sans_deal_sauvage,
           "F3": f3_bot_jamais_score, "F4": f4_adresse_morte,
-          "F5": f5_ex_client_hors_acquisition, "F6": f6_orphelins}
+          "F5": f5_ex_client_hors_acquisition, "F6": f6_orphelins,
+          "F7": f7_on_ne_sauve_pas_un_parti}
 
 
 def main():

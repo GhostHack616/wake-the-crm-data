@@ -1,5 +1,5 @@
 # Rapport du Filet — V0
-*généré le 2026-07-31 07:26*
+*généré le 2026-07-31 08:55*
 
 | # | La règle | Réaction | Statut | Mesure |
 |---|---|---|---|---|
@@ -9,5 +9,6 @@
 | F4 | Une adresse morte ne reçoit plus d'envois : le canal email suppose une adresse valide. | sonner | ✅ | canal email ⇒ adresse au statut ok |
 | F5 | Un ex-client ne sort jamais dans la liste acquisition — sa place est en reconquête. | sonner | ✅ | un passé client change le message — jamais le pitch d'un inconnu |
 | F6 | Les contacts orphelins ne s'accumulent pas. | compter | ✅ | 53 orphelins (0.07 % — seuil 1.0 %) |
+| F7 | On ne sauve pas quelqu'un qui est déjà parti : un compte sans facturation ne sort jamais « à sauver » — sauf renouvellement futur porté au contrat. | sonner | ✅ | 10 exceptions assumées (renouvellement futur au contrat) |
 
 **✅ Filet vert : rien à signaler — normal juste après un nettoyage. Sa valeur, c'est demain.**

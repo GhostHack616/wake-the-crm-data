@@ -26,7 +26,7 @@ python3 dashboard/build/build_dashboard.py   # construit le dashboard -> dashboa
 python3 filet/run_filet.py                   # le filet (2b) : 6 règles métier -> filet/filet_report.md
 ```
 
-119 contrôles automatiques tournent à chaque exécution (95 sur le nettoyage, 24 sur le scoring). Un statut ne se déclare pas : il se constate sur le run, et un contrôle rouge fait échouer le pipeline. Après chaque déploiement, le site servi est comparé à l'octet au build du dépôt.
+124 contrôles automatiques tournent à chaque exécution (95 sur le nettoyage, 29 sur le scoring). Un statut ne se déclare pas : il se constate sur le run, et un contrôle rouge fait échouer le pipeline. Après chaque déploiement, le site servi est comparé à l'octet au build du dépôt.
 
 ## Transparence sur la vérité terrain
 

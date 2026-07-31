@@ -41,3 +41,8 @@ regles:
     regle: "Les contacts orphelins ne s'accumulent pas."
     reaction: compter
     seuil_pct: 1.0   # au-delà de 1 % des contacts, la réaction monte à sonner
+
+  - id: F7
+    regle: "On ne sauve pas quelqu'un qui est déjà parti : un compte sans facturation ne sort jamais « à sauver » — sauf renouvellement futur porté au contrat."
+    reaction: sonner   # née du bug Sylvasolfinance, attrapé et corrigé le 31/07
+

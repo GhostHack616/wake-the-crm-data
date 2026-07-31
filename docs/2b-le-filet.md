@@ -28,6 +28,7 @@ Chaque règle s'écrit **en une ligne de langage métier**, dans une config (« 
 | Une adresse morte ne reçoit plus d'envois | les adresses cassées relevées au nettoyage |
 | Un ex-client ne sort jamais en acquisition | la segmentation reconquête : un passé client change le message |
 | Les orphelins ne s'accumulent pas | les 53 contacts sans compte |
+| On ne sauve pas quelqu'un qui est déjà parti | **le bug Sylvasolfinance, attrapé et corrigé le jour du rendu** — un ex-client rebasculé « à sauver » par un signal de départ ; la règle assume les 10 exceptions à renouvellement futur |
 
 ## Pourquoi maintenant
 
@@ -51,16 +52,16 @@ flowchart LR
 
 ## La V0 (rugueuse, volontairement)
 
-Je l'ai déjà construite en miniature : **le build de ce repo refuse de publier si un de ses 119 contrôles est rouge** (95 sur le nettoyage, 24 sur le scoring). Le détecteur en est la généralisation — configurable, et tourné vers l'action (l'envoi), plus seulement vers le build.
+Je l'ai déjà construite en miniature : **le build de ce repo refuse de publier si un de ses 124 contrôles est rouge** (95 sur le nettoyage, 29 sur le scoring). Le détecteur en est la généralisation — configurable, et tourné vers l'action (l'envoi), plus seulement vers le build.
 
-`filet/run_filet.py` + `filet/filet_rules.yaml` : les 6 règles du tableau, branchées sur les sorties réelles de la machine (hot list, scores, companies, contacts).
+`filet/run_filet.py` + `filet/filet_rules.yaml` : les 7 règles du tableau, branchées sur les sorties canoniques de la machine (celles que l'écran consomme).
 
 ```bash
 python3 filet/run_filet.py               # vert aujourd'hui, exit 0 -> filet/filet_report.md
-python3 filet/run_filet.py --demo-panne  # injecte 2 pannes en mémoire -> ROUGE, exit 1
+python3 filet/run_filet.py --demo-panne  # injecte 3 pannes en mémoire -> ROUGE, exit 1
 ```
 
-Le détecteur est **vert aujourd'hui** — normal, le nettoyage vient de passer ; sa valeur, c'est demain. Le mode démo injecte deux pannes réalistes (un désabonnement arrivé *après* la construction de la hot list, une contradiction qui sort de la file de review) et montre le blocage en live, violations nommées.
+**Le détecteur a servi le jour même de sa naissance.** Le 31/07, jour du rendu, un vrai bug est trouvé : Sylvasolfinance, ex-client sans facturation, affiché « à sauver » parce qu'un signal de départ ne vérifiait pas que le compte paie encore. Le moteur est corrigé dans l'heure (« On ne sauve pas quelqu'un qui est déjà parti »), et la règle F7 entre au détecteur pour que la faute ne puisse plus revenir sans sonner. Le mode démo rejoue les trois pannes — dont celle-là, telle quelle — et montre la réaction en live, violations nommées.
 
 ## Où ça casse (dit avant qu'on me le demande)
 
