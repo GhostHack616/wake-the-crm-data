@@ -14,7 +14,7 @@ Ce dépôt contient l'énoncé du challenge (conservé plus bas, intact) et la m
 | `dashboard/` | le tableau de bord : build reproductible + test automatique d'interdit d'écran |
 | `docs/` | `decisions.md` (qui a décidé quoi, et où le vérifier), le schéma du scoring, l'architecture d'enrichissement |
 | `slack/` | le push de la hot list avec les preuves (aucun secret dans le dépôt : l'adresse d'envoi vit dans l'environnement) |
-| `filet/` | la réponse au volet 2b, « Le Filet » : des règles métier en config, trois réactions (compter, sonner, bloquer) — raisonnement et schéma dans `docs/2b-le-filet.md` |
+| `filet/` | la V0 du volet 2b, « Le détecteur de fumée pour CRM » : des règles métier en config, trois réactions (compter, sonner, bloquer) — raisonnement et schéma dans `docs/2b-le-filet.md` |
 | `cleanup_report.md` | le rapport d'audit auto-généré à chaque exécution : 95 invariants + la traçabilité règle par règle |
 
 ## Tout se reconstruit depuis un clone nu
