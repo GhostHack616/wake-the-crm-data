@@ -581,6 +581,33 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
   .enr{max-width:270px}
   .enr .eh{display:none} .enr .ev{display:block}
 }
+/* ── la pile d'outils, en pastilles ─────────────────────────────────────── */
+.otls{margin:30px auto 0;max-width:980px;display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(216px,1fr));gap:10px;text-align:left}
+.otl{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;
+  border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel)}
+.otl i{flex:0 0 auto;width:32px;height:32px;border-radius:9px;color:#fff;
+  font-style:normal;font-weight:700;font-size:15px;font-family:var(--display);
+  display:flex;align-items:center;justify-content:center;letter-spacing:-.02em}
+.otl b{display:block;font-size:13px;font-weight:600;line-height:1.25;text-transform:none;letter-spacing:0}
+.otl span{display:block;font-size:11px;color:var(--text-3);margin-top:2px;line-height:1.4;text-transform:none;letter-spacing:0}
+.otl em{display:block;font-size:11px;font-style:normal;font-weight:600;
+  color:var(--violet);margin-top:4px}
+/* ── le fichier de réglages, montré tel quel ────────────────────────────── */
+.cfg{margin:30px auto 0;max-width:640px;text-align:left;border-radius:var(--r-md);
+  border:1px solid var(--line);background:var(--panel);overflow:hidden}
+.cfg-hd{padding:11px 16px;border-bottom:1px solid var(--line);background:var(--soft);
+  font-size:12px;font-weight:600;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.cfg-hd span{float:right;font-weight:400;color:var(--text-3);font-family:inherit;font-size:11px}
+.cfg-b{margin:0;padding:14px 16px;overflow-x:auto;font-size:11.5px;line-height:1.75;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre}
+.cfg-b i{font-style:normal;color:var(--text-3)}
+.cfg-b .yc{color:var(--text-3)}
+.cfg-b .ys{color:var(--violet);font-weight:600}
+.cfg-b .yk{color:var(--text-2)}
+.cfg-b .yp{color:var(--text)}
+.cfg-b .yn{color:var(--danger)}
+.cfg-ft{padding:11px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--text-2);line-height:1.6}
 /* ── le schéma de la chaîne : cinq étages, de la personne à l'appel.
    Même grammaire que les deux autres schémas : boîtes sobres, flux animés. */
 .chaine{margin:30px auto 0;max-width:980px}
@@ -2357,7 +2384,7 @@ var PROC=[
  r:"Parce que 45 jours, c'est la durée au-delà de laquelle une demande sans réponse cesse d'être un signal commercial pour devenir un problème d'organisation. Quelqu'un qui a demandé une démo il y a six semaines et que personne n'a rappelé, le sujet n'est plus son intérêt, c'est notre process.<br><br>Et je l'ai testé plutôt que de l'affirmer : en secouant ces six durées de plus ou moins 30 %, <b>ma liste d'appels ne change pas</b>. Elle ne tient pas à ces chiffres, elle tient aux faits. Si elle avait bougé, c'est que j'aurais réglé mes durées sur mon résultat."
 },
 {
- p:"5 · Scorer", t:"Où vit le moteur", h:"Pas de base de données, et c'est un choix", court:true,
+ p:"5 · Scorer", t:"Où vit le moteur", h:"Pas de base de données, et c'est un choix", court:true, config:true,
  say:"Sur ce fichier, il n'y a pas de base de données. Ce n'est pas un manque d'ambition, c'est que le fichier ne bouge plus.",
  bareme:[
   ["Ici, et pourquoi"],
@@ -2573,8 +2600,8 @@ var PROC=[
  r:"Parce que le CRM est l'endroit où l'information s'endort : c'est le problème qu'on vient de résoudre, pas la solution. Le message arrive là où l'équipe est déjà, avec un lien vers le tableau de bord pour ceux qui veulent creuser.<br><br>Et le format n'est pas un détail. Un commercial lit son téléphone entre deux appels : s'il doit ouvrir un outil, se connecter et filtrer une table, il ne le fait pas. Ce qui ne se voit pas ne se travaille pas."
 },
 {
- p:"6 · Le résultat", t:"Aller chercher ce qui manque", h:"Quoi enrichir, avec quels outils, quand, et à quel prix", court:true, enrich:true,
- say:"Un CRM de huit ans a des trous. Je les ai comptés, j'ai choisi mes fournisseurs, et je ne paie pas pour tout combler.",
+ p:"6 · Le résultat", t:"Aller chercher ce qui manque", h:"Quoi enrichir, avec quels outils, quand, et à quel prix", court:true, enrich:true, logos:true,
+ say:"Un CRM de huit ans a des trous. Je les ai comptés, j'ai choisi mes outils et je peux défendre chacun, et je ne paie pas pour tout combler.",
  bareme:[
   ["QUOI, par ordre de valeur mesurée"],
   ["1. Les adresses email professionnelles", "5 371 contacts",
@@ -2586,16 +2613,28 @@ var PROC=[
   ["4. Les effectifs et le secteur", "en dernier",
    "utile pour savoir à qui on ressemble, jamais pour décider qui on appelle. 78 % des entreprises à plusieurs fiches se contredisent sur leur secteur, 6 734 sur 8 631"]],
  bareme2:[
-  ["AVEC QUOI, et pourquoi ceux-là. On s'arrête au premier qui trouve"],
-  ["1. Dropcontact", "environ 0,02 € par contact",
-   "il ne revend pas une base achetée, il vérifie à la demande. C'est le seul choix défendable en Europe sur du contact professionnel"],
-  ["2. BetterContact ou Kaspr, en secours", "environ 0,15 €",
-   "ils interrogent plusieurs sources d'un coup. Sept fois plus cher, donc appelés seulement quand le premier échoue"],
-  ["3. LinkedIn Sales Navigator", "pour les fonctions",
-   "aucun fournisseur n'est fiable sur les intitulés de poste. Sur 60 comptes par semaine, ça se fait à la main"],
-  ["Pour l'intention anonyme", "n8n, et Leadfeeder ou Albacross",
-   "n8n pour poser un identifiant dans les liens des emails qu'on envoie déjà. La reconnaissance par adresse réseau tourne entre 30 et 75 % en vrai, pas les 90 % des plaquettes"],
-  ["QUAND, et c'est le gate qui protège le budget"],
+  ["AVEC QUOI. Clay orchestre, les fournisseurs cherchent, et on ne paie que celui qui trouve"],
+  ["Clay, le chef d'orchestre", "185 $/mois, 2 500 crédits",
+   "c'est lui qui exécute la cascade et arrête de payer dès qu'un fournisseur a trouvé. Le plan supérieur est à 495 $. C'est aussi l'outil de VOTRE pile, votre annonce le dit"],
+  ["Claygent, l'agent qui va lire le web", "compté en crédits",
+   "on lui pose une question en français (cette entreprise recrute-t-elle des RH en ce moment ?) et il va lire le site, les offres d'emploi, les actualités. C'est ce qui remplace une recherche à la main"],
+  ["1er de la cascade : Dropcontact", "0,016 à 0,024 € par contact",
+   "il vérifie à la demande au lieu de revendre une base achetée. C'est le seul choix défendable en Europe sur du contact professionnel"],
+  ["2e : BetterContact", "environ 0,05 $",
+   "il interroge plusieurs sources d'un coup. Deux à trois fois plus cher, donc appelé seulement si le premier n'a rien trouvé"],
+  ["3e : Findymail", "0,02 à 0,049 $",
+   "spécialisé sur les adresses que les autres ratent, et il ne facture pas quand il ne trouve rien"],
+  ["En parallèle : Hunter", "0,021 à 0,068 $",
+   "il part du nom de domaine plutôt que de la personne, et il vérifie qu'une adresse existe avant qu'on écrive dessus"],
+  ["Lemlist, source ET envoi", "69 $/mois, ou 109 $ en multicanal",
+   "son extension extrait une liste Sales Navigator et récupère les adresses (100 par mois même en gratuit), sa base fait 450 millions de contacts, et les séquences partent du même outil. C'est le seul de la liste qui fait les deux"],
+  ["LinkedIn Sales Navigator", "119,99 $/mois",
+   "la source des listes et des fonctions. Aucun fournisseur d'adresses n'est fiable sur les intitulés de poste"],
+  ["Le chiffre qui justifie toute la cascade", "7 à 10 crédits par adresse trouvée",
+   "on ne paie pas cinq fournisseurs pour chaque contact. On paie celui qui trouve, et la recherche s'arrête là"],
+  ["QUAND. Trois déclencheurs, et c'est ici que le budget tient"],
+  ["À l'entrée : un contact arrive dans le CRM", "immédiatement",
+   "sa fonction est cherchée le jour même. Sans ça, il est scoré à moitié pendant des mois avant que quelqu'un s'en aperçoive"],
   ["Un compte entre dans la liste d'appels", "immédiatement, tout",
    "26 comptes. On va les appeler cette semaine, c'est le seul moment où l'information vaut son prix"],
   ["Un compte est dans la file de travail", "une fois par semaine",
@@ -2611,8 +2650,10 @@ var PROC=[
    "les 41 087 emails partent déjà. Ajouter un identifiant dans leurs liens ne coûte rien de plus"]],
  pb:"L'enrichissement se facture au contact. Le piège n'est pas de mal choisir son fournisseur, c'est de lancer le geste sur toute la base : le tri coûte moins cher que l'outil, et rapporte plus.",
  body:"Le plus gros trou n'est pas une adresse manquante, c'est <b>l'intention anonyme</b>, et le détail qui fait mal est là : <b>vos pages de contenu sont identifiées à 76 %, vos pages de prix et de produit ne le sont qu'à 3 %</b>. Vous savez qui lit vos articles de blog, et vous ignorez qui regarde vos tarifs.<br><br>La façon la moins chère de le récupérer : mettre un identifiant dans les liens des emails qu'on envoie déjà. Dès qu'une personne clique une fois, <b>toutes ses visites, passées et futures, portent son nom</b>. Ça multiplie le signal identifié par 10 à 24, pour zéro euro de plus.<br><br>Et une règle qui ne bouge jamais : l'enrichissement peut <b>trouver une nouvelle personne</b> dans une entreprise, il ne rend <b>jamais</b> joignable quelqu'un qui a demandé qu'on le laisse tranquille. Un trou de données se répare, un refus se respecte.",
- q:"Vous n'avez rien enrichi, en fait ?",
- r:"Non, et c'est volontaire : les entreprises de ce fichier sont inventées, aucun fournisseur ne trouvera quoi que ce soit sur elles. Appeler Dropcontact ici, c'est payer pour zéro résultat et faire joli sur une démo.<br><br>Ce que j'ai construit, c'est la partie qui coûte cher à concevoir et qui ne dépend pas des données : <b>la file des 5 371 contacts, priorisée</b>, <b>la règle qui décide qui mérite d'être complété</b>, et <b>la trace de ce qui a été ajouté</b>, avec sa source et sa date, dans des colonnes neuves.<br><br>Pour la brancher en vrai, il manque trois clés de fournisseur à renseigner. Le reste tourne."
+ q:"Pourquoi Clay, et pas un script qui appelle les API directement ?",
+ r:"Parce que le coût du système n'est pas dans le premier appel, il est dans les six mois suivants.<br><br><b>Un script, c'est moi.</b> Le jour où Dropcontact change sa réponse, où on veut insérer un quatrième fournisseur, ou simplement où quelqu'un veut savoir pourquoi ce contact n'a pas été enrichi, il faut m'appeler. C'est exactement le défaut que j'ai eu sur mon propre outil, et que j'ai mis six mois à corriger.<br><br><b>Clay, c'est un tableau.</b> La cascade se lit, se réordonne et se change sans développeur. Le budget se voit en crédits. Et il gère seul ce qui coûte cher à écrire à la main : les reprises quand une API tombe, le fait de ne pas repayer un contact déjà enrichi, et l'arrêt de la cascade dès qu'un fournisseur a trouvé.<br><br>Il y a un prix à ça, et je le dis : <b>185 $ par mois d'abonnement, plus les crédits</b>. Sur 60 comptes par semaine, ça se défend. Sur trois contacts par mois, non, et là j'écrirais le script.",
+ qs:[["Vous n'avez rien enrichi, en fait ?","Non, et c'est volontaire : les entreprises de ce fichier sont inventées, aucun fournisseur ne trouvera quoi que ce soit sur elles. Appeler Dropcontact ici, c'est payer pour zéro résultat et faire joli sur une démo. Votre énoncé le dit d'ailleurs lui-même : <b>cette partie est un exercice d'architecture, sur schéma</b>.<br><br>Ce que j'ai construit, c'est la partie qui coûte cher à concevoir et qui ne dépend pas des données : <b>la file des 5 371 contacts, priorisée</b>, <b>la règle qui décide qui mérite d'être complété</b>, et <b>la trace de ce qui a été ajouté</b>, avec sa source et sa date, dans des colonnes neuves.<br><br>Pour la brancher en vrai, il manque les clés des fournisseurs. Le reste tourne."],
+     ["Et si un fournisseur vous donne une adresse fausse ?","C'est le risque réel, et il ne se règle pas en choisissant mieux son fournisseur. Trois garde-fous.<br><br><b>Un</b> : la vérification est une étape séparée de la recherche. Hunter contrôle qu'une adresse accepte le courrier avant qu'on écrive dessus.<br><b>Deux</b> : chaque donnée enrichie arrive dans une colonne neuve <b>avec sa source et sa date</b>. Si un fournisseur se met à mentir, on sait exactement quelles lignes reprendre, et on ne les a pas écrasées.<br><b>Trois</b> : une adresse qui revient en erreur repasse en file d'enrichissement au lieu d'être réutilisée. On ne brûle pas la réputation du domaine pour tous les autres envois."]]
 },
 {
  p:"7 · Becca", phase:"7", t:"· Becca ·", h:"Becca",
@@ -2899,26 +2940,30 @@ function enrichSVG(){
   S+=boite(4,26,214,44,"5 371 contacts","sans adresse exploitable");
   S+=boite(4,78,214,44,"4 554 contacts","sans fonction connue");
   S+=boite(4,130,214,44,"97 % des visites","sur tarifs, démo et produit");
-  S+='<text class="edet" x="4" y="196">Gratuit : le nettoyage l\'a déjà</text>';
-  S+='<text class="edet" x="4" y="210">compté et rangé dans un fichier.</text>';
+  S+='<text class="edet" x="4" y="196">Les listes viennent de Sales Navigator,</text>';
+  S+='<text class="edet" x="4" y="210">extraites par lemlist, qui rend aussi les adresses.</text>';
 
+  /* trois déclencheurs, et le brief les nomme : à l'ingestion, au score, en cascade */
   S+='<text class="etit" x="252" y="16">2 · LE FILTRE QUI PROTÈGE LE BUDGET</text>';
   S+=fleche(222,250,100);
-  S+=boite(250,26,230,44,"Dans la liste d\'appels : 26","tout, tout de suite","go");
+  S+=boite(250,26,230,44,"À l\'entrée, ou dans la liste : 26","un contact qui arrive · tout, tout de suite","go");
   S+=boite(250,78,230,44,"Dans la file de travail : 34","adresse et fonction, chaque semaine","go2");
   S+=boite(250,130,230,44,"Tout le reste : 20 459","jamais. Rien. Zéro euro","non");
   S+='<text class="edet b" x="250" y="196">On n\'enrichit jamais 20 519 comptes</text>';
   S+='<text class="edet b" x="250" y="210">à l\'aveugle : c\'est ici que le budget tient.</text>';
 
-  S+='<text class="etit" x="514" y="16">3 · LA CASCADE</text>';
-  S+='<text class="edet" x="514" y="30">on s\'arrête au premier qui trouve</text>';
+  /* Clay orchestre : c'est lui qui descend la cascade et qui arrête de payer
+     dès qu'un fournisseur a trouvé. La cascade affichée est celle de Romain,
+     documentée le 26/06 : Dropcontact, BetterContact, Findymail. */
+  S+='<text class="etit" x="514" y="16">3 · CLAY EXÉCUTE LA CASCADE</text>';
+  S+='<text class="edet" x="514" y="30">on ne paie que celui qui trouve : 7 à 10 crédits par adresse</text>';
   S+='<path class="eflux" d="M484 48 C500 48 500 60 512 60"/>'+puce(510,60);
   S+='<path class="eflux" d="M484 100 C500 100 500 60 512 60"/>';
-  S+=boite(512,44,222,44,"Dropcontact","≈ 0,02 € · vérifie à la demande");
+  S+=boite(512,44,222,44,"1 · Dropcontact","0,016 à 0,024 € · RGPD, vérifie à la demande");
   S+='<path class="eflux" d="M623 92 V108"/><polygon class="epuce" points="617,108 629,108 623,116"/>';
-  S+=boite(512,120,222,44,"BetterContact ou Kaspr","≈ 0,15 € · seulement si le 1er échoue");
+  S+=boite(512,120,222,44,"2 · BetterContact","≈ 0,05 $ · plusieurs sources d\'un coup");
   S+='<path class="eflux" d="M623 168 V184"/><polygon class="epuce" points="617,184 629,184 623,192"/>';
-  S+=boite(512,196,222,44,"LinkedIn Sales Navigator","les fonctions, à la main sur 60 comptes");
+  S+=boite(512,196,222,44,"3 · Findymail","0,02 à 0,049 $ · ne facture rien s\'il ne trouve pas");
 
   S+='<text class="etit" x="768" y="16">4 · CE QU\'ON ÉCRIT</text>';
   S+=fleche(738,766,60);
@@ -2952,6 +2997,75 @@ function enrichSVG(){
   });
   V+='</svg>';
   return '<div class="enr">'+S+V+'</div>';
+}
+/* ── LA PILE D'OUTILS. Chaque marque avec sa couleur, son rôle et son prix.
+   Dessinées ici, pas chargées depuis un site tiers : la page reste autonome. */
+var OUTILS=[
+ {n:"Clay",     c:"#16161A", r:"orchestre la cascade",        p:"185 $/mois"},
+ {n:"Claygent", c:"#3F3FD8", r:"va lire le web et répond",    p:"en crédits"},
+ {n:"Dropcontact", c:"#3D5AFE", r:"1er : l'adresse, RGPD",    p:"0,016 à 0,024 €"},
+ {n:"BetterContact", c:"#6C5CE7", r:"2e : plusieurs sources", p:"≈ 0,05 $"},
+ {n:"Findymail", c:"#0E7C66", r:"3e : celles qu'on rate",     p:"0,02 à 0,049 $"},
+ {n:"Hunter",   c:"#FF5D2E", r:"vérifie avant d'écrire",      p:"0,021 à 0,068 $"},
+ {n:"lemlist",  c:"#5A31F4", r:"extrait, trouve, et envoie",  p:"69 $/mois"},
+ {n:"Sales Navigator", c:"#0A66C2", r:"les listes, les fonctions", p:"119,99 $/mois"},
+ {n:"n8n",      c:"#EA4B71", r:"pose l'identifiant dans les liens", p:"auto-hébergé"}
+];
+function logosHTML(){
+  var h='<div class="otls">';
+  OUTILS.forEach(function(o){
+    /* la pastille porte l'initiale : une marque se reconnaît à sa couleur
+       autant qu'à son nom, et ça reste lisible à trois mètres d'un écran */
+    h+='<div class="otl"><i style="background:'+o.c+'">'+esc(o.n.charAt(0).toUpperCase())+'</i>'
+      +'<div><b>'+esc(o.n)+'</b><span>'+esc(o.r)+'</span><em>'+esc(o.p)+'</em></div></div>';
+  });
+  return h+'</div>';
+}
+/* ── LE FICHIER DE RÉGLAGES, montré tel qu'il est.
+   Le brief demande « config, pas code : les poids et seuils vivent en config ».
+   Le dire ne prouve rien ; le montrer prouve tout, parce que chaque poids y
+   porte SA RAISON en commentaire. Extrait fidèle de scoring/scoring_config.yaml. */
+var CONFIG_EXTRAIT=[
+ ["c","# Config du SCORING · Wake the CRM · V1.1"],
+ ["c","# Chaque poids, seuil et règle vit ici, avec son pourquoi."],
+ ["",""],
+ ["k","version: |V1.1|"],
+ ["k","reference_date: |2026-07-22|   |# le NOW du fichier, jamais la date du jour|"],
+ ["",""],
+ ["s","points:"],
+ ["c","  # Les preuves. Plein poids quel que soit celui qui les fait."],
+ ["p","  meeting_booked: 40   |# il demande à nous parler, c'est la preuve ultime|"],
+ ["p","  form_fill: 35        |# il se déclare, c'est nous qui rappelons|"],
+ ["c","  # Les gestes. Pondérés selon qui les fait."],
+ ["p","  email_click: 8       |# un clic est volontaire, une ouverture ne prouve rien|"],
+ ["p","  linkedin_comment: 6  |# écrire coûte, trois fois plus qu'un pouce|"],
+ ["p","  linkedin_like: 2     |# un pouce, une seconde|"],
+ ["p","  email_open: 0        |# la moitié des ouvertures mondiales sont automatiques|"],
+ ["p","  email_sent: 0        |# notre activité, pas la sienne|"],
+ ["",""],
+ ["s","pages:"],
+ ["p","  /pricing: 10                  |# il regarde les prix|"],
+ ["p","  /demo: 10                     |# il regarde la page démo|"],
+ ["p","  /integrations: 4              |# il vérifie que ça se branche chez lui|"],
+ ["n","  /help/cancel-subscription: -15 |# il cherche la porte de sortie|"],
+ ["n","  /help/export-data: -15         |# il récupère ses données pour partir|"],
+ ["p","  /billing: 0                   |# consulter sa facture n'est pas partir|"],
+ ["p","  /careers: 0                   |# des candidats, pas des acheteurs|"]
+];
+function configHTML(){
+  var h='<div class="cfg"><div class="cfg-hd">scoring/scoring_config.yaml '
+       +'<span>153 lignes, versionnées</span></div><pre class="cfg-b">';
+  CONFIG_EXTRAIT.forEach(function(l){
+    var cls=l[0], txt=l[1];
+    if(!txt){ h+='\n'; return; }
+    /* les portions entre barres verticales sont les commentaires du fichier */
+    var out=esc(txt).split("|").map(function(m,i){
+      return i%2 ? '<i>'+m+'</i>' : m;
+    }).join("");
+    h+='<span class="y'+cls+'">'+out+'</span>\n';
+  });
+  return h+'</pre><div class="cfg-ft">Changer un poids ne demande pas de toucher au code. '
+    +'Et aucun poids n\'existe sans sa raison écrite juste à côté.</div></div>';
 }
 function chaineSVG(){
   function etage(x,y,w,h,t1,t2,cl){
@@ -3224,6 +3338,8 @@ function procShow(i){
   if(x.fusion) h+=fusionSVG();
   if(x.digest) h+=digestHTML();
   if(x.enrich) h+=enrichSVG();
+  if(x.logos) h+=logosHTML();
+  if(x.config) h+=configHTML();
   if(x.becca) h+=beccaSVG();
   if(x.geant) h+='<div class="sgeant'+(x.geant[0].length>9?" long":"")+'">'+esc(x.geant[0])
                 +'</div><div class="sgeant-l">'+x.geant[1]+'</div>';
