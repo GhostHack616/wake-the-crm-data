@@ -31,7 +31,7 @@ Ce que le script lit :
   dashboard_data/dashboard_data.json              le détail, les gardes, le graphe
   dashboard/build/steps_all.json                  les 12 étapes du nettoyage
 """
-import csv, json, os, re, shutil, sys
+import csv, json, os, re, shutil, subprocess, sys, tempfile
 from collections import defaultdict, Counter
 from datetime import date, timedelta
 
@@ -232,6 +232,31 @@ bon &= ck("chaque cascade tombe juste à l'écran",
 bon &= ck("aucun compte affiché sous le seuil de son tier",
           not [d for d in detail.values()
                if d["porte"] != "comite" and d["tier"] == "T2" and d["brut"] < SEUIL_T2])
+# Le JavaScript de l'écran doit se lire sans erreur de syntaxe. Ce contrôle est
+# né d'une virgule oubliée entre deux champs d'une carte : le fichier restait un
+# HTML valide, les huit autres contrôles passaient au vert, et le tableau de bord
+# s'affichait entièrement blanc. Aucun d'eux ne pouvait le voir : ils lisent tous
+# le texte, jamais le code.
+def js_valide(chemin):
+    """(ok, détail). Passe node --check sur le JS extrait de la page."""
+    txt = open(chemin, encoding="utf-8").read()
+    bouts = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", txt, re.S)
+    if not bouts:
+        return False, "aucun bloc de script trouvé"
+    tmp = os.path.join(tempfile.gettempdir(), "wtc_verif_ecran.js")
+    open(tmp, "w", encoding="utf-8").write("\n".join(bouts))
+    try:
+        r = subprocess.run(["node", "--check", tmp], capture_output=True, text=True)
+    except FileNotFoundError:
+        # sans node on ne peut pas prétendre avoir vérifié : on refuse d'écrire
+        return False, "node absent, la syntaxe n'a PAS pu être vérifiée"
+    if r.returncode == 0:
+        return True, "%d bloc(s)" % len(bouts)
+    return False, " / ".join([l for l in (r.stderr or "").splitlines() if l.strip()][:3])
+
+ok_js, detail_js = js_valide(os.path.join(SRC, "index.html"))
+bon &= ck("le JavaScript de l'écran se lit sans erreur", ok_js, detail_js)
+
 fautes_ecran = VE.controle(os.path.join(SRC, "index.html"))
 bon &= ck("l'interdit d'écran tient", not fautes_ecran,
           "%d violation(s)" % len(fautes_ecran))

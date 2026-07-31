@@ -39,8 +39,15 @@ CIBLES = [os.path.join(RACINE, "index.html")]
 # Motifs interdits. Chacun porte la raison de son interdiction : un interdit
 # sans raison finit par sauter au premier build pressé.
 INTERDITS = [
-    (r"\bevent_id\b",
-     "nomme la colonne technique du jeu de données"),
+    # event_id est interdit EN PHRASE, pas comme intitulé de colonne. La table
+    # des événements est publiée telle quelle : son en-tête affiche déjà
+    # « event_id » à l'exécution. Interdire le mot jusque dans le dictionnaire
+    # qui explique chaque colonne laisserait la seule colonne technique sans
+    # explication, ce qui la désigne au lieu de la banaliser. Ce qui reste
+    # interdit, et qui est la vraie clé, c'est le numéro seuil : il a sa propre
+    # ligne ci-dessous et elle ne bouge pas.
+    (r"\bevent_id\b(?!\"\s*:)",
+     "nomme la colonne technique du jeu de données dans une phrase"),
     (r"\bantis[èe]che",
      "le mot lui-même n'a rien à faire à l'écran, même si la préparation est assumée"),
     (r"\b92\s?969\b",

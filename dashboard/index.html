@@ -402,6 +402,23 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 .dtable th.add{color:var(--violet)}
 .dtable th.add::before{content:"+ ";opacity:.6}
 .dtable th .ar{opacity:.45;margin-left:4px}
+/* ── l'explication de chaque colonne, au survol de son titre.
+   Un titre de colonne comme « email_multi_entity » ne s'explique pas tout
+   seul : il faut le dire là où on le lit, pas dans une carte à côté. */
+.dtable th[data-aide]{cursor:help}
+.dtable th[data-aide]::after{
+  content:attr(data-aide);
+  position:absolute;left:8px;top:calc(100% + 6px);z-index:60;
+  width:290px;padding:11px 13px;border-radius:var(--r-md);
+  background:var(--ink);color:var(--on-ink);
+  font-size:11.5px;font-weight:400;line-height:1.55;letter-spacing:0;
+  text-transform:none;white-space:normal;text-align:left;
+  box-shadow:0 12px 34px rgba(0,0,0,.26);
+  opacity:0;visibility:hidden;transform:translateY(-4px);
+  transition:opacity .14s var(--e),transform .14s var(--e),visibility .14s}
+.dtable th[data-aide]:hover::after{opacity:1;visibility:visible;transform:none}
+/* les dernières colonnes ouvrent leur bulle vers la gauche, sinon elle sort de l'écran */
+.dtable th[data-aide].fin::after{left:auto;right:8px}
 .dtable td{padding:7px 11px;border-bottom:1px solid var(--line-2);white-space:nowrap;color:var(--text-2);max-width:280px;overflow:hidden;text-overflow:ellipsis}
 .dtable td.add{color:var(--text);background:var(--violet-soft)}
 .dtable tr:hover td{background:var(--soft)}
@@ -493,6 +510,35 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
 @keyframes fluxA{to{stroke-dashoffset:-16}}
 @keyframes fluxB{to{stroke-dashoffset:16}}
 .lpuce{fill:var(--violet)}
+/* ── le schéma de la fusion. Sobre comme les deux autres : ce qui est écarté
+   reste dessiné, en pointillé, parce que c'est le sujet de la carte. */
+.ufus{margin:30px auto 0;max-width:1000px}
+.ufus .uh{width:100%;height:auto;display:block} .ufus .uv{display:none}
+.unom{font-size:12px;font-weight:600;fill:var(--text)}
+.usite{font-size:10px;fill:var(--text-3)}
+.udet{font-size:9.5px;fill:var(--text-3)}
+.udet.b{fill:var(--text);font-weight:600}
+.ureg{font-size:10.5px;font-weight:600;fill:var(--text)}
+.utit{font-size:9px;letter-spacing:.16em;fill:var(--text-3);font-weight:700}
+.ur{fill:var(--danger)} .ug{fill:var(--text-3)}
+.ubox{fill:var(--panel);stroke:var(--line);stroke-width:1}
+.ubox.out{fill:transparent;stroke-dasharray:4 4}
+.ubox.hors{fill:var(--soft);stroke:var(--line-2)}
+.ubox.win{fill:var(--ink);stroke:var(--ink)}
+.unom.win{fill:var(--on-ink)} .usite.win{fill:var(--on-ink);opacity:.62}
+.uflux{stroke:var(--violet);stroke-width:1.8;fill:none;stroke-linecap:round;
+  stroke-dasharray:5 9;opacity:.75;animation:fluxA 1.15s linear infinite}
+.uflux.mort{stroke:var(--text-3);opacity:.28;animation:none}
+.upuce{fill:var(--violet)}
+.ucle{fill:var(--violet-soft);stroke:rgba(124,108,240,.4);stroke-width:1}
+.ucle.non{fill:var(--soft);stroke:var(--line)}
+.ucletxt{font-size:12.5px;font-weight:700;fill:var(--violet);font-family:var(--display)}
+.ucletxt.non{fill:var(--text-3)}
+@media(prefers-reduced-motion:reduce){ .uflux{animation:none} }
+@media(max-width:760px){
+  .ufus{max-width:270px}
+  .ufus .uh{display:none} .ufus .uv{display:block}
+}
 /* ── le schéma de la chaîne : cinq étages, de la personne à l'appel.
    Même grammaire que les deux autres schémas : boîtes sobres, flux animés. */
 .chaine{margin:30px auto 0;max-width:980px}
@@ -622,8 +668,9 @@ body.sp-revealing .app{animation:appReveal .82s cubic-bezier(.2,.8,.2,1)}
   display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r-pill);
   border:1px solid var(--line)}
 .smore:hover{color:var(--text);background:var(--panel)}
+/* la hauteur ouverte est MESURÉE en JS, jamais écrite en dur : une valeur fixe
+   coupait le bas des cartes longues (l'étape 7 perdait une question entière). */
 .sdet{max-height:0;overflow:hidden;transition:max-height .32s var(--e);text-align:left}
-.sdet.on{max-height:1200px}
 .sdet-in{max-width:640px;margin:26px auto 0;padding-top:24px;border-top:1px solid var(--line)}
 .sdet h5{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);
   font-weight:700;margin-bottom:7px}
@@ -1297,7 +1344,7 @@ var G=(function(){
       +'<div class="gsc"><b style="color:'+css+'">'+vf(d.score)+'</b>'
       +'<em style="color:'+css+'">'+esc(LIB[d.tier]||d.tier)+'</em></div>'
       +'<div class="gline"><span>entré par</span><b>'
-      +(d.porte==="conversion"?"une demande":d.porte==="comite"?"le comité":"—")+'</b></div>'
+      +(d.porte==="conversion"?"une demande":d.porte==="comite"?"aucune":"aucune")+'</b></div>'
       +'<div class="gline"><span>actives / 14 j</span><b>'+esc(d.comite)+'</b></div>'
       +(d.tier!=="PERDU"?'<div class="gline"><span>qui appeler</span><b>'+esc(d.qui)+'</b></div>'
         +'<div class="gline"><span>preuve</span><b>'+esc(d.preuve)+'</b></div>':'');
@@ -1603,27 +1650,28 @@ function openLogic(i){
    ══════════════════════════════════════════════════════════════════════════ */
 var PROC=[
 {
- p:"1 · L'analyse", t:"Comment on a travaillé", court:true,
- h:"La preuve que c'est moi qui dirige",
- say:"J'ai joué mes deux IA l'une contre l'autre. Chacune amenait une amélioration à l'autre, en repartant des fichiers de départ, ou parfois de ce que l'autre avait déjà fait. Et ça passait toujours par moi, parce que c'est moi qui devais trancher.",
+ p:"1 · L'analyse", t:"Comment j'ai travaillé", court:true,
+ h:"Deux IA en contradiction, et moi qui tranche",
+ say:"Elles se corrigeaient l'une l'autre. Tantôt en refaisant le calcul de zéro pour vérifier, tantôt en améliorant ce que l'autre avait fait. Moi je tranchais.",
  loop:true,
  bareme:[
-  ["Des décisions où j'ai dit non, et ce que chacune a changé"],
-  ["Le désabonnement retire 20 points", "règle supprimée",
-   "« fermer un canal, ce n'est pas être fermé à l'offre »"],
-  ["Consulter sa facture est un signal de départ", "7 events sur 14 retirés",
-   "« ça m'arrive sur n8n et je ne pars pas »"],
-  ["La page carrières vaut zéro point", "683 candidats repérés",
-   "« ce n'est même pas un lead, ce n'est pas la bonne personne »"],
-  ["On appelle le décideur le mieux placé", "on appelle celui qui a levé la main",
-   "« si tu appelles mon CIO, il te dit qu'il n'a pas le temps »"]],
+  ["Quatre fois où j'ai dit non à la machine, et ce que ça a changé"],
+  ["Elle voulait retirer 20 points à quiconque se désabonne", "j'ai supprimé la règle",
+   "fermer un canal, ce n'est pas être fermé à l'offre : on garde la personne, on change de canal"],
+  ["Elle comptait « consulter sa facture » comme un signe de départ", "j'ai retiré 7 cas sur 14",
+   "ça m'arrive sur n8n et je ne pars pas pour autant"],
+  ["Elle donnait des points à la visite de la page carrières", "j'ai mis ce geste à zéro",
+   "683 personnes cherchent un emploi chez vous, ce ne sont pas des acheteurs"],
+  ["Elle proposait d'appeler le décideur le mieux placé", "on appelle celui qui a levé la main",
+   "un directeur informatique qui n'a rien demandé répond qu'il n'a pas le temps"]],
  bareme2:[
-  ["435 comptes sont injoignables", "le chiffre était faux",
-   "« vous avez checké l'opt-out ? ». Il mélangeait les désabonnés et les contacts sans adresse, deux problèmes différents"]],
- pb:"Le brief le dit lui-même : « IA bienvenue, mais tu dois pouvoir défendre chaque ligne de logique comme si tu l'avais écrite. » Ce n'est pas une tolérance, c'est le test. Et un modèle qui relit son propre travail ne trouve que ce qu'il a pensé à chercher : il faut un contradicteur, pas un correcteur.",
- body:"Les deux modèles ne se parlent jamais. Je suis le seul canal et le seul à trancher. Quand les chiffres divergeaient, personne n'argumentait : chacun renvoyait <b>sa définition exécutable et son chiffre</b>, et je comparais. Aucune décision n'a été prise parce qu'un modèle était plus convaincant que l'autre.<br><br>Et j'ai appris une règle à mes frais. Une fois, j'ai laissé l'une des deux avancer seule sur un lot : elle a poussé des modifications que je n'avais pas validées. Depuis, <b>rien ne part sans mon accord explicite</b>, et un accord ne vaut que pour le lot qu'il décrit.",
- q:"Et la double lecture, elle a attrapé quoi ?",
- r:"Un exemple, et il est parlant. Quand deux fiches de la même entreprise fusionnent, on avait décidé qu'une case vide devait se remplir depuis la fiche jumelle. C'était écrit. Ça n'avait jamais été codé pour le commercial responsable.<br><br>Résultat : <b>1 407 entreprises</b> sortaient sans commercial alors que leur fiche jumelle en portait un. Un manager aurait dû les réattribuer à la main, pour rien.<br><br>Et personne ne l'avait vu, parce que les <b>contrôles automatiques</b> (des tests qui se rejouent à chaque exécution et arrêtent tout si un compteur sort de ses bornes) étaient <b>tous au vert</b>. Ils vérifiaient ce qu'on avait pensé à vérifier. Ils ne pouvaient pas voir une règle qu'on avait oublié d'écrire. C'est l'autre implémentation qui l'a trouvée, en refaisant le calcul de son côté.<br><br>La limite, je l'assume : ce croisement est manuel. Sur un vrai pipeline, les deux implémentations tourneraient automatiquement et la construction s'arrêterait dès qu'elles divergent."
+  ["Une erreur qu'elle a sortie et que j'ai fait corriger"],
+  ["Elle annonçait 435 comptes impossibles à joindre par email", "le chiffre était faux",
+   "elle additionnait deux problèmes différents : les gens désabonnés, et les gens sans adresse du tout"]],
+ pb:"Le brief le dit lui-même : « IA bienvenue, mais tu dois pouvoir défendre chaque ligne de logique comme si tu l'avais écrite. » Ce n'est pas une tolérance, c'est le test. Et une IA qui relit son propre travail ne trouve que ce qu'elle a pensé à chercher. Il faut une contradictrice, pas une correctrice.",
+ body:"Les deux ne se parlent jamais. Je suis le seul canal et le seul à trancher. Quand leurs chiffres divergeaient, aucune n'argumentait : chacune me renvoyait <b>son calcul et son chiffre</b>, et je comparais les deux. Aucune décision n'a été prise parce qu'une IA était plus convaincante que l'autre.<br><br>Et j'ai appris une règle à mes frais. Une fois, j'ai laissé l'une avancer seule sur un lot : elle a poussé des modifications que je n'avais pas validées. Depuis, <b>rien ne part sans mon accord explicite</b>, et un accord ne vaut que pour le lot qu'il décrit.",
+ q:"Et concrètement, cette double lecture a attrapé quoi ?",
+ r:"Un exemple, et il est parlant. Quand deux fiches de la même entreprise fusionnent, on avait décidé qu'une case vide devait se remplir depuis la fiche jumelle. C'était écrit noir sur blanc. Ça n'avait jamais été codé pour la colonne du commercial responsable.<br><br>Résultat : <b>1 407 entreprises</b> sortaient sans commercial alors que leur fiche jumelle en portait un. Un manager aurait dû les réattribuer à la main, pour rien.<br><br>Et personne ne l'avait vu, parce que les tests automatiques étaient <b>tous au vert</b>. Ils vérifiaient ce qu'on avait pensé à vérifier. Ils ne pouvaient pas voir une règle qu'on avait oublié d'écrire. C'est l'autre IA qui l'a trouvée, en refaisant le calcul de son côté.<br><br>La limite, je l'assume : ce croisement est manuel. En production, les deux calculs tourneraient automatiquement et tout s'arrêterait dès qu'ils divergent."
 },
 {
  p:"1 · L'analyse", t:"Ce que cette double lecture a trouvé", court:true,
@@ -1644,7 +1692,7 @@ var PROC=[
 {
  p:"1 · L'analyse", t:"La règle posée avant tout code", court:true,
  h:"Rien n'est jamais supprimé ni écrasé",
- vue:"data",
+ vue:"data", table:"accounts",
  say:"Avant de nettoyer, j'ai décidé de ne rien détruire. Vos colonnes d'origine sont là, intactes. Les miennes sont à côté.",
  pb:"Un nettoyage qui écrase est irréversible. Si une règle est fausse, on ne peut plus revenir en arrière, et on ne peut plus prouver ce qu'on a changé.",
  body:"Chaque réparation vit dans une <b>colonne neuve</b>, avec sa trace et son drapeau. L'original reste au caractère près. Le retour arrière est toujours possible, et la comparaison avant/après est vérifiable à l'écran, ligne par ligne.",
@@ -1657,55 +1705,64 @@ var PROC=[
 },
 {
  p:"2 · Réparer", t:"Étape 1 : les dates", court:true,
- h:"« 05/19/24 » ne peut pas mentir",
- vue:"ops",
- say:"Les dates dont le jour dépasse 12 révèlent leur format toutes seules. J'en ai 54 000 comme ça : elles donnent une règle sans aucune exception, et j'applique cette règle au reste.",
- geant:["54 419","dates qui <b>prouvent</b> la règle, <b>zéro</b> qui la contredit. <i>05/19/24</i> : 19 n'est pas un mois, donc c'est le jour, donc l'année à 2 chiffres s'écrit mois d'abord. Miroir exact pour l'année à 4 chiffres."],
+ h:"Trois façons d'écrire une date, dans la même colonne",
+ vue:"data", table:"accounts",
+ say:"Dans une même colonne, certaines dates s'écrivent à la française, d'autres à l'américaine. Une date sur trois se lit dans les deux sens. Je n'en devine aucune : je fais parler celles qui ne peuvent pas mentir.",
+ geant:["54 419","dates qui <b>prouvent</b> la règle, <b>zéro</b> qui la contredit. <i>05/19/24</i> : 19 ne peut pas être un mois, donc c'est le jour, donc dans cette écriture le mois passe devant. Miroir exact pour l'autre écriture."],
  bareme:[
-  ["La preuve : on démontre avant d'appliquer"],
-  ["Année sur 2 chiffres → le mois d'abord (américain)", "27 173", "27 173 preuves, zéro contre-exemple"],
-  ["Année sur 4 chiffres → le jour d'abord (français)", "27 246", "27 246 preuves, zéro contre-exemple"],
-  ["Dates où les deux nombres sont sous 13", "35 551", "leur année dit de quelle famille elles sont"],
-  ["Tout ressort en AAAA-MM-JJ", "un seul format",
-   "l'original n'est pas touché"]],
+  ["Ce qu'on trouve dans les colonnes de date de ce fichier"],
+  ["Dates déjà écrites à l'endroit, année-mois-jour", "44 848",
+   "exemple : 2022-12-13. Aucune ambiguïté possible, il n'y a rien à faire"],
+  ["Dates avec l'année sur 2 chiffres, comme 05/19/24", "45 057",
+   "27 173 d'entre elles ont un nombre au-dessus de 12 en deuxième position, ce qui prouve que le mois passe devant. Zéro dit le contraire"],
+  ["Dates avec l'année sur 4 chiffres, comme 19/05/2024", "44 913",
+   "27 246 ont un nombre au-dessus de 12 en première position, ce qui prouve que le jour passe devant. Zéro dit le contraire"],
+  ["Dates où les deux nombres sont sous 13, donc illisibles seules", "35 551",
+   "exemple : 05/07/24. C'est leur année qui dit à quelle famille elles appartiennent, et donc dans quel sens les lire"]],
  bareme2:[
-  ["Le geste : trois écritures entrent, une seule sort"],
-  ["Le format est détecté ligne par ligne", "", "les trois écritures cohabitent DANS la même colonne, pas une par colonne"],
-  ["La date convertie va dans une colonne neuve", "_parsed", "AAAA-MM-JJ, un format unique pour tout ce qui suit"],
-  ["Le format détecté est gardé à côté", "_format", "iso · dmy · mdy : l'inférence est écrite, pas cachée"],
-  ["La colonne d'origine n'est pas touchée", "intacte", "réversible ligne par ligne, à tout moment"],
-  ["Le recoupement qui verrouille"],
-  ["3 386 renouvellements remplis", "3 346 + 40", "3 346 clients + 40 ex-clients contradictoires : deux mesures indépendantes qui tombent juste"]],
- pb:"Trois formats coexistent dans les mêmes colonnes. Se tromper ne déclenche <b>aucune erreur</b> : juste <b>~10 000 dates fausses en silence, par colonne</b>. Et tout ce qui suit compare des dates : « actif ces 14 jours », « renouvellement dans 90 jours ».",
- body:"<b>Le format de sortie est AAAA-MM-JJ</b> (ISO 8601), pour deux raisons opérationnelles. Il ne peut pas se lire à l'envers. Et <b>trier le texte revient à trier le temps</b> : en JJ/MM/AAAA, <i>02/01/2019</i> passerait avant <i>01/12/2018</i>, et toutes les fenêtres du scoring seraient fausses. C'est aussi déjà le format des 94 838 horodatages d'événements : on aligne le reste dessus.<br><br>Le périmètre : 4 colonnes de date sur les deux fichiers, soit <b>167 199 cases</b>, dont <b>32 381 vides</b> → <b>134 818 dates</b> décodées (44 848 ISO + 45 057 américaines + 44 913 françaises, la somme referme). <b>0 échec.</b> Une date illisible n'est jamais devinée : elle sort vide, avec un drapeau.",
- q:"Et les dates où les deux nombres sont sous 13 ?",
- r:"Il y en a <b>35 551</b>. Elles sont <b>déduites de la règle, pas lues directement</b> : c'est une <b>inférence assumée</b>. Elle est fondée parce que la règle n'a <b>aucun contre-exemple sur 54 419 cas vérifiables</b>, et parce que le format d'origine est conservé sur chaque ligne : <b>tout est réversible</b>."
+  ["Ce que je fais, colonne par colonne"],
+  ["Je crée une colonne à côté avec la date remise à l'endroit", "_parsed",
+   "elle s'écrit toujours année-mois-jour, quelle que soit l'écriture d'origine"],
+  ["Je crée une colonne qui dit dans quelle écriture était l'originale", "_format",
+   "trois valeurs possibles : iso, dmy, mdy. On peut donc toujours refaire le chemin inverse"],
+  ["Je ne touche jamais à votre colonne d'origine", "intacte",
+   "elle reste au caractère près, à côté de la mienne, visible dans l'onglet Données"],
+  ["Une date que je n'arrive pas à lire reste vide", "0 échec ici",
+   "je ne devine jamais : une case vide est honnête, une date inventée ne l'est pas"],
+  ["Le recoupement qui verrouille tout"],
+  ["Dates de renouvellement remplies dans le fichier", "3 386",
+   "je retombe dessus par un autre chemin : 3 346 clients actifs plus 40 ex-clients qui portent quand même un renouvellement. Deux comptages indépendants, même total"]],
+ pb:"Trois écritures cohabitent dans la même colonne, et se tromper ne déclenche <b>aucune erreur</b> : juste des milliers de dates fausses en silence. Or tout ce qui vient ensuite compare des dates : « actif ces 14 derniers jours », « renouvellement dans 90 jours ».",
+ body:"<b>Je fais tout ressortir en année-mois-jour</b>, et c'est un choix, pas une convention subie. Deux raisons.<br><br><b>Un</b> : cette écriture ne peut pas se lire à l'envers. 2024-05-19, il n'y a pas deux façons de la comprendre.<br><b>Deux</b> : trier ces dates comme du texte revient à les trier dans le temps. Si je gardais le format français, <i>02/01/2019</i> passerait avant <i>01/12/2018</i>, et toutes mes fenêtres de calcul seraient fausses.<br><br>Le périmètre exact : 4 colonnes de dates sur deux fichiers, soit <b>167 199 cases</b>, dont <b>32 381 vides</b>. Restent <b>134 818 dates</b> remises à l'endroit, et le compte referme : 44 848 plus 45 057 plus 44 913.",
+ q:"Le format américain existe aussi avec une année à quatre chiffres. Comment savez-vous qu'il n'y en a pas ici ?",
+ r:"Parce que je l'ai cherché, et il n'y en a aucun. Sur les <b>44 913 dates à année longue</b> de ce fichier, <b>27 246 portent un nombre au-dessus de 12 en première position</b> : ce nombre ne peut être qu'un jour, donc le jour passe devant. Et le cas inverse, un nombre au-dessus de 12 en deuxième position, qui prouverait l'écriture américaine, <b>n'existe pas une seule fois</b>.<br><br>Zéro contre-exemple sur 27 246 preuves, ce n'est pas une hypothèse, c'est une propriété de ce fichier. Et si un jour une date contredisait la règle, elle ne serait pas convertie de force : elle sortirait signalée.",
+ qs:[["Et les 35 551 dates dont les deux nombres sont sous 13 ?","Celles-là, je ne les lis pas, je les <b>déduis</b>, et je le dis plutôt que de le cacher. La déduction tient parce que la règle n'a <b>aucun contre-exemple sur 54 419 cas vérifiables</b>, et parce que je garde sur chaque ligne l'écriture d'origine dans une colonne à part. Si la règle était fausse, tout se défait."]]
 },
 {
- p:"2 · Réparer", t:"Étape 2 : les pays", h:"30 façons d'écrire 8 pays", vue:"data",
- say:"Filtrer « France » dans ce CRM montrait 2 730 fiches. Il y en avait 13 517.",
+ p:"2 · Réparer", t:"Étape 2 : les pays", h:"30 façons d'écrire 8 pays", vue:"data", table:"accounts",
+ say:"Filtrer « France » dans ce CRM montrait 2 730 fiches. Il y en avait 13 517. Les 10 787 autres étaient écrites autrement.",
  pb:"FR, France, france, FRANCE, Fr : pour une machine, ce sont cinq pays différents. Toute segmentation par marché, tout routage commercial, tout reporting était faux, et rien ne le signalait.",
  bareme:[
-  ["Le geste, en quatre temps"],
-  ["1. Recenser toutes les écritures présentes", "30 écritures",
-   "aucune ne doit échapper au recensement, sinon la table est incomplète sans qu'on le sache"],
-  ["2. Écrire la table de correspondance à la main", "30 vers 8",
-   "chaque écriture pointe vers un code ISO 3166, le standard international à deux lettres"],
-  ["3. Écrire le résultat dans une colonne neuve", "country_clean",
-   "la colonne d'origine n'est pas touchée"],
-  ["4. Surveiller ce qui n'entre pas dans la table", "0 inconnue",
-   "une écriture absente de la table n'est jamais devinée : elle sort en « non mappée » dans le rapport"]],
+  ["Ce que je fais, en quatre temps"],
+  ["1. Je recense toutes les écritures présentes dans la colonne pays", "30 écritures",
+   "si une seule échappe au recensement, ma table est incomplète et je ne le sais pas"],
+  ["2. J'écris à la main la correspondance vers un code unique", "30 vers 8",
+   "chaque écriture pointe vers son code à deux lettres du standard international, ISO 3166. FR, BE, NL, DE, ES, IT, CH, GB"],
+  ["3. J'écris le résultat dans une colonne neuve", "country_clean",
+   "votre colonne d'origine reste à côté, intacte"],
+  ["4. Je surveille ce qui n'entre pas dans ma table", "0 écriture inconnue",
+   "une écriture absente de ma table n'est jamais devinée : elle ressort en « non reconnue » dans le rapport"]],
  kpi:[["30 000 / 30 000","fiches classées"],["0","pays deviné"],
       ["45 %","de France, puis Belgique, Pays-Bas, Allemagne, Espagne, Italie, Suisse, Royaume-Uni"]],
- body:"La table vit en <b>configuration</b>, pas dans le code : une graphie nouvelle s'ajoute en une ligne, sans toucher au programme. C'est ce qui rend la règle relisible en trente secondes, et c'est ce qui garantit qu'aucune valeur n'est interprétée au hasard.",
- q:"Pourquoi des codes ISO ? Et si une écriture inconnue apparaît demain ?",
- r:"Je normalise vers <b>ISO 3166</b>, le standard international : n'importe quel outil en aval, enrichissement, CRM, tableau de bord, le comprend, et les codes ne changent pas selon la langue. La table de correspondance vit en configuration, pas dans le code : une graphie inconnue n'est jamais devinée, elle sort en « non mappée » dans le rapport d'audit, et on l'ajoute à la table en une ligne.",
- qs:[["Pourquoi pas une librairie de détection, ou une IA ?","Pour <b>30 valeurs distinctes</b>, une table explicite est plus sûre, plus rapide et 100 % auditable. Une librairie introduirait des devinettes invisibles. Le bon outil pour la bonne taille de problème. Et j'ai une contre-vérification : le compte par pays recoupe mon audit initial au chiffre près."],
-     ["Et quand deux doublons de la même entreprise se contredisent sur le pays ?","C'est massif, et je l'ai chiffré : <b>5 947 cas</b>, soit 69 % des entreprises qui ont plusieurs fiches. Je tranche par <b>vote majoritaire</b> des fiches ; à égalité, la fiche de référence l'emporte, et le conflit est signalé pour revue.<br><br>Et j'en tire une conclusion de conception : à ce niveau de contradiction, <b>le pays ne porte aucun poids dans le score</b>. Il sert au reporting, pas à la qualification."],
-     ["Vous auriez pu deviner le pays depuis le site web.","Mesuré aussi, et non : la répartition des pays est <b>identique sur toutes les extensions</b>. Le .com, le .fr, le .eu, le .co et le .io affichent tous 44 à 46 % de France, qui est le taux de base du fichier. Une boîte en .fr n'est pas plus française qu'une autre dans ce CRM : le domaine ne peut pas arbitrer le pays."]]
+ body:"Ma table de correspondance vit dans un <b>fichier de réglages</b>, pas dans le programme : une écriture nouvelle s'ajoute en une ligne, sans toucher au code. C'est ce qui la rend relisible en trente secondes par quelqu'un qui n'est pas développeur.",
+ q:"Et quand deux fiches de la même entreprise ne disent pas le même pays ?",
+ r:"C'est massif, et je l'ai chiffré : <b>5 947 cas</b>, soit 69 % des entreprises qui ont plusieurs fiches. Je tranche par <b>vote majoritaire</b> des fiches, et à égalité c'est la fiche de référence qui l'emporte. Le conflit est signalé, jamais résolu en silence.<br><br>Et surtout j'en tire une conclusion de conception, qui est la vraie réponse : à ce niveau de contradiction, <b>le pays ne pèse aucun point dans mon score</b>. Il sert au reporting, pas à décider qui on appelle. Une donnée fausse à 69 % ne mérite pas de porter une décision commerciale.",
+ qs:[["Deux fiches avec deux pays différents, ce ne serait pas deux filiales ? Ou deux franchisés ?","La bonne question, et je me la suis posée. La réponse tient à une mesure : <b>sur les 30 000 fiches, aucun nom d'entreprise ne porte de marqueur géographique autre que « France »</b>. Pas un « Belgique », pas un « Deutschland », pas un « Benelux », pas un « EMEA ». Zéro fois.<br><br>Or des filiales, ça se nomme. Un franchisé de Lille et un de Copenhague, ça se lit dans le nom de la fiche. Ici ça ne s'y lit jamais, sur aucune des 30 000.<br><br>Je donne aussi ce qui va contre moi : le pays n'est pas du bruit pur. Deux fiches du même groupe disent le même pays <b>19 % plus souvent que le hasard</b> ne le voudrait. Il y a donc un signal, faible, dedans. C'est une raison de plus pour le signaler et ne pas lui donner de points."],
+     ["Vous auriez pu deviner le pays depuis le site web.","Mesuré aussi, et non. La répartition des pays est <b>identique sur toutes les extensions</b> : le .com, le .fr, le .eu, le .co et le .io affichent tous entre 44 et 46 % de France, qui est exactement le taux moyen du fichier. Une entreprise en .fr n'est pas plus française qu'une autre ici. Le site web ne peut pas arbitrer le pays."],
+     ["Pourquoi des codes à deux lettres et pas les noms en toutes lettres ?","Parce que <b>ISO 3166</b> est compris par n'importe quel outil en aval, et parce que ces codes ne changent pas selon la langue de celui qui lit. « Allemagne », « Germany » et « Deutschland » désignent la même chose et cassent tous les regroupements. DE ne casse rien."]]
 },
 {
- p:"2 · Réparer", t:"Étape 3 : les domaines", h:"Déduire n'est pas deviner", vue:"data",
+ p:"2 · Réparer", t:"Étape 3 : les domaines", h:"2 671 fiches sans site web, 2 538 retrouvées", vue:"data", table:"accounts",
  say:"2 671 fiches n'avaient aucun domaine. J'en ai récupéré 2 538, sans en inventer un seul.",
  pb:"Le domaine est la première clé pour reconnaître deux fiches d'une même entreprise. Sans lui, une boîte reste éclatée en plusieurs comptes pour toujours. Et la même entreprise existe ici en .com, en .fr et en .eu.",
  bareme:[
@@ -1727,27 +1784,35 @@ var PROC=[
      ["Et s'il y avait des URL complètes, des sous-domaines, des cas tordus ?","Vérifié, pas supposé : <b>zéro protocole http</b>, un seul préfixe possible (www.), et exactement <b>5 extensions</b>. La chaîne de traitement est défensive : une extension inconnue sortirait dans le rapport au lieu d'être traitée en silence."]]
 },
 {
- p:"2 · Réparer", t:"Étape 4 : les noms", h:"La deuxième clé, et son banc d'essai", vue:"data",
- say:"Mon test de validation n'est pas un échantillon. Les 27 329 fiches qui ont un domaine me servent de banc d'essai : si ma normalisation retombe sur la racine du domaine à 100 %, le geste est prouvé.",
- pb:"La même boîte écrite de plusieurs façons : Talosolmedia, TalosolMedia & Co, Talosolmedia SARL. Et 234 fiches portent une étiquette de doublon dans leur nom : (old), - import, ou un « 2 » collé à la fin.",
+ p:"2 · Réparer", t:"Étape 4 : les noms", h:"La même entreprise écrite de cinq façons", vue:"data", table:"accounts",
+ say:"Talosolmedia, TalosolMedia & Co, Talosolmedia SARL, TALOSOLMEDIA France. Quatre fiches, une entreprise. Je fabrique une écriture de référence pour pouvoir les reconnaître.",
+ pb:"Le site web permet de rapprocher deux fiches, mais 133 fiches n'en ont aucun. Il me faut une deuxième façon de reconnaître la même entreprise, et elle doit fonctionner sur le nom seul, sans jamais rapprocher deux entreprises qui se ressemblent.",
  bareme:[
-  ["Les deux tests indépendants"],
-  ["Le nom normalisé retombe sur la racine du domaine déclaré", "27 329 / 27 329", "100 %"],
-  ["Et sur les racines déduites des emails à l'étape 3", "2 538 / 2 538", "100 %, second test, autre chemin"],
-  ["Noms normalisés distincts obtenus", "20 519",
-   "exactement la taille de la table entreprises que la fusion produira à l'étape 7. Deux chemins, même nombre"]],
+  ["Ce que je retire du nom, dans cet ordre"],
+  ["1. Je passe tout en minuscules", "TALOSOLMEDIA devient talosolmedia",
+   "une majuscule n'a jamais fait deux entreprises"],
+  ["2. Je retire les étiquettes de doublon collées au nom", "234 fiches concernées",
+   "les mentions (old), - import, ou un « 2 » collé à la fin. Quelqu'un les a mises là en important un fichier"],
+  ["3. Je retire les mentions juridiques et décoratives", "SA, SAS, SARL, & Co, Group, France",
+   "la liste vit dans un fichier de réglages, elle se relit en trente secondes"],
+  ["4. Je retire la ponctuation et les espaces", "Talosol-Media devient talosolmedia",
+   "il reste une suite de lettres, et c'est elle que je compare"]],
  bareme2:[
-  ["Le geste, deux colonnes neuves"],
-  ["1. Normaliser le nom", "name_norm",
-   "minuscules, puis retrait des étiquettes de doublon, puis des mentions juridiques (liste en config), puis de la ponctuation"],
-  ["2. Mémoriser l'étiquette trouvée", "dup_marker",
-   "une fiche marquée (old), - import ou « 2 » ne pourra JAMAIS être la fiche de référence de son groupe"]],
- body:"La liste des mentions à retirer ne contient pas que SA, SAS et SARL. Elle contient aussi <b>France</b> (2 994 fiches), <b>Group</b> (2 976) et <b>&amp; Co</b> (2 860). Sans ça, Yellodordata SA et YellodorData &amp; Co restent deux entreprises différentes, et on se retrouve avec <b>3 498 faux conflits</b>. 58 % de la base porte l'un de ces suffixes : c'est le détail qui fait tout.",
- q:"Vous retirez « France » et « SARL » : vous allez fusionner deux filiales différentes.",
- r:"Dans cette base, c'est mesuré : le nom normalisé coïncide avec la racine du domaine sur <b>100 % des 27 329 fiches vérifiables</b>, et sur <b>100 % des 2 538 racines déduites</b> des emails, qui est un second test indépendant. Les suffixes y sont décoratifs, pas discriminants.<br><br>Derrière, trois garde-fous : une borne de sanité sur le nombre d'entités (entre 19 000 et 22 000), une taille maximale des groupes de doublons (aucun ne dépasse 4 fiches), et le retour arrière, puisque rien n'est supprimé.<br><br>Et je dis la limite : en production réelle, j'ajouterais le pays et le chiffre d'affaires comme témoins avant de fusionner des noms à suffixe géographique. Ici, la mesure dit que c'est sûr."
+  ["Comment je sais que ça ne rapproche pas deux entreprises différentes"],
+  ["Test 1 : je compare mon écriture de référence au site web déclaré", "27 329 fiches sur 27 329",
+   "quand une fiche a un site web, mon nom nettoyé retombe dessus. 100 % des cas, zéro écart"],
+  ["Test 2 : je refais le test sur les sites web déduits des emails", "2 538 fiches sur 2 538",
+   "un second test qui ne partage aucune hypothèse avec le premier. 100 % aussi"],
+  ["Le garde-fou : j'exige que ce soit identique, pas ressemblant", "aucune approximation",
+   "Roccaviaforge et Roccaviafood se ressemblent beaucoup et ne sont jamais rapprochées"],
+  ["Nombre d'écritures de référence différentes obtenues", "20 519",
+   "c'est exactement le nombre d'entreprises que la fusion produira à l'étape 7, par un tout autre chemin"]],
+ body:"Le détail qui fait tout : ma liste de mentions à retirer ne contient pas que SA, SAS et SARL. Elle contient aussi <b>France</b> (2 994 fiches), <b>Group</b> (2 976) et <b>&amp; Co</b> (2 860). Sans ça, Yellodordata SA et Yellodordata &amp; Co restent deux entreprises différentes. <b>58 % du fichier porte l'un de ces trois mots</b>.",
+ q:"Vous retirez « France » du nom. Vous allez fusionner la filiale française avec le groupe.",
+ r:"C'est le vrai risque de ce que je fais, et je ne l'ai pas supposé, je l'ai mesuré.<br><br>Mon nom nettoyé retombe sur le site web déclaré dans <b>100 % des 27 329 fiches vérifiables</b>, et sur <b>100 % des 2 538 sites déduits des emails</b>, qui est un second test indépendant. Dans ce fichier, ces suffixes sont décoratifs : ils ne distinguent jamais deux entreprises.<br><br>Derrière, trois garde-fous : le nombre d'entreprises obtenu doit rester entre 19 000 et 22 000, aucun groupe de doublons ne doit dépasser 4 fiches (aucun ne le fait), et rien n'est supprimé donc tout se défait.<br><br>Et je dis la limite franchement : <b>sur un vrai CRM je ne ferais pas ça les yeux fermés</b>. J'ajouterais le pays et le chiffre d'affaires comme témoins avant de rapprocher deux noms à suffixe géographique. Ici, la mesure dit que c'est sûr."
 },
 {
- p:"2 · Réparer", t:"Étape 5 : les emails", h:"Réparer sans inventer", vue:"data",
+ p:"2 · Réparer", t:"Étape 5 : les emails", h:"1 544 adresses email cassées par une faute de frappe", vue:"data", table:"contacts",
  say:"1 544 adresses étaient cassées mécaniquement. Je les répare, et je vous dis tout de suite que ça n'a fait gagner aucun compte chaud.",
  pb:"Un double arobase ou un espace au milieu d'une adresse : elle est invalide, le contact est injoignable, et rien ne le signale. Un email sert à deux choses, joindre quelqu'un et identifier son entreprise. Une adresse cassée casse les deux.",
  bareme:[
@@ -1769,111 +1834,159 @@ var PROC=[
  qs:[["Donc les comptes prioritaires sont tous joignables par email ?","Non, et c'est une nuance que je préfère donner moi-même. <b>3 des comptes prioritaires</b> restent injoignables par email : un sans adresse, deux en adresse personnelle. Ça ne change pas leur score, <b>ça change le canal</b> : téléphone ou LinkedIn.<br><br>Attention à ne pas confondre avec un autre chiffre que je donne plus loin : <b>4 comptes joignables uniquement par téléphone</b>. Celui-là compte en plus l'interdiction d'écrire à une personne désabonnée, dont l'adresse fonctionne pourtant. Deux définitions, deux chiffres, les deux vrais."]]
 },
 {
- p:"2 · Réparer", t:"Étape 6 : les dates impossibles", h:"On ne corrige pas une date fausse, on la neutralise", vue:"ops",
- say:"Une date fausse ne doit jamais entrer dans un calcul. Une case vide assumée vaut toujours mieux qu'un chiffre faux qui entre en silence.",
- pb:"6 321 contacts sont créés dans le futur, jusqu'en novembre 2027. Une date de création postérieure à aujourd'hui fausse tout calcul d'ancienneté. Mais on ne peut pas deviner la vraie : la corriger, ce serait inventer une donnée.",
+ p:"2 · Réparer", t:"Étape 6 : des dates qui n'existent pas", h:"6 321 contacts créés dans le futur", vue:"data", table:"contacts",
+ say:"On revient aux dates, mais ce n'est plus le même problème. À l'étape 1, la date était juste mal écrite. Ici elle est fausse : un contact créé en novembre 2027, ça n'existe pas.",
+ pb:"Une date de création postérieure à aujourd'hui rend faux tout calcul d'ancienneté. Et on ne peut pas deviner la vraie : la corriger, ce serait inventer une donnée que personne ne pourra plus distinguer d'une vraie.",
  bareme:[
-  ["Ce qui a été trouvé"],
-  ["Contacts créés dans le futur", "6 321", "neutralisés"],
-  ["Contacts ayant REÇU des emails avant leur création", "414", "impossible, donc date corrompue"],
-  ["Contacts avec seulement des visites avant création", "20", "attribution rétroactive plausible, bénéfice du doute"]],
+  ["Les dates impossibles trouvées dans ce fichier"],
+  ["Contacts dont la date de création est dans le futur", "6 321",
+   "certaines vont jusqu'en novembre 2027. Aujourd'hui, on est en juillet 2026"],
+  ["Contacts qui ont REÇU des emails avant d'exister", "414",
+   "on ne peut pas recevoir un email avant d'être créé dans le CRM. Leur date est corrompue, c'est certain"],
+  ["Contacts qui ont seulement des visites de site avant leur création", "20",
+   "celui-là est plausible : un outil web rattache après coup les visites anonymes d'une personne qui remplit un formulaire. Je leur laisse le bénéfice du doute"],
+  ["Comptes dont la dernière activité est dans le futur", "3", "même traitement"]],
  bareme2:[
-  ["Le principe, et sa limite"],
-  ["On ne corrige jamais", "", "la vraie valeur est inconnaissable, l'inventer serait pire que le trou"],
-  ["On neutralise", "date vidée", "la date convertie est vidée, donc elle n'entre plus dans aucun calcul"],
-  ["On trace", "un drapeau", "la date d'origine reste visible, personne ne peut la prendre pour vraie"],
-  ["On ne touche jamais aux événements", "", "c'est la fiabilité de la DATE qui est jugée, pas l'activité du contact"],
-  ["Comptes à dernière activité dans le futur", "3", "neutralisés aussi"]],
- body:"La distinction entre les 414 et les 20 n'était pas dans ma première version. Elle est née d'une question posée pendant la revue : <b>et si c'était juste de l'attribution rétroactive ?</b> J'ai vérifié sur les données, et la réponse dépend du type d'événement. C'est pour ça que les deux cas ne sont plus traités pareil.",
- q:"Des événements avant la création du contact, c'est peut-être juste de l'attribution rétroactive, non ?",
- r:"Exact, et pour les visites web c'est même plausible : l'outil rattache rétroactivement les visites anonymes après un formulaire. J'ai séparé ces cas, <b>20 contacts</b>, bénéfice du doute.<br><br>Mais <b>414 sur 434</b> ont <b>reçu des emails</b> avant leur date de création. On ne peut pas recevoir rétroactivement un email. Ceux-là, c'est de la date corrompue.<br><br>Et dans les deux cas, je ne déclasse que <b>la date</b>, jamais les événements : la fraîcheur du signal vient des événements, pas de ce champ."
+  ["Ce que je fais, et surtout ce que je ne fais pas"],
+  ["Je ne corrige jamais la date", "aucune date réécrite",
+   "la vraie valeur est inconnaissable. L'inventer serait pire que le trou, parce que plus personne ne verrait le problème"],
+  ["Je vide la date dans MA colonne de travail", "la case devient vide",
+   "vide, elle n'entre plus dans aucun calcul d'ancienneté. C'est ça, neutraliser"],
+  ["Je garde votre date d'origine visible", "intacte, avec un drapeau",
+   "elle reste lisible dans l'onglet Données, et le drapeau empêche quiconque de la prendre pour vraie"],
+  ["Je ne touche jamais aux clics ni aux rendez-vous du contact", "0 événement retiré",
+   "c'est la fiabilité de la DATE que je juge, pas l'activité de la personne. Elle garde tous ses signaux"]],
+ body:"La séparation entre les 414 et les 20 n'était pas dans ma première version. Elle est née d'une objection pendant la relecture : <b>et si c'était juste l'outil qui rattache des visites après coup ?</b> J'ai vérifié dans les données, et la réponse dépend du type d'événement. Recevoir un email, non. Avoir été vu sur le site, oui. C'est pour ça que les deux cas ne sont plus traités pareil.",
+ q:"Des événements avant la création du contact, ce n'est pas juste du rattachement rétroactif ?",
+ r:"Pour les visites de site, si, et c'est même le fonctionnement normal d'un outil web : quelqu'un navigue anonymement, il remplit un formulaire, et l'outil lui recolle ses visites d'avant. J'ai isolé ces cas, <b>20 contacts</b>, et je ne les touche pas.<br><br>Mais <b>414 sur 434</b> ont <b>reçu des emails</b> avant leur date de création. Ça, aucun outil ne le fait rétroactivement : on n'envoie pas un email à quelqu'un qui n'est pas encore dans la base. Pour ceux-là, la date est corrompue, sans hésitation.<br><br>Et dans les deux cas je ne déclasse que <b>la date</b>, jamais les événements. La fraîcheur d'un compte se lit sur ses clics et ses rendez-vous, pas sur ce champ."
 },
 {
- p:"3 · Reconstruire", t:"Étape 7 : la fusion", court:true, h:"30 000 fiches, 20 519 entreprises", vue:"data",
- say:"2 808 entreprises, soit 20,8 % des comptes actifs, ont leurs signaux éclatés sur plusieurs fiches. Trois d'entre elles ne passent le seuil qu'après fusion. Sans cette étape, elles restent trois fiches tièdes.",
+ p:"3 · Reconstruire", t:"Étape 7 : la fusion", court:true, fusion:true,
+ h:"30 000 fiches, 20 519 entreprises",
+ vue:"data", table:"companies",
+ say:"Voilà quatre fiches de votre CRM. C'est une seule entreprise. Je vous montre comment je le sais, et laquelle je garde.",
  pb:"Sans table des entreprises, un commercial appelle deux fois la même boîte, le chiffre d'affaires est compté deux fois, et l'activité reste éclatée sur trois fiches qui semblent toutes tièdes. C'est la table que ce CRM n'a jamais eue.",
  bareme:[
-  ["Reconnaître un doublon : trois clés, jamais une seule"],
-  ["Clé 1, la racine du domaine", "99,6 % du CRM", "produite à l'étape 3, déductions incluses et tracées"],
-  ["Clé 2, le nom normalisé", "20 519 distincts", "produite à l'étape 4, elle couvre les 133 fiches sans racine"],
-  ["Clé 3, le domaine des emails des contacts", "témoin", "le vivant contrôle le déclaratif"]],
+  ["Comment je sais que deux fiches sont la même entreprise"],
+  ["Première façon : le nom du site, sans son extension", "couvre 99,6 % du fichier",
+   "rapihallab.fr et rapihallab.com donnent tous les deux rapihallab. Produite à l'étape 3, déductions comprises et tracées"],
+  ["Deuxième façon : le nom de l'entreprise mis à plat", "20 519 formes distinctes",
+   "minuscules, sans SA ni & Co ni France, sans ponctuation. Produite à l'étape 4. C'est elle qui couvre les 133 fiches sans site web"],
+  ["Témoin de contrôle : le domaine des adresses email des contacts", "le vivant vérifie le déclaré",
+   "les gens qui écrivent depuis rapihallab.fr confirment que la fiche est bien celle-là"],
+  ["La règle qui empêche les dégâts", "identique, jamais ressemblant",
+   "Roccaviaforge et Roccaviafood se ressemblent beaucoup et ne sont jamais rapprochées. Rapihallabs non plus n'est pas Rapihallab"]],
  bareme2:[
-  ["Égalité exigée", "exacte", "garde-fou réel : Roccaviaforge n'est pas Roccaviafood"],
-  ["Élire la fiche de référence : on tranche dans cet ordre"],
-  ["1. Jamais une fiche étiquetée (old), - import ou « 2 »", "critère d'exclusion", "elle est écartée avant tout le reste"],
-  ["2. Le statut le plus avancé", "client, ex-client, négo, prospect, lead, perdu", "dans cet ordre"],
-  ["3. À égalité, celle qui porte le chiffre d'affaires", "", ""],
-  ["4. Encore à égalité, la plus ancienne", "", ""]],
+  ["Laquelle des quatre je garde : je tranche dans cet ordre, et je m'arrête dès qu'il n'en reste qu'une"],
+  ["1. J'élimine d'office toute fiche étiquetée doublon", "234 fiches dans tout le CRM",
+   "les mentions (old), - import, ou un 2 collé à la fin. Elle ne peut JAMAIS devenir la fiche gardée"],
+  ["2. Le statut le plus avancé l'emporte", "client, ex-client, négociation, prospect, lead, perdu",
+   "dans cet ordre exact. Un ex-client bat un prospect : il a déjà payé, c'est un fait plus fort qu'une étiquette"],
+  ["3. À égalité, celle qui porte le contrat", "", "un montant facturé est une preuve de relation réelle"],
+  ["4. Encore à égalité, la plus ancienne", "", "c'est elle qui porte l'historique le plus long"],
+  ["Ce que ça donne sur tout le CRM"],
+  ["Entreprises réelles obtenues", "20 519", "à partir de 30 000 fiches"],
+  ["Fiches absorbées", "9 481", "aucune supprimée : chacune garde un lien vers la fiche gardée"],
+  ["Entreprises dont les signaux étaient éclatés sur plusieurs fiches", "2 808",
+   "soit 20,8 % des comptes actifs. Trois d'entre elles ne deviennent chaudes qu'une fois recollées"]],
  kpi:[["20 519","entreprises réelles"],["9 481","fiches absorbées, aucune supprimée"],
       ["52,0 M€","facturés chaque année aux 3 246 clients actifs"],["14,6 M€","que rapportaient les 2 094 partis : le potentiel de reconquête"]],
- body:"<b>Les conflits ne sont jamais tranchés en silence.</b> 5 947 sur le pays, 251 sur le chiffre d'affaires, 5 067 sur le commercial, 6 858 sur le statut : chacun porte un drapeau et part en revue. Les cases vides se complètent depuis les fiches jumelles, avec la provenance écrite dans une colonne.<br><br>Deux pièges vérifiés nommément dans la table. <b>Grimodormobility</b> : un client à 40 000 € qui se réveille, donc de l'expansion, plus jamais de la prospection à froid. <b>BelfonexMedia</b> : trois fiches recollées, dont celle étiquetée « perdue » qui portait le formulaire.",
- q:"Comment vous savez que vous n'avez pas fusionné deux entreprises différentes ?",
- r:"Pas parce que ma clé est bonne. Parce que <b>deux clés indépendantes donnent la même partition, fiche par fiche, zéro écart sur 20 519 groupes</b>. L'une part du nom normalisé, l'autre du domaine et des emails des contacts : elles ne partagent aucune hypothèse.<br><br>Derrière, quatre contrôles :<br>• aucun groupe au-dessus de <b>4 fiches</b><br>• chaque fiche dans exactement <b>une</b> entreprise<br>• un équilibre arithmétique qui surveille la seule dépendance cachée de la clé : <b>20 753 moins 234 égale 20 519</b><br>• une corroboration : chaque fusion déclenchée par une étiquette de doublon a une seconde preuve indépendante, <b>234 sur 234</b><br><br>Et tout est réversible : chaque doublon garde un lien vers sa fiche de référence, rien n'est supprimé.",
- qs:[["Et les fusions en chaîne ? A ressemble à B, B ressemble à C, et vous fusionnez A avec C sans preuve directe.","Structurellement absentes avec ma clé, parce que l'égalité exigée est exacte, pas approchante. Et ça a été stress-testé indépendamment par la seconde implémentation : <b>zéro faux positif</b>. La seule dépendance qui existe, le retrait des étiquettes de doublon, est sous contrôle automatique."],
-     ["Un ex-client élu fiche de référence alors qu'une négociation est en cours, vous enterrez le deal.","L'étiquette ne décide de rien. Le routage lit <b>deux colonnes de faits</b>, a-t-il été client et y a-t-il un deal en cours, jamais le statut affiché. Et les <b>80 cas exacts</b> où ça se produit partent dans une liste d'arbitrage dédiée. Sur un champ que votre propre brief déclare peu fiable, je neutralise le problème au lieu de le trancher en silence."],
-     ["Votre chiffre d'affaires consolidé, il vaut combien ?","À l'euro près, et je le publie en <b>deux lignes</b> : <b>52,0 M€ facturés chaque année</b> aux 3 246 clients actifs, et <b>14,6 M€</b> que rapportaient les 2 094 partis, qui mesurent ce qu'il y a à reconquérir mais qui ne rentrent plus.<br><br>Les additionner, c'est le piège que j'ai trouvé dans la base de départ : <b>100 % des clients partis y gardent leur chiffre d'affaires comme s'ils payaient encore</b>, donc 21,9 % du total est fantôme. La séparation est verrouillée par trois contrôles, pas seulement documentée. Et la vérité comptable ne vit pas dans le CRM : elle vit dans la facturation, synchronisée en lecture seule."]]
+ body:"<b>Les contradictions ne sont jamais tranchées en silence.</b> Quand deux fiches du même groupe ne disent pas la même chose, la contradiction est écrite dans une colonne : 5 947 sur le pays, 251 sur le montant, 5 067 sur le commercial, 6 858 sur le statut. Les cases vides se remplissent depuis les fiches jumelles, avec la provenance écrite à côté.<br><br>Deux cas vérifiés nommément dans la table. <b>Grimodormobility</b> : un client à 40 000 € qui se réveille, donc une vente additionnelle, plus jamais de la prospection à froid. <b>BelfonexMedia</b> : trois fiches recollées, dont celle étiquetée « perdue » qui portait le formulaire du 19 juillet.",
+ q:"Comment savez-vous que vous n'avez pas fusionné deux entreprises différentes ?",
+ r:"Pas parce que ma règle est bonne. Parce que <b>deux façons de reconnaître, qui ne partagent aucune hypothèse, donnent exactement le même découpage</b>, fiche par fiche, zéro écart sur 20 519 groupes. L'une part du nom mis à plat, l'autre du site web et des adresses email des contacts.<br><br>Derrière, quatre contrôles automatiques :<br>• aucun groupe ne dépasse <b>4 fiches</b><br>• chaque fiche appartient à exactement <b>une</b> entreprise<br>• un compte qui doit tomber juste : <b>20 753 moins 234 égale 20 519</b><br>• chaque regroupement déclenché par une étiquette de doublon a une seconde preuve indépendante, <b>234 sur 234</b><br><br>Et tout est réversible : chaque fiche absorbée garde un lien vers la fiche gardée, rien n'est supprimé.",
+ qs:[["Et les fusions en chaîne ? A ressemble à B, B ressemble à C, et vous fusionnez A avec C sans preuve directe.","Impossible ici, parce que j'exige l'égalité et pas la ressemblance. Rapihallab et Rapihallabs diffèrent d'une lettre et restent deux entreprises. C'est aussi ce qu'a testé la seconde IA de son côté : <b>zéro cas</b>. La seule dépendance qui existe, le retrait des étiquettes de doublon, est sous contrôle automatique."],
+     ["Vous gardez une fiche « ex-client » alors qu'une autre porte une négociation en cours. Vous enterrez le deal.","L'étiquette gardée ne décide de rien. Ce qui décide de la conversation, ce sont <b>deux colonnes de faits</b> : cette entreprise a-t-elle déjà payé, et y a-t-il une négociation ouverte. Jamais le statut affiché, que votre propre brief déclare peu fiable.<br><br>Et les <b>80 cas exacts</b> où une fiche dit « parti » et une autre « négociation en cours » partent dans une liste d'arbitrage humain, plutôt que d'être tranchés par le programme."],
+     ["Votre chiffre d'affaires consolidé, il vaut combien ?","À l'euro près, et je le publie en <b>deux lignes séparées</b> : <b>52,0 M€ facturés chaque année</b> aux 3 246 clients actifs, et <b>14,6 M€</b> que rapportaient les 2 094 partis, qui mesurent ce qu'il y a à reconquérir mais qui ne rentrent plus.<br><br>Les additionner, c'est exactement le piège de votre base de départ : <b>100 % des clients partis y gardent leur montant comme s'ils payaient encore</b>, donc 21,9 % du total est fantôme. La séparation est verrouillée par trois contrôles, pas seulement documentée.<br><br>Et je le dis franchement : la vérité comptable ne vit pas dans un CRM, elle vit dans la facturation. Ce que je publie, c'est ce que le CRM peut défendre."]]
 },
 {
- p:"3 · Reconstruire", t:"Étape 8 : le ré-attachement", h:"Fusionner sans ré-attacher ne sert à rien", vue:"data",
- say:"C'est ici que les signaux se recollent. Un tiers des événements change de maison.",
- pb:"La table des entreprises ne vaut rien si les contacts et les événements restent accrochés aux anciennes fiches. Un formulaire posé sur une fiche doublon est un signal qui compte pour une entreprise qui n'existe pas.",
+ p:"3 · Reconstruire", t:"Étape 8 : recoller les signaux", h:"Un tiers des signaux étaient posés sur une fiche qui n'existe plus",
+ vue:"data", table:"events",
+ say:"On vient de fusionner les fiches. Mais les clics et les rendez-vous, eux, pointent encore vers les anciens numéros. Cette étape les recolle sur la bonne entreprise, et ça touche un tiers du fichier.",
+ pb:"À l'étape précédente, plusieurs fiches sont devenues une seule entreprise. Les fiches écartées ont disparu du tableau, mais tout ce qui était accroché dessus y est resté : les contacts, les clics, les rendez-vous. Un formulaire rempli sur une fiche écartée, c'est un signal qui compte pour une entreprise qui n'existe plus.",
  bareme:[
-  ["Ce qui a bougé"],
-  ["Événements rattachés", "90 838", "plus 4 000 anonymes conservés tels quels : on retombe sur 94 838"],
-  ["Événements qui changent d'entreprise", "29 184", "32,1 % du total : c'est la mesure de ce que la fusion a réparé"],
-  ["Doublons de personnes signalés", "105", "99 par la clé email, 6 par la clé nom"]],
+  ["Un cas réel du fichier : BelfonexMedia"],
+  ["Ce qu'on avait dans le CRM", "3 fiches",
+   "BELFONEXMEDIA en .co étiquetée perdue, Belfonexmedia en .fr, et BelfonexMedia SA en .fr étiquetée prospect"],
+  ["Le formulaire du 19 juillet était rempli sur", "la fiche étiquetée perdue",
+   "c'est la seule des trois qui porte une vraie demande, et c'est celle qu'on écarte à la fusion"],
+  ["La fiche qu'on garde, elle, ne porte", "aucune demande",
+   "une visite et deux ouvertures d'email. Un compte tiède, rien de plus"],
+  ["Sans cette étape, ce compte finit", "invisible",
+   "le seul signal fort du groupe reste accroché à une fiche disparue. Personne ne l'appelle"],
+  ["Après cette étape, il finit", "dans la liste d'appels",
+   "BelfonexMedia SA, 58,5 points, 21e sur les 60 comptes de la liste, avec son motif écrit : formulaire le 19 juillet"]],
  bareme2:[
-  ["Contacts rattachés par leur compte", "76 599", ""],
-  ["Contacts orphelins récupérés par le domaine de leur email", "547", "même geste et même prudence qu'à l'étape 3 : unanimité exigée"],
-  ["Vrais inconnus, mis de côté", "53", "aucun événement : ils partent dans une liste de comptes à créer, pas rangés au hasard"]],
- body:"<b>Le moment qui prouve que la surveillance sert à quelque chose.</b> J'attendais 97 doublons de personnes. La chaîne en a trouvé 99, et c'est une alarme du filet de contrôles qui a signalé l'écart, pas moi. Explication : <b>le ré-attachement lui-même a révélé 2 doublons</b> qui étaient invisibles avant, parce que les deux fiches ne vivaient pas encore dans la même entreprise. L'écart a été expliqué, puis verrouillé.<br><br>Au passage, 11 contacts ont récupéré un titre depuis leur copie, dont un directeur des ressources humaines qui était sans fonction connue. Ses gestes comptent désormais à 100 % au lieu de 50 %.",
- q:"32 % des événements changent de compte, ça ne vous inquiète pas ?",
- r:"Au contraire, c'est exactement ce que j'allais mesurer. Ces <b>29 184</b> événements étaient rattachés à des fiches doublons : ils existaient, mais ils comptaient pour une entreprise qui n'existe pas. Les recoller, c'est la moitié du travail de détection.<br><br>Et rien n'a été perdu : <b>90 838 rattachés plus 4 000 anonymes conservés font 94 838</b>, le compte exact du fichier de départ."
+  ["Le même geste, sur tout le fichier"],
+  ["Clics et rendez-vous replacés sur la bonne entreprise", "90 838",
+   "plus 4 000 signaux dont on ne connaît pas l'auteur, laissés tels quels. Total 94 838, le compte exact du fichier que vous nous avez donné"],
+  ["Parmi eux, ceux qui changent effectivement d'entreprise", "29 184",
+   "32 % du fichier. C'est la mesure de ce que la fusion a réparé"],
+  ["Fiches écartées qui portaient un rendez-vous ou un formulaire", "9",
+   "neuf entreprises comme BelfonexMedia, dont le seul signal fort était posé au mauvais endroit"],
+  ["Les contacts, eux"],
+  ["Contacts replacés grâce au numéro de fiche qu'ils portaient", "76 599",
+   "leur fiche existait, on suit simplement le lien vers l'entreprise qui l'absorbe"],
+  ["Contacts sans numéro de fiche, replacés par leur adresse email", "547",
+   "même prudence qu'à l'étape 3 : il faut que toutes les adresses désignent la même entreprise, sinon on ne touche à rien"],
+  ["Contacts qu'on n'a pas pu rattacher", "53",
+   "aucun clic, aucun rendez-vous, aucune adresse exploitable. Ils partent dans une liste de comptes à créer, plutôt que rangés au hasard"],
+  ["Personnes présentes en double, signalées", "105",
+   "99 reconnues par leur adresse email, 6 par leur nom. La même personne comptée deux fois fabriquerait un faux groupe d'acheteurs"]],
+ body:"<b>Le moment qui prouve que la surveillance sert.</b> J'attendais 97 personnes en double. Le programme en a trouvé 99, et c'est un test automatique qui a signalé l'écart, pas moi.<br><br>L'explication : recoller les signaux a fait apparaître <b>2 doublons de plus</b>. Avant, les deux fiches de la même personne vivaient dans deux entreprises différentes, donc rien ne permettait de les rapprocher. Une fois les entreprises fusionnées, elles se sont retrouvées côte à côte. L'écart a été expliqué, puis verrouillé.<br><br>Au passage, <b>11 personnes ont récupéré leur fonction</b> depuis leur doublon, dont une directrice des ressources humaines qui était sans fonction connue. Ses gestes comptent maintenant à 100 % au lieu de 50 %.",
+ q:"32 % des signaux changent d'entreprise. Ça ne vous inquiète pas ?",
+ r:"Au contraire, c'est exactement ce que je voulais mesurer. Ces <b>29 184 signaux</b> existaient déjà dans votre fichier, mais ils comptaient pour une entreprise qui n'existe pas. Les recoller, c'est la moitié du travail de détection.<br><br>Et rien n'est perdu, le compte referme : <b>90 838 replacés plus 4 000 sans auteur connu font 94 838</b>, exactement le nombre de lignes du fichier de départ. C'est un test automatique, il arrête la chaîne si le total ne tombe pas juste."
 },
 {
- p:"4 · Assainir et classer", t:"Étape 9 : les doublons d'événements", h:"Trois ouvertures du même email ne font pas trois signaux", vue:"ops",
- say:"Sans cette étape, les comptes les plus arrosés par le marketing paraissent les plus engagés. Et je le signale, je ne le supprime pas.",
- pb:"Un même envoi ouvert trois fois dans la journée gonfle le score d'un compte qui n'a rien fait de plus qu'un autre. C'est du bruit de pixel de tracking, pas de l'intérêt.",
+ p:"4 · Assainir et classer", t:"Étape 9 : la même ouverture comptée trois fois", h:"Trois lignes dans le fichier, une seule personne, quatre secondes",
+ vue:"data", table:"events",
+ say:"La même personne, le même email, le même jour, écrit trois fois dans le fichier. Ce n'est pas quelqu'un qui s'intéresse trois fois plus. Je le signale, je ne le supprime pas.",
+ pb:"Compter trois fois la même ouverture gonfle un compte qui n'a rien fait de plus qu'un autre. Sans cette étape, les entreprises les plus arrosées par le marketing sont celles qui paraissent les plus intéressées.",
  bareme:[
-  ["Le résultat"],
-  ["Lignes signalées comme doublons", "1 988", "réparties en 1 860 groupes"],
-  ["Dont des ouvertures d'email", "88 %", "c'est bien du bruit de tracking"],
-  ["Conversions touchées", "0", "aucun rendez-vous, aucun formulaire"],
-  ["Événements supprimés", "0", "signalés seulement"]],
+  ["Un cas réel du fichier, trois lignes qui se suivent"],
+  ["EVT-0093864, la personne CON-077194 ouvre un email", "25 avril, 17h46m02s", ""],
+  ["EVT-0093865, la même personne ouvre le même email", "25 avril, 17h46m04s", ""],
+  ["EVT-0093866, la même personne ouvre encore le même email", "25 avril, 17h46m06s", ""],
+  ["Ce que je garde", "la première",
+   "les deux autres sont signalées comme répétitions. Quatre secondes, ce n'est pas trois fois de l'intérêt"]],
  bareme2:[
-  ["La clé de doublon, et pourquoi elle est stricte"],
-  ["Même contact", "", ""],
-  ["Même type d'événement", "", ""],
-  ["Même campagne", "", ""],
-  ["Même PAGE", "indispensable",
-   "sans la page dans la clé, quelqu'un qui visite les tarifs puis la démo le même jour perd la moitié de son parcours"],
-  ["Même jour", "", "la première occurrence est conservée, les suivantes sont signalées"]],
- body:"Les <b>4 000 visites anonymes ne sont pas touchées</b>, et ce n'est pas un oubli : c'est chiffré. Leur appliquer la même clé supprimerait <b>2 872 lignes à tort</b>, parce que deux visiteurs différents peuvent voir la même page le même jour sans être la même personne. Une règle juste sur une population peut être fausse sur l'autre.",
- q:"Vous supprimez des événements ?",
- r:"Jamais. Ils sont <b>signalés</b>, pas retirés : le scoring les ignore, le fichier les garde. Si la règle se révèle mauvaise, on l'annule sans avoir rien perdu. C'est la règle du chantier entier : rien n'est jamais supprimé ni écrasé."
+  ["Ce que je signale, sur tout le fichier"],
+  ["Lignes qui répètent une ligne déjà présente", "1 988",
+   "à chaque fois : la même personne, le même type de geste, la même campagne, la même page, le même jour. Je garde la première, je signale les suivantes"],
+  ["Situations concernées", "1 860",
+   "1 732 fois la ligne est écrite deux fois, 128 fois elle est écrite trois fois"],
+  ["Parmi ces 1 988 lignes, des ouvertures d'email", "1 756, soit 88 %",
+   "une ouverture d'email vaut ZÉRO point dans mon calcul. Donc cette étape ne change presque rien au classement"],
+  ["Parmi ces 1 988 lignes, des clics", "211, soit 11 %",
+   "un clic vaut 8 points. C'est le seul vrai impact de cette étape sur le score"],
+  ["Rendez-vous ou formulaires signalés", "0",
+   "je ne signale jamais une vraie demande comme une répétition. Une demande en double, ça se vérifie à la main"],
+  ["Lignes supprimées du fichier", "0",
+   "signalées seulement. Le fichier garde tout, le calcul les ignore, et la règle s'annule sans rien perdre"]],
+ body:"Les <b>4 000 visites de site sans personne identifiée ne sont pas touchées</b>, et ce n'est pas un oubli, c'est chiffré. Leur appliquer la même règle signalerait <b>2 872 lignes à tort</b> : deux visiteurs anonymes différents peuvent très bien voir la même page le même jour sans être la même personne. Une règle juste sur une population peut être fausse sur l'autre.<br><br>Et une précision que je préfère donner avant qu'on me la demande : le cas à quatre secondes est spectaculaire mais rare, <b>120 situations sur 1 860</b>. Dans la plupart des cas, les deux ouvertures sont espacées de plusieurs heures dans la même journée. C'est la même personne qui rouvre son email le soir. Même conclusion, un seul intérêt, mais je ne raconte pas que tout est du mouchard automatique : ce serait faux.",
+ q:"Comment savez-vous que ce sont des doublons et pas trois vraies ouvertures ?",
+ r:"Je ne le sais pas avec certitude, et c'est précisément pour ça que je <b>signale au lieu de supprimer</b>. La ligne reste dans le fichier, le drapeau se retire en une exécution.<br><br>Ce que je sais, c'est que compter trois fois la même ouverture du même email le même jour gonfle un compte sans qu'il ait rien fait de plus qu'un autre.<br><br>Et je donne la taille réelle de l'enjeu plutôt que de la gonfler : <b>88 % de ce que je signale sont des ouvertures d'email, qui valent zéro point chez moi</b>. Le seul effet réel de l'étape, ce sont <b>211 clics</b>. Ça n'a bougé aucun compte de la liste d'appels."
 },
 {
- p:"4 · Assainir et classer", t:"Étape 10 : le robot", court:true, h:"Ce n'est pas le volume qui trahit, c'est le chronomètre", vue:"data",
- say:"C'est une horloge, pas un humain. Et je le signale, je ne le supprime pas : un scanner de sécurité est une information sur le compte.",
- pb:"Un contact porte 420 événements. C'est le contact le plus actif de toute la base, et n'importe quel scoring naïf met son compte en tête de la liste d'appels. Un commercial aurait passé le coup de fil.",
+ p:"4 · Assainir et classer", t:"Étape 10 : le robot", court:true, h:"Le contact le plus actif du CRM est une machine",
+ vue:"data", table:"events",
+ say:"Un contact porte 420 événements, c'est le plus actif de toute la base. Il ouvre les emails 4 secondes après l'envoi, toujours. C'est une horloge, pas un humain.",
+ pb:"N'importe quel scoring qui compte les gestes met ce compte en tête de la liste d'appels. Un commercial aurait passé le coup de fil, et serait tombé sur un scanner de sécurité.",
  bareme:[
-  ["Ce qui trahit la machine"],
-  ["Délai médian entre l'envoi et l'ouverture", "4 secondes", "et le motif : plus 2, plus 4, plus 6 secondes, soixante fois de suite"],
-  ["Le même délai chez l'humain le plus actif de la base", "23,4 heures", "il n'est pas signalé, et il fait sept fois moins d'événements"],
-  ["Pages du site vues par le robot", "0", "il ouvre et il clique, il ne visite rien"],
-  ["Événements neutralisés", "420", "signalés from_bot, pas supprimés"]],
- bareme2:[
-  ["Deux précisions de méthode qui comptent"],
-  ["La détection tourne sur le flux d'origine", "avant le retrait des doublons",
-   "retirer les doublons efface justement le motif mécanique : trois ouvertures plus trois clics deviennent un plus un"],
-  ["La définition est verrouillée", "médiane ≤ 60 s",
-   "délai entre une ouverture et le dernier envoi antérieur de la même campagne"]],
- body:"<b>La leçon que je raconte volontiers.</b> Trois façons différentes d'apparier les envois et les ouvertures donnaient trois chiffres pour le même humain témoin : 3,9 heures, 23,4 heures, 64,8 heures. Aucun n'était faux, ils ne mesuraient pas la même chose. Une métrique sans sa définition n'est pas un chiffre : c'est pour ça que la définition est écrite dans la configuration, à côté du seuil.",
+  ["Ce qui le trahit, et ce n'est pas le volume"],
+  ["Temps entre l'envoi de l'email et son ouverture, chez lui", "4 secondes",
+   "et toujours le même motif : plus 2, plus 4, plus 6 secondes, soixante fois de suite"],
+  ["Le même temps chez l'humain le plus actif de la base", "23,4 heures",
+   "un facteur 21 000 entre les deux. L'écart n'est pas serré, il est énorme"],
+  ["Pages du site qu'il a visitées", "0",
+   "il ouvre et il clique dans les emails, il ne visite jamais rien. Un humain intéressé va voir le site"],
+  ["Ce que j'en fais", "420 gestes neutralisés",
+   "ils portent un drapeau et ne comptent plus dans le score. Ils restent dans le fichier : savoir qu'un scanner tourne chez un compte, c'est une information"]],
+ body:"<b>La leçon que je raconte volontiers.</b> Trois façons de rapprocher les envois et les ouvertures m'ont donné trois chiffres pour le même humain témoin : 3,9 heures, 23,4 heures, 64,8 heures. Aucun n'était faux, ils ne mesuraient pas la même chose.<br><br>Depuis, ma définition est écrite noir sur blanc à côté du seuil, dans le fichier de réglages : <b>le temps entre une ouverture et le dernier envoi de la même campagne qui la précède, en médiane, sur au moins cinq emails</b>. Un chiffre sans sa définition n'est pas un chiffre.<br><br>Détail qui compte : cette détection tourne <b>avant</b> l'étape 9. Retirer les répétitions d'abord effacerait justement le motif mécanique que je cherche.",
  q:"Et si un humain très réactif se faisait attraper ?",
- r:"Il faudrait qu'il ouvre en moins d'une minute, en médiane, sur au moins cinq emails. Sur cette base, le contact humain le plus actif est à <b>23,4 heures</b>. L'écart n'est pas serré, il y a un facteur <b>21 000</b> entre les deux.<br><br>Et même si ça arrivait : je le signale, je ne le supprime pas. La ligne reste dans le fichier, le drapeau se retire en une exécution."
+ r:"Il faudrait qu'il ouvre ses emails en moins d'une minute, en médiane, sur au moins cinq campagnes. Sur cette base, l'humain le plus rapide est à <b>23,4 heures</b>. Personne n'est proche du seuil.<br><br>Et même si ça arrivait : je le signale, je ne le supprime pas. La ligne reste dans le fichier et le drapeau se retire en une exécution."
 },
 {
- p:"4 · Assainir et classer", t:"Étape 11 : la segmentation", h:"On ne prospecte pas un client, on ne relance pas un mort", vue:"data",
+ p:"4 · Assainir et classer", t:"Étape 11 : la segmentation", h:"On ne prospecte pas un client, on ne relance pas un mort", vue:"data", table:"companies",
  say:"Avant de scorer, je sais qui est quoi. Et ma liste d'appels traverse les segments : c'est le play qui change, pas la liste.",
  pb:"Un client actif et un prospect froid peuvent porter le même score d'engagement. Ce n'est pas le même appel, pas le même interlocuteur, pas la même séquence. Scorer avant de savoir à qui on parle produit des appels absurdes.",
  bareme:[
@@ -1894,7 +2007,7 @@ var PROC=[
  qs:[["Deux de vos pièges disparaissent tout seuls avec cette étape, non ?","Oui, et c'est voulu. Le robot tombe en « email seulement » parce qu'il ne lui reste que 3 événements humains. Et un ex-client résilié ne peut jamais devenir prospect chaud, par construction de cet ordre.<br><br>Je signale quand même la fragilité : cette deuxième garantie devient <b>paramétrique</b>, elle dépend des poids négatifs. Elle est donc surveillée sur le paramètre, parce que 14 événements sur 94 838 font une dérive statistiquement invisible."]]
 },
 {
- p:"4 · Assainir et classer", t:"Étape 12 : l'audit", h:"Ce que je remonte de moi-même", vue:"ops",
+ p:"4 · Assainir et classer", t:"Étape 12 : l'audit", h:"Le rapport d'audit, écrit par le programme", vue:"ops",
  say:"Chaque décision de nettoyage est auditable poste par poste. Et chaque euro écarté a sa raison, verrouillée par un contrôle.",
  pb:"Un rapport écrit à la main devient faux dès la première correction. Celui-là est produit par le code à chaque exécution, à partir des fichiers : il ne peut pas mentir sur un état ancien.",
  bareme:[
@@ -1941,14 +2054,21 @@ var PROC=[
   ["Plusieurs personnes bougent ensemble", "1 compte",
    "au moins 3 personnes différentes de la même entreprise, actives sur 14 jours, dont un décideur, alors qu'aucune n'a rien demandé"],
   ["Par accumulation de points", "0 compte",
-   "la protection existe si un compte accumule énormément sans jamais rien demander. Elle ne s'est jamais déclenchée ici, et je le dis plutôt que de le cacher"]],
+   "la protection existe si un compte accumule énormément sans jamais rien demander. Elle ne s'est jamais déclenchée ici, et je le dis plutôt que de le cacher"],
+  ["La preuve que cette liste ne tient pas à mes réglages"],
+  ["Calculs complets relancés en secouant chaque poids et chaque durée de plus ou moins 30 %", "38 essais",
+   "un essai par réglage secoué, refait de bout en bout. La commande est run_scoring.py --robustesse"],
+  ["Essais où la liste des comptes à appeler change", "0 sur 38",
+   "elle est faite de faits datés, pas de points. Si elle avait bougé, c'est que j'aurais réglé mes chiffres sur mon résultat"],
+  ["Essais où la file de travail juste derrière change", "38 sur 38",
+   "et c'est normal : elle est bornée par un nombre de points, donc ses bords bougent quand les points bougent. Au pire, 29 % de comptes en commun. Je le dis plutôt que de le taire"]],
  pb:"Un classement par points rate le compte où trois personnes s'agitent sans jamais remplir un formulaire. Et il fait passer devant un compte qui a beaucoup cliqué sans intention. Le volume et l'intention ne sont pas la même chose.",
  body:"Pourquoi des faits et pas un seuil, en deux raisons.<br><br><b>Un</b> : bougez tous mes poids de plus ou moins 30 %, la liste ne change pas. Elle n'est pas faite de points, elle est faite de faits.<br><b>Deux</b> : chaque compte s'explique en une phrase à un commercial. Pas « il a 42 points », mais « le 17 juillet, cette personne a réservé une démo ».<br><br>Une décision d'achat en entreprise est collective : 3 personnes en 2 semaines, c'est un sujet qui circule en interne ; 3 personnes en 3 ans, c'est du hasard. C'est pour ça que la fenêtre est courte et qu'elle compte à partir d'aujourd'hui.",
  q:"Pourquoi pas simplement un seuil de points ?",
  r:"Parce qu'un seuil de points ne sait pas faire la différence entre l'intention et le volume. Les deux façons d'entrer décrivent <b>ce qui s'est passé</b>, pas combien ça pèse.<br><br>Et je l'ai mesuré au lieu de l'affirmer. <b>38 variations</b> : chaque poids et chaque durée secoués de plus ou moins 30 %, un calcul complet à chaque fois. <b>Le Tier 1 est identique dans les 38 cas</b>, y compris au pire. Le Tier 2, lui, respire : <b>29 % de recouvrement au pire cas</b>. C'est normal, et je le dis plutôt que de le taire : une file de travail est bornée par un nombre de points, donc ses bords bougent quand les points bougent. Le Tier 1 ne bouge pas parce qu'il n'est pas fait de points.<br><br>Le test se rejoue en une commande : <b>run_scoring.py --robustesse</b>."
 },
 {
- p:"5 · Scorer", t:"Le barème", h:"Ce qui monte, ce qui descend", court:true,
+ p:"5 · Scorer", t:"Le barème", h:"Combien vaut chaque geste, et pourquoi", court:true,
  say:"Chaque signal a un poids déclaré, avec sa raison. Rien n'est appris, rien n'est optimisé : ce sont des choix qu'on peut me reprocher un par un.",
  bareme:[
   ["Les preuves : plein poids, quel que soit le porteur"],
@@ -2176,6 +2296,24 @@ var PROC=[
  r:"Sur le fait de <b>trouver</b>, il n'ajoute rien, et je préfère le dire avant qu'on me le démontre. Ce fichier est petit et ses comptes chauds sont bruyants.<br><br>Il sert sur trois choses que le filtre ne sait pas faire.<br><br><b>Le bruit.</b> 197 fiches contre 60, dont 140 sans aucune valeur.<br><b>La conversation.</b> Le filtre range un client qui veut plus, un client qui s'en va et un inconnu dans la même liste. Trois appels différents, une seule ligne.<br><b>L'oubli.</b> Un compte qui a cliqué deux fois en mai reste dans le filtre pour toujours. Chez moi il redescend tout seul.<br><br>Et sur un vrai CRM, l'écart se creuse : le filtre grossit avec le volume, la liste d'appels reste à la taille de ce qu'un commercial peut absorber."
 },
 {
+ p:"5 · Scorer", t:"Là où je m'écarte de l'habitude", h:"Quatre choix qui ne sont pas les choix habituels", court:true,
+ say:"Il y a quatre endroits où je fais l'inverse de ce qui se fait d'habitude. À chaque fois c'est délibéré, et à chaque fois j'ai la raison.",
+ bareme:[
+  ["Ce qui se fait d'habitude, et ce que je fais"],
+  ["D'habitude : une ouverture d'email rapporte des points", "chez moi elle vaut 0",
+   "l'ouverture dépend d'un mouchard dans l'image, pas de la personne. Elle se déclenche toute seule chez certains, jamais chez d'autres. Ce n'est pas une mesure d'intérêt, c'est une mesure de logiciel de messagerie"],
+  ["D'habitude : un score dépasse un seuil, donc le compte est chaud", "chez moi on entre par un fait",
+   "un seuil récompense le volume. Trois personnes qui cliquent beaucoup passent devant une personne qui a demandé une démo. C'est l'inverse de ce qu'un commercial veut"],
+  ["D'habitude : le score d'une entreprise est la moyenne de ses gens", "chez moi c'est la somme",
+   "une moyenne écrase : quatre personnes tièdes font redescendre la personne qui a réservé un rendez-vous. Une entreprise où une seule personne bouge fort est un vrai sujet"],
+  ["D'habitude : un désabonnement fait baisser le score", "chez moi il change le canal",
+   "fermer un canal, ce n'est pas être fermé à l'offre. La personne reste dans la liste, on l'appelle au lieu de lui écrire"]],
+ pb:"On peut copier un barème trouvé en ligne et le défendre en disant « c'est le standard ». Sauf que le standard n'a pas vu vos données. Chacun de ces quatre choix vient d'une mesure faite sur VOTRE fichier, pas d'une note de blog.",
+ body:"Une chose que je préfère dire moi-même : <b>je ne vous sors aucun chiffre de marché</b>. Pas de « le taux moyen du secteur est de X ». J'ai des références, mais je ne peux pas les re-sourcer proprement aujourd'hui, donc je ne les cite pas.<br><br>Tout ce que j'avance ici est mesuré sur les trois fichiers que vous m'avez donnés, et chaque mesure se rejoue en une commande. C'est moins impressionnant qu'une statistique de marché. C'est surtout beaucoup plus difficile à démonter.",
+ q:"Vos poids sortent d'où, alors ?",
+ r:"De trois endroits, et aucun n'est un classement trouvé en ligne.<br><br><b>Un, l'ordre est évident et se défend en une phrase</b> : un rendez-vous pris vaut plus qu'un formulaire, qui vaut plus qu'un clic, qui vaut plus qu'une ouverture. Personne ne discute cet ordre.<br><br><b>Deux, les écarts sont testés</b> : j'ai secoué chaque poids de plus ou moins 30 %, 38 fois, et ma liste d'appels ne bouge pas. Autrement dit, les valeurs exactes n'ont pas d'importance. Seul l'ordre en a.<br><br><b>Trois, ce qui pesait faux a été retiré</b> après vérification sur vos données : la page carrières, les consultations de facture, la pénalité de désabonnement. Trois règles que j'ai supprimées parce que la mesure disait qu'elles avaient tort."
+},
+{
  p:"6 · Le résultat", phase:"6", t:"· Le résultat ·", h:"Le résultat",
  say:"Vingt mille cinq cent dix-neuf entreprises. Voilà où va chacune, et ce qu'on en fait."
 },
@@ -2220,7 +2358,7 @@ var PROC=[
  r:"Parce que le score répond à une seule question, est-ce qu'il se passe quelque chose, et qu'il ne sait rien de la relation.<br><br>Concrètement, une liste unique par score fait deux dégâts. Elle envoie un commercial vendre à une entreprise dont quatre personnes cherchent comment résilier, parce que leur agitation ressemble à de l'intérêt. Et elle laisse dormir <b>209 clients dont le contrat est déjà échu</b>, parce qu'un client content ne clique sur rien.<br><br>Les quatre listes coûtent une colonne. Elles évitent ces deux appels, qui sont les deux pires de la semaine."
 },
 {
- p:"6 · Le résultat", t:"Ce qui a cassé", h:"Trois erreurs, et la règle que chacune a produite", court:true,
+ p:"6 · Le résultat", t:"Ce qui a cassé", h:"Trois choses qui ont cassé pendant le chantier", court:true,
  say:"Je préfère vous les raconter moi-même. Chacune a laissé une règle derrière elle, et c'est la règle qui vaut, pas l'erreur.",
  bareme:[
   ["Ce qui a cassé, et ce que ça a produit"],
@@ -2236,7 +2374,29 @@ var PROC=[
  r:"Plus que trois, et je ne vais pas vous donner un chiffre que vous ne pouvez pas vérifier. Ce qui compte, c'est que <b>je peux vous raconter chacune, ce qu'elle a produit, et où voir la correction dans le dépôt</b>. Ces trois-là sont les plus instructives.<br><br>Et aucune n'est restée : elles ont toutes été trouvées avant d'atteindre ce que vous avez sous les yeux."
 },
 {
- p:"6 · Le résultat", t:"La vérité terrain", h:"Oui, j'ai vu les réponses", court:true,
+ p:"6 · Le résultat", t:"Où c'est fragile", h:"Six endroits où ça peut lâcher, et ce que je fais pour chacun", court:true,
+ say:"Si vous me demandez où c'est fragile, je préfère avoir la liste toute prête. En voilà six, avec ce que je ferais pour chacun.",
+ bareme:[
+  ["Les six, du plus concret au plus structurel"],
+  ["1. 48 entreprises portent deux contrats sans que rien ne le signale", "invisible aujourd'hui",
+   "299 groupes ont deux contrats. J'en signale 251 parce que les montants diffèrent. Les 48 autres ont deux montants identiques, donc mon test ne voit aucune contradiction et se tait. Correctif : un drapeau dédié et un compteur attendu à 299"],
+  ["2. Le pays se contredit dans 69 % des entreprises à plusieurs fiches", "contourné, pas résolu",
+   "je l'ai contourné en lui donnant zéro point. Mais tout reporting par marché reste bancal. Correctif en production : un troisième témoin, les employés partagés entre deux fiches"],
+  ["3. La file de travail juste derrière la liste d'appels bouge si on change les poids", "29 % de comptes en commun au pire",
+   "c'est structurel : elle est bornée par un nombre de points. Ma réponse est de ne jamais la présenter comme une décision, seulement comme un ordre de passage. La liste d'appels, elle, ne bouge pas du tout"],
+  ["4. La garantie qu'un ex-client ne devient jamais prospect chaud dépend d'un réglage", "14 gestes sur 94 838",
+   "elle tient aux poids négatifs. Une dérive sur 14 gestes est statistiquement invisible, donc je la surveille sur le réglage lui-même, pas sur le résultat"],
+  ["5. Le croisement entre mes deux IA est manuel", "moi, à la main",
+   "c'est ce croisement qui a trouvé les 1 407 entreprises sans commercial. Aujourd'hui c'est moi qui le déclenche. En production, les deux calculs tournent seuls et la chaîne s'arrête dès qu'ils divergent"],
+  ["6. 133 fiches n'ont aucun site web, donc je les reconnais par le nom seul", "0,4 % du fichier",
+   "sur ces 133, je n'ai qu'une seule façon de reconnaître un doublon au lieu de deux. Correctif en production : ajouter le pays et le montant facturé comme témoins avant de fusionner"]],
+ pb:"On me demandera où ça casse. Si je réponds « nulle part », je perds la conversation : personne ne croit un système sans angle mort. Si je réponds au hasard, j'ouvre une porte que je ne contrôle pas. Donc je liste moi-même, avec le correctif à côté.",
+ body:"Le point commun des six : <b>aucun n'est caché dans le code</b>. Chacun se lit dans une colonne, un compteur ou un rapport. C'est la seule chose qui me permet d'en parler sereinement.<br><br>Et sur les six, <b>un seul se corrige en une ligne</b> (le premier). Les cinq autres demandent soit de la donnée que ce fichier n'a pas, soit une vraie mise en production. Je préfère le dire que promettre un correctif en cinq minutes.",
+ q:"Si vous ne deviez en corriger qu'un aujourd'hui, lequel ?",
+ r:"Le premier, les <b>48 entreprises à double contrat invisibles</b>. Pour trois raisons.<br><br>Il est <b>silencieux</b> : les cinq autres, on les voit venir. Celui-là ne déclenche rien du tout, ce qui est exactement le genre de défaut qui traverse une migration sans se faire remarquer.<br><br>Il touche <b>de l'argent</b> : deux contrats dans un groupe, on n'en garde qu'un. Sur 48 cas, personne n'est prévenu qu'un montant a été mis de côté.<br><br>Et il se corrige <b>en une ligne</b> plus un compteur qui refuse de passer si le total n'est pas 299."
+},
+{
+ p:"6 · Le résultat", t:"La vérité terrain", h:"Les réponses étaient dans le fichier. Je le dis.", court:true,
  say:"Votre énoncé dit que les comptes chauds ont été plantés dans les données. J'ai trouvé leur trace. Je vous le dis moi-même, parce que la question suivante est légitime.",
  bareme:[
   ["Ce à quoi elle a servi, et ce à quoi elle n'a jamais servi"],
@@ -2271,7 +2431,7 @@ var PROC=[
  r:"Oui. Celui qui a pris le rendez-vous attend l'appel : le rappeler est la seule chose cohérente. Le décideur, on le trouve <b>pendant</b> l'appel, il est identifié dans la fiche. Passer par-dessus la tête de celui qui a levé la main, c'est le meilleur moyen de perdre les deux."
 },
 {
- p:"6 · Le résultat", t:"Là où l'équipe travaille", h:"La liste ne sert à rien dans un fichier", court:true,
+ p:"6 · Le résultat", t:"Là où l'équipe travaille", h:"Où l'équipe travaille la liste au quotidien", court:true,
  say:"Un fichier que personne n'ouvre n'a jamais réveillé un CRM. La liste part dans Slack, avec les preuves.",
  kpi:[["1","message par jour"],["0","mot de passe dans le dépôt : l'adresse d'envoi vit ailleurs"]],
  body:"Chaque ligne porte qui appeler, sa fonction, ce qu'il a fait et quand, par quel canal le joindre, combien de personnes bougent chez lui, et quel décideur est derrière. Les comptes qui montrent des signes de départ partent avec la mention <b>appel de rétention, pas de prospection</b> : un compte qui s'en va ne s'appelle pas comme un compte qui arrive.<br><br>Et un garde-fou refuse d'écrire le mot « comité » quand il n'y a pas au moins trois personnes derrière.",
@@ -2279,7 +2439,7 @@ var PROC=[
  r:"Parce que le CRM est l'endroit où l'information s'endort : c'est le problème qu'on vient de résoudre, pas la solution. Le message arrive là où l'équipe est déjà, avec un lien vers le tableau de bord pour ceux qui veulent creuser. Ce qui ne se voit pas ne se travaille pas."
 },
 {
- p:"6 · Le résultat", t:"Aller chercher ce qui manque", h:"On n'enrichit jamais 20 519 comptes à l'aveugle", court:true, vue:"data",
+ p:"6 · Le résultat", t:"Aller chercher ce qui manque", h:"On n'enrichit jamais 20 519 comptes à l'aveugle", court:true, vue:"data", table:"contacts",
  say:"Un CRM de huit ans a des trous. Je les ai comptés, et je ne paie pas pour les combler tous.",
  bareme:[
   ["Ce qui manque, compté"],
@@ -2300,7 +2460,7 @@ var PROC=[
  say:"Deuxième partie : quelque chose que j'ai construit. Un agent qui tourne depuis avril, 24 h sur 24, sur mon serveur, et qui a livré de vraies campagnes."
 },
 {
- p:"7 · Becca", t:"Le problème", h:"Le goulot d'étranglement, c'était moi", court:true,
+ p:"7 · Becca", t:"Le problème", h:"Pourquoi j'ai construit Becca", court:true,
  say:"Je suis seul sur mon agence, avec plusieurs clients en même temps. Chaque opération passait par mes mains, dans le bon outil, au bon moment.",
  kpi:[["5","outils pour une seule opération : Notion, Drive, Apify, Lemlist, n8n"],
       ["1","point d'entrée voulu à la place, qui connaît mes clients"],
@@ -2311,7 +2471,7 @@ var PROC=[
  r:"Parce que je veux pouvoir tout casser et tout reconstruire. Le serveur, je le loue, quelques euros par mois, et il se remplace. Ce qui ne se remplace pas, c'est le code, la configuration et les fiches clients : ils vivent dans mon dépôt. <b>C'est ça que je possède.</b>"
 },
 {
- p:"7 · Becca", t:"Mes choix", h:"Rien qui m'enferme", court:true,
+ p:"7 · Becca", t:"Mes choix", h:"Mes choix techniques, et pourquoi ceux-là", court:true,
  say:"Le serveur, je le loue, quelques euros par mois. Ce qui n'est pas loué, c'est ce qui compte : le code, la configuration et les données sont dans mon dépôt. Je change d'hébergeur ce soir, je réinstalle tout demain matin.",
  bareme:[
   ["Quatre choix, et le pourquoi de chacun"],
@@ -2359,7 +2519,7 @@ var PROC=[
  qs:[["Et les gros volumes de données, ils passent par où ?","Pas par l'agent. Au-delà de <b>100 lignes</b>, le transport passe par un workflow n8n : la source parle directement à la destination, l'agent ne fait que déclencher et rendre compte. Cette règle est née d'un incident, il est à l'écran juste après."]]
 },
 {
- p:"7 · Becca", t:"Où ça casse", h:"Trois casses, trois règles", court:true,
+ p:"7 · Becca", t:"Où ça casse", h:"Où Becca casse, et ce que j'ai mis en face", court:true,
  say:"Un agent en production, ça casse. Je préfère vous dire où, et ce que chaque casse a produit comme règle.",
  bareme:[
   ["Ce qui a cassé, et la règle qui en est sortie"],
@@ -2378,7 +2538,7 @@ var PROC=[
  r:"Non, et je le dis. La règle en place est provisoire : pas de redémarrage pendant un job. La vraie correction, c'est de persister les sessions au lieu de les garder en mémoire vive. <b>C'est une dette, et j'assume de la citer.</b>"
 },
 {
- p:"7 · Becca", t:"Ce que je referais différemment", h:"Trois choses que je ferais dans l'autre ordre", court:true,
+ p:"7 · Becca", t:"Ce que je referais différemment", h:"Ce que je referais autrement", court:true,
  say:"Si je recommençais aujourd'hui, trois décisions changeraient de place dans le planning.",
  bareme:[
   ["Ce que je ferais autrement, et quand"],
@@ -2393,7 +2553,7 @@ var PROC=[
  r:"Pas encore, et c'est écrit dans mes dettes. Les clés vivent dans l'environnement du serveur, pas dans le dépôt, mais celles que j'ai exposées au début doivent changer. Je préfère le dire que vous laisser le trouver."
 },
 {
- p:"7 · Becca", t:"Le mémo", h:"Chaque casse est devenue une règle", court:true,
+ p:"7 · Becca", t:"Le mémo", h:"Le mémo, en une page", court:true,
  say:"Becca tourne depuis avril, 24 h sur 24, sur mon serveur. Elle a livré de vraies campagnes pour de vrais clients. Et je peux vous citer les trois fois où elle a cassé, parce que chaque casse est devenue une règle.",
  kpi:[["avril","en production depuis, 24 h sur 24, sur mon serveur"],
       ["1 + 5","un point d'entrée, Telegram, et cinq outils branchés"],
@@ -2437,6 +2597,95 @@ function procDots(){
    elle tombe, et ce que le commercial en fait.
    Le point du dossier : les deux derniers étages ne se déduisent pas l'un de
    l'autre. Le tier dit la température, la relation dit la conversation. */
+/* ── LE SCHÉMA DE LA FUSION : quatre fiches, une entreprise, et une cinquième
+   qui reste dehors. Toutes les valeurs sont celles du fichier, vérifiées.
+   Même grammaire que les autres schémas : boîtes sobres, flux animés, ce qui
+   est écarté reste visible. */
+function fusionSVG(){
+  function fiche(y,nom,site,etat,cl){
+    return '<rect class="ubox'+(cl?" "+cl:"")+'" x="4" y="'+y+'" width="212" height="50" rx="9"/>'
+      +'<text class="unom'+(cl==="win"?" win":"")+'" x="18" y="'+(y+21)+'">'+nom+'</text>'
+      +'<text class="usite'+(cl==="win"?" win":"")+'" x="18" y="'+(y+38)+'">'+site+'  ·  '+etat+'</text>';
+  }
+  function puce(x,y){ return '<polygon class="upuce" points="'+x+','+(y-4)+' '+(x+7)+','+y+' '+x+','+(y+4)+'"/>'; }
+
+  var S='<svg class="uh" viewBox="0 0 1000 400" role="img" '
+       +'aria-label="Quatre fiches du CRM fusionnées en une entreprise, une cinquième laissée dehors">';
+
+  /* colonne 1 : ce que le CRM contient */
+  S+='<text class="utit" x="110" y="18" text-anchor="middle">CE QUE VOTRE CRM CONTIENT</text>';
+  S+=fiche(30,  'RapihalLab',        'rapihallab<tspan class="ur">.fr</tspan>',  'prospect');
+  S+=fiche(88,  'Rapihallab <tspan class="ug">&amp; Co</tspan>', 'rapihallab<tspan class="ur">.fr</tspan>', 'ex-client, 8 000 €');
+  S+=fiche(146, 'Rapihallab <tspan class="ur">- import</tspan>', 'rapihallab<tspan class="ur">.com</tspan>', 'lead', 'out');
+  S+=fiche(204, 'RAPIHALLAB',        '<tspan class="ur">www.</tspan>rapihallab<tspan class="ur">.com</tspan>', 'perdue');
+  S+=fiche(286, 'RapihalLab<tspan class="ur">s</tspan>', 'rapihallab<tspan class="ur">s.io</tspan>', 'lead', 'hors');
+  S+='<text class="udet" x="18" y="356">Celle-ci ne bouge pas : rapihallabs n\'est pas rapihallab.</text>';
+  S+='<text class="udet b" x="18" y="371">On exige l\'égalité, pas la ressemblance.</text>';
+
+  /* étape 1 : le nom mis à plat */
+  S+='<text class="utit" x="390" y="18" text-anchor="middle">1 · ON MET LES NOMS À PLAT</text>';
+  [55,113,171,229].forEach(function(y){
+    S+='<path class="uflux" d="M220 '+y+' C262 '+y+' 268 142 310 142"/>';
+  });
+  S+='<path class="uflux mort" d="M220 311 C262 311 268 250 300 250"/>';
+  S+=puce(308,142);
+  S+='<rect class="ucle" x="318" y="118" width="148" height="48" rx="9"/>';
+  S+='<text class="ucletxt" x="392" y="139" text-anchor="middle">rapihallab</text>';
+  S+='<text class="udet"   x="392" y="156" text-anchor="middle">les quatre donnent le même</text>';
+  S+='<rect class="ucle non" x="310" y="226" width="156" height="44" rx="9"/>';
+  S+='<text class="ucletxt non" x="388" y="246" text-anchor="middle">rapihallabs</text>';
+  S+='<text class="udet"       x="388" y="261" text-anchor="middle">une lettre de plus, entreprise à part</text>';
+  S+='<text class="udet" x="390" y="192" text-anchor="middle">minuscules · on retire &amp; Co et - import</text>';
+  S+='<text class="udet" x="390" y="207" text-anchor="middle">le www. et le .fr ou .com</text>';
+
+  /* étape 2 : la cascade */
+  S+='<text class="utit" x="658" y="18" text-anchor="middle">2 · LAQUELLE ON GARDE</text>';
+  S+='<path class="uflux" d="M470 142 H548"/>'+puce(546,142);
+  function regle(y,n,t1,t2,cl){
+    return '<rect class="ubox'+(cl?" "+cl:"")+'" x="558" y="'+y+'" width="214" height="'+(t2?52:34)+'" rx="9"/>'
+      +'<text class="ureg" x="572" y="'+(y+(t2?20:21))+'">'+n+' · '+t1+'</text>'
+      +(t2?'<text class="udet" x="572" y="'+(y+38)+'">'+t2+'</text>':'');
+  }
+  S+=regle(30, '1','Jamais une fiche étiquetée doublon','<tspan class="ur">« - import » sort. Il en reste 3</tspan>');
+  S+=regle(92, '2','Le statut le plus avancé gagne','<tspan class="ug">ex-client bat prospect et perdue</tspan>');
+  S+=regle(154,'3','À égalité, celle qui porte le contrat','');
+  S+=regle(196,'4','Encore à égalité, la plus ancienne','');
+  S+='<text class="udet" x="665" y="256" text-anchor="middle">on s\'arrête dès qu\'il n\'en reste qu\'une</text>';
+
+  /* étape 3 : le résultat */
+  S+='<text class="utit" x="890" y="18" text-anchor="middle">3 · CE QUI SORT</text>';
+  S+='<path class="uflux" d="M776 118 H822"/>'+puce(820,118);
+  S+='<rect class="ubox win" x="830" y="92" width="164" height="56" rx="9"/>';
+  S+='<text class="unom win"  x="844" y="114">Rapihallab &amp; Co</text>';
+  S+='<text class="usite win" x="844" y="131">ex-client · 8 000 € · 4 fiches</text>';
+  S+='<text class="udet" x="844" y="172">Les trois autres restent dans le</text>';
+  S+='<text class="udet" x="844" y="187">fichier, avec un lien vers celle-ci.</text>';
+  S+='<text class="udet b" x="844" y="204">Rien n\'est supprimé, tout se défait.</text>';
+  S+='</svg>';
+
+  /* vertical, pour les écrans étroits */
+  var V='<svg class="uv" viewBox="0 0 270 430" role="img" aria-label="Quatre fiches fusionnées en une entreprise">';
+  V+='<text class="utit" x="8" y="14">CE QUE VOTRE CRM CONTIENT</text>';
+  ["RapihalLab · prospect","Rapihallab &amp; Co · ex-client 8 000 €",
+   "Rapihallab - import · écartée","RAPIHALLAB · perdue"].forEach(function(t,k){
+    V+='<rect class="ubox'+(k===2?" out":"")+'" x="4" y="'+(24+k*40)+'" width="262" height="32" rx="8"/>'
+      +'<text class="unom" x="18" y="'+(45+k*40)+'">'+t+'</text>';
+  });
+  function puceBas(y){ return '<polygon class="upuce" points="129,'+(y-6)+' 141,'+(y-6)+' 135,'+y+'"/>'; }
+  V+='<path class="uflux" d="M135 190 V222"/>'+puceBas(230);
+  V+='<rect class="ucle" x="52" y="234" width="166" height="42" rx="9"/>'
+    +'<text class="ucletxt" x="135" y="254" text-anchor="middle">rapihallab</text>'
+    +'<text class="udet" x="135" y="269" text-anchor="middle">les quatre donnent le même</text>';
+  V+='<path class="uflux" d="M135 282 V314"/>';
+  V+='<rect class="ubox win" x="20" y="322" width="230" height="46" rx="9"/>'
+    +'<text class="unom win"  x="34" y="343">Rapihallab &amp; Co</text>'
+    +'<text class="usite win" x="34" y="359">ex-client · 8 000 € · 4 fiches</text>';
+  V+='<text class="udet b" x="8" y="392">rapihallabs.io reste une entreprise à part :</text>';
+  V+='<text class="udet"   x="8" y="407">on exige l\'égalité, pas la ressemblance.</text>';
+  V+='</svg>';
+
+  return '<div class="ufus">'+S+V+'</div>';
+}
 function chaineSVG(){
   function etage(x,y,w,h,t1,t2,cl){
     return '<rect class="cbox'+(cl?" "+cl:"")+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="11"/>'
@@ -2705,6 +2954,7 @@ function procShow(i){
      chiffre est la conclusion */
   if(x.loop) h+=loopSVG();
   if(x.chaine) h+=chaineSVG();
+  if(x.fusion) h+=fusionSVG();
   if(x.becca) h+=beccaSVG();
   if(x.geant) h+='<div class="sgeant'+(x.geant[0].length>9?" long":"")+'">'+esc(x.geant[0])
                 +'</div><div class="sgeant-l">'+x.geant[1]+'</div>';
@@ -2741,9 +2991,17 @@ function procShow(i){
      défiler. Une carte peut pointer un compte précis, et le bouton l'ouvre
      directement : sur ce fichier, taper « Sylvasol » dans la recherche sort 21
      comptes, chercher à la main devant quelqu'un est un piège. */
-  if(x.vue)  h+='<button class="sgo" data-go="'+x.vue+'"'
-               +(x.compte?' data-compte="'+esc(x.compte)+'"':'')
-               +'>'+(x.compte?'Ouvrir '+esc(x.compte)+' →':'Le montrer dans le tableau de bord →')+'</button>';
+  if(x.vue){
+    /* le bouton dit OÙ il emmène. Il ouvrait toujours « Entreprises », donc la
+       carte sur les emails atterrissait sur un tableau sans colonne email. */
+    var lib = x.compte ? 'Ouvrir '+esc(x.compte)+' →'
+            : x.table  ? 'Ouvrir le tableau '+(TNOM[x.table]||x.table)+' →'
+            : 'Le montrer dans le tableau de bord →';
+    h+='<button class="sgo" data-go="'+x.vue+'"'
+      +(x.compte?' data-compte="'+esc(x.compte)+'"':'')
+      +(x.table ?' data-table="'+esc(x.table)+'"':'')
+      +'>'+lib+'</button>';
+  }
   document.getElementById("pBody").innerHTML=h;
   document.getElementById("sScroll").scrollTop=0;
   document.getElementById("pPrev").disabled=PI===0;
@@ -2751,10 +3009,20 @@ function procShow(i){
   procDots(); procList(); majChemin();
   var m=document.getElementById("sMore");
   if(m) m.onclick=function(){
-    var d=document.getElementById("sDet");
-    d.classList.toggle("on");
-    this.textContent=d.classList.contains("on")?"▴ replier":"▾ le détail";
-    if(d.classList.contains("on")) setTimeout(function(){ d.scrollIntoView({behavior:"smooth",block:"nearest"}); },120);
+    var d=document.getElementById("sDet"), ouvert=d.classList.toggle("on");
+    /* on mesure le contenu au lieu de parier sur une hauteur. Une fois
+       l'animation finie on relâche la contrainte, sinon un survol qui
+       agrandit le texte recouperait le bas. */
+    if(ouvert){
+      d.style.maxHeight=d.scrollHeight+"px";
+      setTimeout(function(){ if(d.classList.contains("on")) d.style.maxHeight="none"; },340);
+    } else {
+      d.style.maxHeight=d.scrollHeight+"px";
+      d.offsetHeight;                       /* force le navigateur à prendre la valeur */
+      d.style.maxHeight="0px";
+    }
+    this.textContent=ouvert?"▴ replier":"▾ le détail";
+    if(ouvert) setTimeout(function(){ d.scrollIntoView({behavior:"smooth",block:"nearest"}); },120);
   };
 }
 
@@ -2774,6 +3042,7 @@ function initProc(){
       });
       if(cible!==null){ openLogic(cible); return; }
     }
+    if(g.dataset.table){ TCUR=g.dataset.table; TSORT=null; TDESC=false; majOnglets(); }
     showView(g.dataset.go);
   };
   var menu=document.getElementById("pMenu");
@@ -2868,7 +3137,7 @@ function renderOps(){
     if(cs.length){
       h+='<table class="mini"><tr><th>Contrôle</th><th class="num">Attendu</th><th class="num">Obtenu</th><th class="num">État</th></tr>';
       cs.forEach(function(c){ h+='<tr><td>'+esc(c.name)+'</td><td class="num">'+esc(String(c.expected))+'</td><td class="num">'+esc(String(c.actual))+'</td>'
-        +'<td class="num '+(c.pass===false?"ko":"ok")+'">'+(s.status==="done"?(c.pass===false?"KO":"OK"):"—")+'</td></tr>'; });
+        +'<td class="num '+(c.pass===false?"ko":"ok")+'">'+(s.status==="done"?(c.pass===false?"KO":"OK"):"en attente")+'</td></tr>'; });
       h+='</table>';
     }
     if(s.unresolved&&s.unresolved.count){
@@ -2925,6 +3194,107 @@ var T={}, TCUR="companies", TSORT=null, TDESC=false, TBUSY={};
    d'origine, jamais modifiées » sur la table des entreprises serait faux : cette
    table n'existait pas, et les 8 champs qui viennent des fiches y sont consolidés
    (élection de la fiche de référence, vote majoritaire) — repris, pas intacts. */
+/* l'explication de chaque colonne, montrée au survol de son titre dans
+   Données. Aucune colonne ne doit rester sans phrase : c'est celle qu'on
+   se prendrait en pleine figure devant quelqu'un. */
+var AIDE_COL={
+ "entity_id": "Le numéro de l'entreprise réelle, celui qu'on a créé. Toutes les fiches d'une même entreprise le partagent. C'est ce numéro qui recolle tout.",
+ "account_id": "Le numéro de fiche d'origine, le vôtre. Il n'a pas bougé d'un caractère.",
+ "contact_id": "Le numéro de la personne, le vôtre. Il n'a pas bougé.",
+ "name_norm": "Le nom de l'entreprise réduit à sa forme comparable : minuscules, sans SA ni SAS ni & Co ni France, sans ponctuation. C'est cette forme qu'on compare, jamais le nom affiché.",
+ "n_records": "Combien de vos fiches ont été regroupées dans cette entreprise. 1 veut dire qu'elle n'avait pas de doublon.",
+ "created_date": "Votre date de création, telle qu'elle est écrite dans le fichier. Jamais modifiée.",
+ "created_date_parsed": "La même date remise à l'endroit, en année-mois-jour. C'est celle-là qui entre dans les calculs.",
+ "created_date_format": "Dans quelle écriture était votre date d'origine : iso (déjà à l'endroit), dmy (jour d'abord) ou mdy (mois d'abord). Écrit ici pour qu'on puisse toujours refaire le chemin inverse.",
+ "domain": "Le site web déclaré dans votre fiche, tel quel.",
+ "domain_root": "Le nom du site sans son www ni son extension. rapihallab.fr et rapihallab.com donnent tous les deux rapihallab. C'est la première façon de reconnaître deux fiches de la même entreprise.",
+ "country": "Le pays tel qu'il est écrit dans votre fiche. Il y en a 30 écritures différentes pour 8 pays.",
+ "industry": "Le secteur d'activité déclaré dans votre fiche.",
+ "employee_range": "La tranche d'effectif déclarée dans votre fiche.",
+ "owner": "Le commercial responsable, tel que votre CRM le déclare.",
+ "arr_eur": "Le montant annuel facturé, tel qu'il est écrit dans votre fiche.",
+ "renewal_date": "La date de renouvellement du contrat, telle qu'elle est écrite dans votre fiche.",
+ "liste": "Dans quelle des quatre listes d'appels ce compte tombe : acquisition, expansion, rétention ou reconquête. Elle dit la conversation, pas la température.",
+ "segment": "L'état commercial de l'entreprise, parmi onze : client actif, prospect chaud, ex-client réactif, dormant, etc. Posé avant tout calcul de score.",
+ "name": "Le nom de l'entreprise, repris de la fiche qu'on a élue comme fiche de référence.",
+ "master_id": "Le numéro de la fiche qu'on a élue comme référence dans le groupe. Les autres pointent vers elle et restent intactes.",
+ "account_ids": "La liste de toutes vos fiches regroupées ici. C'est la preuve de la fusion : on peut la refaire à la main.",
+ "lifecycle_consolidated": "Le statut retenu pour l'entreprise après fusion : le plus avancé du groupe l'emporte. Un ex-client bat un prospect.",
+ "a_ete_client": "Est-ce que cette entreprise a déjà payé, oui ou non. Un fait, pas une étiquette. C'est ce fait qui décide de la liste d'appels, jamais le statut affiché.",
+ "deal_en_cours": "Est-ce qu'une négociation est ouverte, oui ou non. Deuxième fait qui décide de la liste d'appels.",
+ "arr_actif": "Ce que cette entreprise facture aujourd'hui. Vaut 0 si elle est partie.",
+ "arr_ex_client": "Ce qu'elle facturait avant de partir. Séparé du reste exprès : additionner les deux fabriquait 69,7 M€ dont 21,9 % de fantôme.",
+ "arr_source_account": "De laquelle de vos fiches vient le montant retenu. La provenance est écrite, jamais devinée.",
+ "owner_source_account": "De laquelle de vos fiches vient le commercial retenu.",
+ "created_date_min": "La plus ancienne date de création du groupe : depuis quand cette entreprise est chez vous.",
+ "last_activity_max": "La date du dernier signe de vie, tous doublons confondus. C'est le vrai « depuis quand on n'a pas de nouvelles ».",
+ "country_conflict": "Vrai si deux fiches du groupe ne disent pas le même pays. 5 947 cas. Signalé, pas résolu en silence.",
+ "arr_conflict": "Vrai si deux fiches du groupe ne disent pas le même montant. 251 cas.",
+ "owner_conflict": "Vrai si deux fiches du groupe ne désignent pas le même commercial. 5 067 cas.",
+ "lifecycle_conflict": "Vrai si deux fiches du groupe ne disent pas le même statut. 6 858 cas.",
+ "review_churned_vs_opportunity": "Vrai quand une fiche dit « parti » et une autre « négociation en cours ». 80 cas, envoyés en arbitrage humain plutôt que tranchés par le programme.",
+ "owner_a_router": "Vrai quand aucune des fiches ne portait de commercial : il faut en attribuer un.",
+ "play_segment": "L'action commerciale qui correspond à l'état de l'entreprise : fidéliser, sauver, reconquérir, prospecter.",
+ "segment_evidence": "Sur quoi l'état a été établi. La valeur declared_field veut dire qu'on s'est appuyé sur un champ du CRM qu'on sait peu fiable : c'est écrit plutôt que caché.",
+ "account_name": "Le nom de l'entreprise tel qu'il est écrit dans votre fiche. Jamais modifié.",
+ "dup_marker": "L'étiquette de doublon trouvée collée au nom : (old), - import, ou un 2 à la fin. 234 fiches en portent une, et aucune ne peut devenir fiche de référence.",
+ "is_master": "Vaut 1 si cette fiche est celle qu'on a élue comme référence de son entreprise.",
+ "merged_into": "Vers quelle fiche celle-ci a été rattachée. C'est ce qui rend la fusion réversible : rien n'a été supprimé, tout garde son lien.",
+ "domain_clean": "Le site web nettoyé : www. retiré, tout en minuscules. 1 825 préfixes retirés.",
+ "domain_source": "D'où vient le site web. declared : il était dans votre fiche. inferred_from_contacts : on l'a déduit des emails des contacts, à l'unanimité. none : on n'en a pas.",
+ "has_domain": "Vaut 1 si la fiche a un site web, déclaré ou déduit. 99,6 % du fichier.",
+ "country_clean": "Le pays ramené à son code international à deux lettres. FR, BE, NL, DE, ES, IT, CH, GB. 30 écritures ramenées à 8 codes.",
+ "lifecycle_stage": "Le statut déclaré dans votre fiche : client, prospect, lead, perdu. Votre brief le dit peu fiable, donc il ne décide de rien chez moi.",
+ "last_activity_date": "La date de dernier signe de vie, telle qu'elle est écrite dans votre fiche.",
+ "last_activity_date_parsed": "La même, remise à l'endroit. C'est celle qui entre dans les calculs.",
+ "last_activity_date_format": "Dans quelle écriture était la date d'origine.",
+ "last_activity_flag": "Signale une date impossible, par exemple une activité dans le futur. 3 comptes.",
+ "renewal_date_parsed": "La date de renouvellement remise à l'endroit.",
+ "renewal_date_format": "Dans quelle écriture était la date de renouvellement d'origine.",
+ "entity_source": "Comment cette personne a été rattachée à son entreprise : par le numéro de fiche qu'elle portait, ou par le nom de domaine de son adresse email.",
+ "is_orphan": "Vaut 1 si la personne n'était rattachée à aucune fiche existante. 600 cas, dont 547 récupérés par leur adresse email.",
+ "first_name": "Le prénom, tel qu'il est écrit dans votre fichier.",
+ "last_name": "Le nom, tel qu'il est écrit dans votre fichier.",
+ "job_title": "La fonction déclarée dans votre fichier.",
+ "title_from_copy": "Vaut 1 si la fonction a été récupérée depuis la fiche jumelle de la même personne. 11 cas, dont une directrice RH qui n'avait pas de fonction connue.",
+ "persona_tier": "Le rôle de la personne dans une décision d'achat : décideur, prescripteur, utilisateur, ou inconnu. Ce rôle pondère ses clics, jamais ses demandes.",
+ "email": "L'adresse email telle qu'elle est écrite dans votre fichier. Jamais modifiée.",
+ "email_clean": "L'adresse réparée mécaniquement : un espace retiré, deux arobases ramenées à une. Aucun caractère ajouté, rien d'inventé.",
+ "email_status": "L'état de l'adresse. ok : rien à faire. repaired : réparée, 1 544 cas. missing : absente. personal : adresse personnelle, donc inutilisable pour reconnaître l'entreprise.",
+ "email_domain_root": "Le nom de domaine de l'adresse, sans extension. Sert à rattacher une personne à son entreprise quand sa fiche ne le dit pas.",
+ "email_is_duplicate": "Vaut 1 si cette adresse apparaît sur plusieurs fiches contact. C'est UNE personne : la compter deux fois fabriquerait un faux groupe d'acheteurs.",
+ "email_duplicate_count": "Combien de fiches portent cette même adresse.",
+ "email_multi_entity": "Vaut 1 si la même adresse apparaît dans deux entreprises différentes. Cas rare, signalé pour revue.",
+ "opted_out": "La personne s'est désabonnée des emails. Chez moi ça change le canal, pas la température : on l'appelle au lieu de lui écrire.",
+ "is_bot": "Vaut 1 pour le contact dont les 420 gestes sont ceux d'une machine : ouverture 4 secondes après l'envoi, jamais de visite du site.",
+ "person_primary": "Vaut 1 pour la fiche retenue quand la même personne existe en plusieurs exemplaires.",
+ "duplicate_of": "Vers quelle fiche personne celle-ci a été rattachée. 105 cas.",
+ "created_date_flag": "Signale une date de création impossible : dans le futur, ou postérieure à des emails déjà reçus. 6 321 cas neutralisés.",
+ "event_id": "Le numéro de la ligne, le vôtre.",
+ "timestamp": "La date et l'heure du geste, telles que reçues. Déjà à l'endroit dans ce fichier.",
+ "event_type": "Ce que la personne a fait : email reçu, ouvert, cliqué, visite du site, formulaire rempli, rendez-vous pris, engagement LinkedIn.",
+ "campaign": "La campagne marketing à l'origine du geste, quand il y en a une.",
+ "page_url": "La page du site visitée, quand c'est une visite.",
+ "metadata": "Le champ libre du fichier d'origine, laissé tel quel.",
+ "entreprise": "Le nom de l'entreprise à appeler.",
+ "score": "Les points de l'entreprise : la somme des points de ses gens, jamais leur moyenne. Il ordonne la file d'appel, il ne décide pas de l'entrée.",
+ "score_brut": "Le même nombre sans arrondi, pour pouvoir refaire le calcul à la main.",
+ "tier": "La température. Tier 1 : elle a demandé quelque chose, ou trois personnes bougent ensemble. Tier 2 : au moins 8 points. Tier 3 : le reste.",
+ "porte": "Par quelle porte elle est entrée en Tier 1. conversion : elle a demandé un rendez-vous ou rempli un formulaire. comite : trois personnes actives sur 14 jours dont un décideur, sans rien demander.",
+ "fit": "À quel point l'entreprise ressemble à vos clients qui signent : A, B ou C. Il ordonne la file, il ne bloque jamais l'entrée.",
+ "comite_personnes_14j": "Combien de personnes différentes de cette entreprise ont bougé ces 14 derniers jours. Trois, c'est un sujet qui circule en interne.",
+ "sponsor_decideur": "Est-ce qu'au moins un décideur fait partie des personnes actives.",
+ "qui_appeler": "La personne à appeler : celle qui a levé la main, pas le décideur le mieux placé.",
+ "son_titre": "Sa fonction.",
+ "preuve": "Pourquoi ce compte est dans la liste, en une phrase datée. « formulaire le 19 juillet », pas « 58 points ».",
+ "canal": "Par quel moyen la joindre. Passe au téléphone quand l'email est absent, personnel, ou que la personne s'est désabonnée.",
+ "play": "Ce qu'on lui dit en appelant. Ce n'est pas la même conversation selon qu'elle est cliente, ancienne cliente, ou inconnue.",
+ "play_ajuste_par": "Ce qui a fait changer la conversation prévue : un renouvellement proche, un signal de départ, une négociation ouverte.",
+ "signaux_negatifs": "Les signes qui vont dans l'autre sens : désabonnement, export de données, annulation de rendez-vous.",
+ "perdu_canal_mort": "Le compte n'est joignable ni par email ni autrement : il sort de la liste plutôt que d'occuper une place.",
+ "perte": "Ce que rapportait ce client avant de partir. C'est le montant à reconquérir.",
+ "silence": "Depuis combien de jours ce compte n'a plus donné signe de vie."
+};
 var ORIG={
  companies:["name","domain","country","industry","employee_range","arr_eur","renewal_date","owner"],
  accounts:["account_id","account_name","domain","industry","employee_range","country",
@@ -2942,6 +3312,17 @@ var LEGENDE={
 };
 var TLABEL={companies:"entreprises",accounts:"fiches CRM",contacts:"contacts",
             events:"événements",hot_list:"lignes"};
+/* le nom d'un tableau tel qu'il s'écrit dans une phrase, pour les boutons */
+var TNOM={companies:"« Entreprises »",accounts:"« Fiches CRM »",contacts:"« Contacts »",
+          events:"« Événements »",hot_list:"« Liste d\'appels »"};
+/* aligne les onglets de Données sur TCUR quand on y arrive depuis une carte */
+function majOnglets(){
+  var t=document.getElementById("dtabs"); if(!t) return;
+  t.querySelectorAll("button[data-t]").forEach(function(b){
+    b.classList.toggle("on", b.dataset.t===TCUR);
+  });
+  var q=document.getElementById("dq"); if(q) q.value="";
+}
 
 function loadTables(){
   if(T[TCUR]) { renderTable(); return; }
@@ -3054,7 +3435,9 @@ function renderTable(){
   h+='</colgroup><thead><tr>';
   for(var c5=0;c5<t.cols.length;c5++){
     var ar = (TSORT===c5) ? '<span class="ar">'+(TDESC?"▾":"▴")+'</span>' : '';
-    h+='<th class="'+(TADD[c5]?"add":"")+'" data-c="'+c5+'">'+esc(t.cols[c5])+ar+'</th>';
+    var aide=AIDE_COL[t.cols[c5]]||"";
+    h+='<th class="'+(TADD[c5]?"add":"")+'" data-c="'+c5+'"'
+      +(aide?' data-aide="'+esc(aide)+'"':'')+'>'+esc(t.cols[c5])+ar+'</th>';
   }
   h+='</tr></thead><tbody id="dbody"></tbody>';
   var tb=document.getElementById("dtable");
@@ -3078,7 +3461,17 @@ function renderTable(){
     + (L[1] ? '<span><i class="ad"></i>'+esc(L[1])+'</span>' : '')
     + '<span style="margin-left:auto">source : <b>'+src+'</b> · branche <b>cleanup-pipeline</b></span>';
 }
+/* La bulle d'explication s'ouvre à droite du titre par défaut, et à gauche
+   quand il ne reste pas 300 px avant le bord de la fenêtre. Décidé au survol :
+   la table défile, donc la même colonne change de côté d'un instant à l'autre. */
+function cotéBulle(e){
+  var th=e.target.closest?e.target.closest("th[data-aide]"):null;
+  if(!th) return;
+  var r=th.getBoundingClientRect();
+  th.classList.toggle("fin", r.left+306 > window.innerWidth);
+}
 function initData(){
+  document.getElementById("dscroll").addEventListener("mouseover", cotéBulle);
   document.getElementById("dtabs").onclick=function(e){
     var b=e.target.closest("button[data-t]"); if(!b) return;
     TCUR=b.dataset.t; TSORT=null; TDESC=false;
