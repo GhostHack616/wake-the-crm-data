@@ -1237,7 +1237,15 @@ var G=(function(){
   function couleur(i){
     var k=kind[i];
     if(k===3) return COL.perdu;
-    if(k===2){ var d=D.detail[String(i)]; return (d&&d.play==="risque")?COL.risque:COL.t1; }
+    /* Le rouge suit la LISTE, pas le mot « risque » du play. Il marquait
+       auparavant play==="risque", et cette étiquette a disparu le 31/07 quand
+       on a interdit de « sauver » un compte déjà parti : la sphère s'est
+       retrouvée sans un seul point rouge. Or ce que le rouge doit montrer,
+       c'est un client qui PAIE et qui regarde la sortie. C'est exactement la
+       définition de la liste rétention. */
+    var d=D.detail[String(i)];
+    if(d && d.liste==="retention" && (k===2||k===1)) return COL.risque;
+    if(k===2) return COL.t1;
     if(k===1) return COL.t2;
     return COL.froid;
   }
@@ -2299,19 +2307,20 @@ var PROC=[
  r:"Parce qu'une moyenne punit les comptes où beaucoup de monde est inscrit mais où une seule personne bouge. Or c'est souvent celle-là qui compte. La somme récompense l'activité réelle ; le nombre de personnes actives est traité séparément, par la porte du comité."
 },
 {
- p:"5 · Scorer", t:"La deuxième porte", h:"Zéro point, et pourtant le plus urgent", court:true, vue:"logic", compte:"Sylvasolfinance Group",
- say:"Cette boîte est dans ma liste, mais pas comme prospect. Mon système a vu que c'était un départ en cours, et il dit appel de rétention, pas de vente. Je n'ai pas ignoré le piège, je l'ai transformé en action utile.",
- pb:"Un ex-client dont quatre personnes visitent les pages « résilier mon abonnement » et « exporter mes données » sur quatorze jours. Ses visites négatives le plombent à moins 76 avant plancher. Un filtre sur le score ne le verra jamais, et un scoring naïf le classe chaud : un commercial appelle pour VENDRE à une boîte qui PART.",
+ p:"5 · Scorer", t:"La deuxième porte", h:"Zéro point, et pourtant dans la liste d'appels", court:true, vue:"logic", compte:"Sylvasolfinance Group",
+ say:"Sylvasolfinance Group. Quatre de ses gens bougent en deux semaines, dont un décideur. Son score est à zéro. Aucun classement par points ne le trouve, et pourtant c'est un appel à passer.",
+ pb:"Un ancien client dont quatre personnes visitent les pages « résilier mon abonnement » et « exporter mes données » en quatorze jours. Ces pages coûtent des points, donc son score tombe à zéro. Un moteur qui trie par score l'enterre. Et un moteur naïf ferait pire : il le classerait chaud et un commercial appellerait pour lui VENDRE quelque chose.",
  bareme:[
-  ["L'histoire en quatre lignes"],
-  ["Son score final", "0,0", "les pages de sortie annulent tout ce qu'il a accumulé"],
-  ["Personnes actives sur 14 jours", "4", "dont un décideur : la porte du comité se déclenche"],
-  ["Ce que le système en fait", "file risque", "pas la file prospection"],
+  ["Sylvasolfinance Group, en cinq lignes"],
+  ["Qui c'est", "un ancien client", "il a payé 12 000 € par an, il ne paie plus rien aujourd'hui"],
+  ["Personnes actives sur 14 jours", "4", "dont un décideur. C'est ce fait, et lui seul, qui le fait sortir"],
+  ["Son score", "0,0", "ses quatre personnes sont actives sur des pages qui RETIRENT des points, pas qui en donnent"],
+  ["Dans quelle liste il tombe", "reconquête", "il est déjà parti, donc on ne le sauve pas : on va le rechercher"],
   ["Comptes que seule cette porte fait remonter", "1 sur 20 519", "et c'est celui-là"]],
- body:"C'est la preuve vivante que les portes ne sont pas des points. Un scoring à seuil l'aurait enterré à zéro. La porte du comité le rattrape sur un <b>fait</b> : quatre personnes de la même boîte, en deux semaines, dont un décideur.<br><br>Et la fiche ne dit pas seulement « chaud ». Elle dit <b>quoi faire</b> : appel de rétention. Le play compte autant que le score.",
- qs:[["Sur votre écran, le rouge n'est pas pour les comptes les plus chauds. Pourquoi ?","Parce que le rouge marque une urgence, pas une température. Et l'urgence, ce n'est pas celui qui lève la main, c'est celui qui part.<br><br>Le raisonnement est commercial, pas esthétique : <b>récupérer un client coûte plus cher que d'en garder un</b>. Un compte chaud qui attend deux jours reste chaud. Un compte qui exporte ses données et qu'on rappelle deux jours trop tard est perdu, et il faudra en gagner un nouveau pour le remplacer.<br><br>Donc s'il y a un seul point rouge dans la sphère, c'est celui-là qu'on regarde avant les vingt-cinq qui lèvent la main. Les comptes chauds sont en orange, les tièdes en violet, et un compte injoignable n'a pas de couleur du tout."]],
+ body:"C'est la preuve vivante que les portes ne sont pas des points. Un classement par score l'aurait enterré à zéro. La porte du comité le rattrape sur un <b>fait</b> : quatre personnes de la même entreprise, en deux semaines, dont un décideur.<br><br>Et la fiche ne dit pas seulement « il bouge ». Elle dit <b>quoi lui dire</b> : c'est un ancien client, donc on part le rechercher, on ne lui vend pas comme à un inconnu. Ce que le compte est compte autant que le score.",
+ qs:[["Sur votre écran, le rouge n'est pas pour les comptes les plus chauds. Pourquoi ?","Parce que le rouge marque une urgence, pas une température. Et l'urgence, ce n'est pas celui qui lève la main, c'est celui qui part.<br><br>Le raisonnement est commercial, pas esthétique : <b>récupérer un client coûte plus cher que d'en garder un</b>. Un compte chaud qui attend deux jours reste chaud. Un compte qui exporte ses données et qu'on rappelle deux jours trop tard est perdu, et il faudra en gagner un nouveau pour le remplacer.<br><br>Il y a <b>deux points rouges</b> dans la sphère, et ce sont deux clients qui paient encore : <b>40 000 €</b> et <b>25 000 €</b>. On les regarde avant les vingt-cinq qui lèvent la main. Les comptes chauds sont en orange, les tièdes en violet, et un compte injoignable n'a pas de couleur du tout."]],
  q:"Un seul compte, ça valait le coup de coder une deuxième porte ?",
- r:"Si cette porte n'existait pas, ce compte serait dans les vingt mille froids. Un ex-client qui exporte ses données pendant que quatre personnes regardent comment résilier, c'est exactement le coup de fil qu'on regrette de ne pas avoir passé.<br><br>Le nombre n'est pas l'argument. L'argument, c'est qu'<b>aucun score ne pouvait le trouver</b> : son score est nul par construction, puisque ses signaux sont négatifs."
+ r:"Si cette porte n'existait pas, ce compte serait dans les vingt mille froids. Un ancien client chez qui quatre personnes se remettent à bouger, c'est exactement le coup de fil qu'on regrette de ne pas avoir passé.<br><br>Le nombre n'est pas l'argument. L'argument, c'est qu'<b>aucun score ne pouvait le trouver</b> : son score est nul par construction, puisque ses signaux sont négatifs."
 },
 {
  p:"5 · Scorer", t:"Le désabonnement", h:"Le désabonnement change le canal, pas la chaleur", court:true,
@@ -3100,7 +3109,27 @@ var CONFIG_EXTRAIT=[
  ["n","  /help/cancel-subscription: -15 |# il cherche la porte de sortie|"],
  ["n","  /help/export-data: -15         |# il récupère ses données pour partir|"],
  ["p","  /billing: 0                   |# consulter sa facture n'est pas partir|"],
- ["p","  /careers: 0                   |# des candidats, pas des acheteurs|"]
+ ["p","  /careers: 0                   |# des candidats, pas des acheteurs|"],
+ ["",""],
+ ["s","seuils:"],
+ ["c","  # absolus, jamais un top 10 : un top 10 ment quand tout est froid"],
+ ["p","  tier1: 30   |# garde-fou. On entre en Tier 1 par un fait, pas par des points|"],
+ ["p","  tier2: 8    |# au moins un vrai geste recent|"],
+ ["",""],
+ ["s","portes:"],
+ ["c","  # les deux seules facons d'entrer dans la liste d'appels"],
+ ["p","  porte1_conversion_fenetre_jours: 45  |# une demande vaut 45 jours|"],
+ ["s","  porte2_comite:"],
+ ["p","    personnes_min: 3       |# une decision d'achat en entreprise est collective|"],
+ ["p","    fenetre_jours: 14      |# 3 personnes en 15 jours = un sujet, en 3 ans = du hasard|"],
+ ["p","    decideur_requis: true  |# sans decideur : zero signature mesuree|"],
+ ["",""],
+ ["s","listes:   # QUELLE conversation, decidee par des faits, jamais par le score"],
+ ["p","  a deja paye + signaux de depart     |-> retention   (on le garde)|"],
+ ["p","  a deja paye + signal d'achat        |-> expansion   (il en veut plus)|"],
+ ["p","  a paye, ne paie plus, il rebouge    |-> reconquete  (on va le rechercher)|"],
+ ["p","  n'a jamais paye + une porte         |-> acquisition|"],
+ ["p","  fenetre_echeance_jours: 90          |# un client a moins de 90 j de son echeance s'appelle|"]
 ];
 function configHTML(){
   var h='<div class="cfg"><div class="cfg-hd">scoring/scoring_config.yaml '
@@ -3114,8 +3143,11 @@ function configHTML(){
     }).join("");
     h+='<span class="y'+cls+'">'+out+'</span>\n';
   });
-  return h+'</pre><div class="cfg-ft">Changer un poids ne demande pas de toucher au code. '
-    +'Et aucun poids n\'existe sans sa raison écrite juste à côté.</div></div>';
+  return h+'</pre><div class="cfg-ft"><b>Pourquoi un fichier de réglages et pas du code :</b> '
+    +'chaque valeur se change sans développeur, et chaque valeur porte sa raison écrite '
+    +'juste à côté. C\'est la seule façon qu\'un poids reste défendable six mois plus tard. '
+    +'Et on y trouve les trois étages : ce que vaut un geste, quand un compte entre dans la '
+    +'liste, et quelle conversation on aura avec lui.</div></div>';
 }
 function chaineSVG(){
   function etage(x,y,w,h,t1,t2,cl){
