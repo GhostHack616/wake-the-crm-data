@@ -3170,7 +3170,7 @@ function chaineSVG(){
     {n:"Nicolas Fontaine",r:"stagiaire RH · hors cible",   g:"2 gestes",             s:"0,0",  c:"0"}
   ];
 
-  var S='<svg class="ch" viewBox="0 0 1060 400" role="img" '
+  var S='<svg class="ch" viewBox="0 0 1060 470" role="img" '
        +'aria-label="De quatre personnes jusqu\'à la conversation, sur un cas réel">';
 
   /* ① les personnes */
@@ -3183,7 +3183,7 @@ function chaineSVG(){
     S+=txt("cdet",16,y+56,p.g+"  ×"+p.c+" selon qui elle est");
     S+=txt("cscore",254,y+34,p.s,"end");
   });
-  S+=txt("cdet",6,388,"Un stagiaire compte pour zéro : ses gestes sont multipliés par 0.");
+  S+=txt("cdet",6,398,"Un stagiaire compte pour zéro : ses gestes sont multipliés par 0.");
 
   /* ② l'addition */
   S+=txt("ctit",300,16,"2 · ON ADDITIONNE");
@@ -3212,14 +3212,14 @@ function chaineSVG(){
   S+=boite(570,158,220,50);
   S+=txt("cnom off",584,182,"TIER 3");
   S+=txt("cdet off",584,199,"tout le reste");
-  S+=txt("cdet b",570,232,"Ici : Tier 1. Un formulaire");
-  S+=txt("cdet",570,246,"le 18 juillet, c'est un fait,");
-  S+=txt("cdet",570,260,"pas un nombre de points.");
+  S+=txt("cdet b",570,282,"Ici : Tier 1. Un formulaire");
+  S+=txt("cdet",570,296,"le 18 juillet, c'est un fait,");
+  S+=txt("cdet",570,310,"pas un nombre de points.");
 
   /* ⑤ l'étiquette */
   S+=txt("ctit",818,16,"4 · SON ÉTIQUETTE");
-  S+='<path class="cflux" d="M548 218 H800 V194"/>'
-    +'<polygon class="cpuce" points="791,198 809,198 800,184"/>';
+  S+='<path class="cflux" d="M546 240 H800 V196"/>'
+    +'<polygon class="cpuce" points="791,200 809,200 800,186"/>';
   S+=boite(816,26,238,58);
   S+=txt("cnom off",830,50,"JAMAIS CLIENT");
   S+=txt("cdet off",830,68,"elle n'a jamais rien payé");
@@ -3229,18 +3229,18 @@ function chaineSVG(){
   S+=boite(816,158,238,50,"win");
   S+=txt("cnom",830,182,"EX-CLIENT");
   S+=txt("cdet",830,199,"elle a payé, elle ne paie plus");
-  S+=txt("cdet b",816,232,"Ici : ex-client. Elle payait");
-  S+=txt("cdet",816,246,"5 000 €, elle ne paie plus rien.");
+  S+=txt("cdet b",816,282,"Ici : ex-client. Elle payait");
+  S+=txt("cdet",816,296,"5 000 €, elle ne paie plus rien.");
 
   /* le croisement, en bas */
-  S+='<line x1="570" y1="286" x2="1054" y2="286" stroke="var(--line-2)"/>';
-  S+=txt("ctit",572,308,"5 · ON CROISE LES DEUX, ET ÇA DONNE LA CONVERSATION");
-  S+='<path class="cflux" d="M680 272 V322 H760"/>';
-  S+='<path class="cflux" d="M935 272 V322 H860"/>';
-  S+=puce(760,322);
-  S+=boite(620,332,434,54,"act");
-  S+=txt("cnom inv",640,356,"TIER 1  +  EX-CLIENT  =  RECONQUÊTE");
-  S+=txt("crole inv",640,374,"on l'appelle en premier, et on va le rechercher");
+  S+='<line x1="570" y1="340" x2="1054" y2="340" stroke="var(--line-2)"/>';
+  S+=txt("ctit",572,362,"5 · ON CROISE LES DEUX, ET ÇA DONNE LA CONVERSATION");
+  S+='<path class="cflux" d="M680 322 V386 H752"/>';
+  S+='<path class="cflux" d="M935 322 V386 H868"/>';
+  S+=puce(752,386);
+  S+=boite(620,396,434,58,"act");
+  S+=txt("cnom inv",640,422,"TIER 1  +  EX-CLIENT  =  RECONQUÊTE");
+  S+=txt("crole inv",640,442,"on l'appelle en premier, et on va le rechercher");
   S+='</svg>';
 
   /* vertical, pour les écrans étroits */
