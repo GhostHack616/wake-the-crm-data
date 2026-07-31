@@ -3202,14 +3202,14 @@ function chaineSVG(){
 
   /* ④ la température */
   S+=txt("ctit",572,16,"3 · SA TEMPÉRATURE");
-  S+=fleche(548,570,195);
+  S+='<path class="cflux" d="M548 195 C560 195 558 55 566 55"/>'+puce(566,55);
   S+=boite(570,26,220,58,"t1");
   S+=txt("cnom",584,50,"TIER 1");
   S+=txt("cdet",584,68,"elle a demandé quelque chose");
-  S+=boite(570,96,220,50,"t2");
+  S+=boite(570,96,220,50);
   S+=txt("cnom",584,120,"TIER 2");
   S+=txt("cdet",584,137,"au moins 8 points");
-  S+=boite(570,158,220,50,"t3");
+  S+=boite(570,158,220,50);
   S+=txt("cnom",584,182,"TIER 3");
   S+=txt("cdet",584,199,"tout le reste");
   S+=txt("cdet b",570,232,"Ici : Tier 1. Un formulaire");
@@ -3218,7 +3218,8 @@ function chaineSVG(){
 
   /* ⑤ l'étiquette */
   S+=txt("ctit",818,16,"4 · SON ÉTIQUETTE");
-  S+='<path class="cflux" d="M794 55 H814"/>'+puce(812,55);
+  S+='<path class="cflux" d="M548 218 H800 V194"/>'
+    +'<polygon class="cpuce" points="794,196 806,196 800,186"/>';
   S+=boite(816,26,238,58);
   S+=txt("cnom",830,50,"JAMAIS CLIENT");
   S+=txt("cdet",830,68,"elle n'a jamais rien payé");
