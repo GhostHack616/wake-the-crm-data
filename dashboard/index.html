@@ -2095,11 +2095,50 @@ var PROC=[
  r:"Aujourd'hui, non, et je préfère le dire que le laisser découvrir dans le code. C'est une protection, pas une porte d'entrée : si un jour un compte accumule assez de gestes pour dépasser trente sans jamais rien demander, il mérite un appel et la règle le sortira.<br><br>Sur ce fichier, personne n'y arrive : le meilleur compte qui n'a rien demandé plafonne à <b>20,4</b>."
 },
 {
+ p:"5 · Scorer", t:"Le A, B ou C sur la fiche", h:"Il ordonne la file, il ne bloque jamais l'entrée", court:true, vue:"logic",
+ say:"Chaque compte porte un A, un B ou un C. Ce n'est pas une note, ça ne fait entrer ni sortir personne : ça départage deux comptes à égalité.",
+ bareme:[
+  ["Ce que la lettre veut dire"],
+  ["A", "les deux", "l'entreprise a la bonne taille ET on connaît au moins un décideur chez elle"],
+  ["B", "l'un des deux", "soit la taille, soit le décideur, pas les deux"],
+  ["C", "aucun des deux", "ni la taille, ni de décideur identifié"],
+  ["Sur les 60 comptes de la liste"],
+  ["A", "33", ""],
+  ["B", "24", ""],
+  ["C", "3", "ils restent dans la liste : la lettre ne bloque personne"]],
+ pb:"C'est le piège classique du ciblage : on écarte les comptes qui ne ressemblent pas au client idéal. Ça donne une liste propre et fausse, parce que les meilleurs comptes sont souvent ceux qui ne ressemblent à rien.",
+ body:"La règle est écrite noir sur blanc dans le fichier de réglages : <b>la lettre ORDONNE la file, elle ne BLOQUE jamais l'entrée</b>. Trois comptes en C sont dans la liste d'appels, et ils y restent.<br><br>Elle sert au moment de trancher : à preuves égales, un A passe avant un B. Ensuite seulement viennent le nombre de fiches historiques, puis le score au décimal près.",
+ q:"Pourquoi ne pas filtrer sur la cible, ça ferait gagner du temps ?",
+ r:"Parce que je l'ai testé, et que c'est le piège le plus coûteux du dossier. Les filtres dits de bon sens, du type « on ne garde que les entreprises dans la cible », détruisaient <b>97 % de ce que le système trouvait</b>.<br><br>La raison est simple : le produit est un logiciel RH, et tout le monde a des ressources humaines. Une entreprise hors cible qui demande une démo reste une entreprise qui demande une démo.<br><br>Donc la lettre ordonne, elle ne bloque pas. Et je préfère qu'un commercial voie trois comptes en C en bas de sa liste plutôt que de ne jamais savoir qu'ils existaient."
+},
+{
+ p:"5 · Scorer", t:"Les six durées", h:"Six durées, et aucune n'est calculée", court:true,
+ say:"Six chiffres de jours font tourner le moteur. Aucun n'est le résultat d'un calcul : ce sont des choix, et je peux défendre chacun.",
+ bareme:[
+  ["Ce que chaque durée décide"],
+  ["Combien de temps une demande reste valable", "45 jours",
+   "au-delà, si personne n'a rappelé, ce n'est plus un signal commercial, c'est un problème d'organisation"],
+  ["Sur quelle période on regarde si plusieurs personnes bougent ensemble", "14 jours",
+   "trois personnes en deux semaines, c'est un sujet qui circule en interne. Trois personnes en trois ans, c'est du hasard"],
+  ["Au bout de combien de temps un clic ne vaut plus que la moitié", "10 jours",
+   "une intention qu'on ne relance pas retombe en deux semaines"],
+  ["Pareil, pour un rendez-vous ou un formulaire", "30 jours",
+   "une démo, ça se travaille pendant un mois. Ça ne s'éteint pas comme un clic"],
+  ["Pendant combien de temps un signal garde au moins le quart de sa valeur", "21 jours",
+   "pour qu'un signal de moins de trois semaines ne devienne jamais négligeable"],
+  ["À partir de quand on appelle un client dont le contrat arrive à terme", "90 jours",
+   "un trimestre, c'est le temps qu'il faut pour préparer un renouvellement"]],
+ pb:"Six chiffres différents dans le même moteur, c'est six occasions de se faire demander « pourquoi celui-là ». Si un seul n'a pas de réponse, tous les autres deviennent suspects.",
+ body:"Un détail qui compte : <b>les 14 jours se comptent à partir d'aujourd'hui</b>, pas depuis le début du fichier. Sinon trois personnes qui bougeaient il y a deux mois compteraient comme un groupe actif aujourd'hui.<br><br>Et les six vivent dans un fichier de réglages, avec leur raison écrite à côté. Les changer ne demande pas de toucher au code.",
+ q:"Pourquoi 45 jours et pas 30 ?",
+ r:"Parce que 45 jours, c'est la durée au-delà de laquelle une demande sans réponse cesse d'être un signal commercial pour devenir un problème d'organisation. Quelqu'un qui a demandé une démo il y a six semaines et que personne n'a rappelé, le sujet n'est plus son intérêt, c'est notre process.<br><br>Et je l'ai testé plutôt que de l'affirmer : en secouant ces six durées de plus ou moins 30 %, <b>ma liste d'appels ne change pas</b>. Elle ne tient pas à ces chiffres, elle tient aux faits. Si elle avait bougé, c'est que j'aurais réglé mes durées sur mon résultat."
+},
+{
  p:"5 · Scorer", t:"Où vit le moteur", h:"Pas de base de données, et c'est un choix", court:true,
  say:"Sur ce fichier, il n'y a pas de base de données. Ce n'est pas un manque d'ambition, c'est que le fichier ne bouge plus.",
  bareme:[
   ["Ici, et pourquoi"],
-  ["Des fichiers et une configuration, versionnés", "pas de base",
+  ["Des fichiers et un fichier de réglages, versionnés", "pas de base",
    "le fichier est figé, personne n'écrit dedans, il n'y a rien à mettre à jour en temps réel"],
   ["Les 20 519 entreprises tiennent en mémoire", "un script, un fichier de réglages",
    "ça se rejoue partout, sur n'importe quelle machine, sans rien installer"],
@@ -2112,6 +2151,29 @@ var PROC=[
  body:"Ce qui ne change pas dans les deux cas : <b>le moteur nous appartient</b>. Le code et les réglages sont dans le dépôt, chaque poids est commenté, et personne ne loue une boîte noire qui décide qui on appelle.",
  q:"Pourquoi pas de base de données ?",
  r:"Parce que le choix d'infrastructure suit le besoin, pas l'inverse.<br><br><b>Ici</b> : le fichier ne bouge plus, il n'y a rien à écrire, personne d'autre à servir. Une base serait un décor.<br><br><b>En production</b> : du flux qui rentre en continu, plusieurs commerciaux qui lisent la même liste, un historique des scores à garder pour voir qui monte et qui descend. Là, je pose une vraie base et je recalcule au fil de l'eau, déclenché par le CRM lui-même.<br><br>Et dans les deux cas le moteur reste chez nous : ce n'est pas un abonnement qui décide qui vos commerciaux appellent."
+},
+{
+ p:"5 · Scorer", t:"Contre un filtre bête", h:"Un simple filtre trouve les mêmes 26. Et alors ?", court:true, vue:"logic",
+ say:"Je vais vous épargner la question : oui, un filtre à deux lignes trouve mes vingt-six comptes. Je l'ai mesuré. Ce n'est pas là que le moteur sert.",
+ bareme:[
+  ["Le filtre le plus évident : au moins deux clics dans les 30 derniers jours"],
+  ["Combien de comptes il sort", "197", "contre 60 pour le moteur"],
+  ["Combien des 26 à appeler il retrouve", "26 sur 26", "sur ce fichier, il ne rate rien"],
+  ["Combien de comptes sans aucune valeur il traîne", "140",
+   "des comptes que le moteur classe dans les vingt mille froids"],
+  ["Ce que le moteur ajoute, et qui n'est pas dans le filtre"],
+  ["Il dit POURQUOI", "une preuve datée",
+   "« rendez-vous pris le 17 juillet par le DRH », pas « ce compte a cliqué »"],
+  ["Il dit QUI appeler", "une personne, un canal",
+   "celle qui a levé la main, et par quel moyen la joindre puisque douze ne sont pas joignables par email"],
+  ["Il dit QUOI dire", "quatre conversations",
+   "prospection, vente additionnelle, sauvetage, reconquête. Le filtre les met sur la même ligne"],
+  ["Il retombe tout seul", "sans personne",
+   "un compte qui cesse de bouger redescend. Un filtre par clics ne l'oublie jamais"]],
+ pb:"C'est la question qui démonte la plupart des projets de scoring : si une requête de deux lignes fait la même chose, à quoi bon. Et sur le rappel, elle a raison.",
+ body:"Le vrai chiffre est là : pour trouver les 26, un commercial ouvrirait <b>197 fiches</b>. Il en ouvre <b>60</b>, et les 26 sont en tête avec leur raison écrite.<br><br>Autrement dit, le moteur ne trouve pas mieux. <b>Il fait perdre trois fois moins de temps, et il dit quoi faire de chaque ligne.</b> Sur une liste hebdomadaire, c'est la différence entre un outil qu'un commercial ouvre et un outil qu'il abandonne au troisième appel inutile.",
+ q:"Donc votre moteur ne sert à rien sur ce fichier ?",
+ r:"Sur le fait de <b>trouver</b>, il n'ajoute rien, et je préfère le dire avant qu'on me le démontre. Ce fichier est petit et ses comptes chauds sont bruyants.<br><br>Il sert sur trois choses que le filtre ne sait pas faire.<br><br><b>Le bruit.</b> 197 fiches contre 60, dont 140 sans aucune valeur.<br><b>La conversation.</b> Le filtre range un client qui veut plus, un client qui s'en va et un inconnu dans la même liste. Trois appels différents, une seule ligne.<br><b>L'oubli.</b> Un compte qui a cliqué deux fois en mai reste dans le filtre pour toujours. Chez moi il redescend tout seul.<br><br>Et sur un vrai CRM, l'écart se creuse : le filtre grossit avec le volume, la liste d'appels reste à la taille de ce qu'un commercial peut absorber."
 },
 {
  p:"6 · Le résultat", phase:"6", t:"· Le résultat ·", h:"Le résultat",
