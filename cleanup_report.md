@@ -1,6 +1,6 @@
 # Rapport d'audit du cleanup — Wake the CRM
 
-Généré par `cleanup/run_cleanup.py` le 2026-07-30 (référence temporelle du dataset : 2026-07-22).
+Généré par `cleanup/run_cleanup.py` le 2026-07-31 (référence temporelle du dataset : 2026-07-22).
 
 Principe : rien n'est supprimé — réparations en colonnes neuves, originaux intacts.
 

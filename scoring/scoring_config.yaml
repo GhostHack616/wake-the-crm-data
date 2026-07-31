@@ -137,13 +137,16 @@ invariants:
   silencieuses_total: 14709                 # aucun signal à poids > 0 sur la fenêtre de 90 j
   silencieuses_events_sans_poids: 7686      # des envois/ouvertures/blog — rien qui compte
   silencieuses_aucun_evenement: 7023        # jamais la moindre trace dans le CRM     # somme des scores personnes = score compte, à l'arrondi près
-  liste_retention: 943                      # 1 (signaux de départ : ENT-16714) + 209 échus + 733 sous 90 j
+  liste_retention: 942                      # 209 échus + 733 sous 90 j. Le compte à
+                                            # signaux de départ en est sorti le 31/07 :
+                                            # il ne paie plus, donc il n'y a rien à sauver
+                                            # (voir SC29). Il est passé en reconquête.
 
 # Les 4 LISTES D'APPEL (actées par Romain le 30/07) — l'écran les affiche,
 # le moteur les étiquette. L'entrée est un FAIT, le score n'y fait que l'ordre :
 #   acquisition (49)  = jamais client + porte ou note        -> ordre : la note
 #   expansion   (4)   = client + signal d'achat, contrat loin -> ordre : le geste
-#   retention   (943) = signaux de départ (toute famille) OU
+#   retention   (942) = signaux de départ CHEZ QUI PAIE ENCORE OU
 #                       contrat échu / sous fenetre_echeance  -> ordre : départ, échus, échéance, ARR
 #   reconquete  (869) = ex-client qui redonne signe de vie    -> ordre : la note
 # Le nurture n'est pas une liste : c'est le sous-sol des 3 familles.

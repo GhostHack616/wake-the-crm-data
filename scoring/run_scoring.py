@@ -163,12 +163,22 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
     ref_l = jour(cfg["reference_date"])
     fen_echeance = cfg["listes"]["fenetre_echeance_jours"]
 
+    def paie_encore(f):
+        """Le compte facture-t-il AUJOURD'HUI ? Pas « a-t-il déjà payé »."""
+        return bool((f.get("arr_actif") or "").strip())
+
     def liste_de(f, tier, negatif, perdu):
         if perdu:
             return "perdus"
         client = f["segment"] in CLIENTS
-        if negatif < 0:
-            return "retention"                 # signaux de départ, toute famille
+        # On ne « sauve » que quelqu'un qu'on a encore. Signalé par Romain le
+        # 31/07 sur Sylvasolfinance : ex-client, plus un euro de facturation,
+        # et pourtant classé « à sauver » parce qu'une de ses personnes avait
+        # visité la page de résiliation. On ne résilie pas un abonnement qu'on
+        # n'a plus : ce signal n'a aucun sens sur un compte déjà parti.
+        # 11 comptes concernés, dont 1 visible dans la liste d'appels.
+        if negatif < 0 and paie_encore(f):
+            return "retention"                 # il paie encore, et il regarde la sortie
         if client and f["renewal_date"]:
             d_ren = jour(f["renewal_date"])
             if d_ren < ref_l or (d_ren - ref_l).days <= fen_echeance:
@@ -256,10 +266,13 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
             canal = ""
 
         play, play_ajuste = f["play_segment"], ""
-        if d["porte"] == "comite" and d["negatif"] < 0:
+        if d["porte"] == "comite" and d["negatif"] < 0 and paie_encore(f):
             # un comité actif qui regarde la porte de sortie = à sauver.
             # La divergence avec l'étiquette de segment est MOTIVÉE et portée
             # par play_ajuste_par — jamais muette (SC28, revue croisée 30/07).
+            # La condition « paie encore » vient de la même correction que
+            # liste_de : sauver quelqu'un qui est déjà parti n'a pas de sens,
+            # et son play doit rester la reconquête.
             play, play_ajuste = "risque", "signaux_negatifs"
 
         if perdu:
@@ -315,7 +328,7 @@ def enrichit(cfg, comptes, score_p, events_p, conv, clics, par_entite, infos, ti
     return lignes
 
 
-def invariants(cfg, lignes, score_p, comptes, alarmes, events_p):
+def invariants(cfg, lignes, score_p, comptes, alarmes, events_p, fiche):
     exp = cfg["invariants"]
     # SC21/SC23 : la loi est re-vérifiée sur la TRACE publiée (base × porteur
     # × temps) — ce que le dashboard montre est exactement ce qui est testé.
@@ -376,10 +389,22 @@ def invariants(cfg, lignes, score_p, comptes, alarmes, events_p):
         # SC14 généralisée (30/07, revue croisée) : elle nommait ENT-16714 en
         # dur — une garde écrite pour un compte protège un compte. La règle :
         # TOUT comité qui regarde la porte de sortie part en risque.
-        ("SC14", "comité + signaux négatifs => play risque, jamais new business", 0,
+        # Resserrée le 31/07 : « qui paie encore ». Un compte déjà parti ne se
+        # sauve pas, il se reconquiert. La garde protégeait un cas absurde.
+        ("SC14", "comité + signaux négatifs + qui paie encore => play risque", 0,
          len([r for r in lignes
               if r["porte"] == "comite" and r["signaux_negatifs"] < 0
+              and (fiche[r["entity_id"]].get("arr_actif") or "").strip()
               and r["play"] != "risque"])),
+        # Et son miroir. Une exception assumée : les churns contradictoires,
+        # marqués « partis » mais porteurs d'un renouvellement à venir. Leur
+        # contradiction est signalée, et si le renouvellement est vrai, les
+        # perdre coûte de l'argent. Eux restent à sauver, tous les autres non.
+        ("SC29", "à sauver seulement si le compte paie encore (hors contradiction signalée)", 0,
+         len([r for r in lignes
+              if r["liste"] == "retention"
+              and r["segment"] != "CHURN_CONTRADICTOIRE"
+              and not (fiche[r["entity_id"]].get("arr_actif") or "").strip()])),
         ("SC15", "règles dormantes étiquetées en config", 6, len(cfg["regles_dormantes"])),
         ("SC16", "pertes sèches (perdu qui valait le coup)", exp["perte_seche"],
          len([r for r in lignes if r["perte"] == "seche"])),
@@ -493,7 +518,8 @@ def main():
              "score": s, "events": events_p[ent][p]}
             for p, s in sorted(score_p[ent].items(), key=lambda y: -y[1])]})
     from datetime import datetime
-    verts, total, checks = invariants(CFG, lignes, score_p, comptes, alarmes, events_p)
+    verts, total, checks = invariants(CFG, lignes, score_p, comptes, alarmes, events_p,
+                                      {c['entity_id']: c for c in companies})
     # Vue OPS (exigence du brief : « statut du dernier run + une alarme si
     # quelque chose casse ») — l'état du moteur voyage AVEC les données.
     ops = {"genere_le": datetime.now().isoformat(timespec="seconds"),
