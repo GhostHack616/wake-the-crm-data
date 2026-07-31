@@ -1,0 +1,43 @@
+# =============================================================
+# Config du FILET — Wake the CRM · proto 2b (V0)
+# Une règle = une ligne en langage métier + une réaction.
+# "Config, pas code" : la réaction et les seuils se changent ici,
+# la mécanique vit dans run_filet.py.
+#
+# Trois réactions possibles :
+#   compter — la métrique part au rapport, rien ne s'arrête
+#   sonner  — alerte visible (cible : Slack), le run continue
+#   bloquer — la sortie ne part pas : exit 1, le build casse
+#
+# Doctrine V0 : bloquer est réservé aux règles à zéro faux positif
+# connu (désabonnés, bots, contradictions non arbitrées). Tout le
+# reste naît en sonner, et une règle qui sonne sans provoquer
+# d'action redescend en compter — ou meurt. C'est l'anti-fatigue.
+# =============================================================
+version: "V0"
+
+regles:
+  - id: F1
+    regle: "Un désabonné ne reçoit jamais un envoi : aucun opted_out ne sort avec le canal email dans la hot list."
+    reaction: bloquer
+
+  - id: F2
+    regle: "Un churné ne porte jamais un deal ouvert non arbitré : chaque contradiction est résolue ou en file de review."
+    reaction: bloquer
+
+  - id: F3
+    regle: "Un bot n'entre dans aucun score."
+    reaction: bloquer
+
+  - id: F4
+    regle: "Une adresse morte ne reçoit plus d'envois : le canal email suppose une adresse valide."
+    reaction: sonner
+
+  - id: F5
+    regle: "Un ex-client ne sort jamais dans la liste acquisition — sa place est en reconquête."
+    reaction: sonner
+
+  - id: F6
+    regle: "Les contacts orphelins ne s'accumulent pas."
+    reaction: compter
+    seuil_pct: 1.0   # au-delà de 1 % des contacts, la réaction monte à sonner

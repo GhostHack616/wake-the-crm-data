@@ -14,6 +14,7 @@ Ce dépôt contient l'énoncé du challenge (conservé plus bas, intact) et la m
 | `dashboard/` | le tableau de bord : build reproductible + test automatique d'interdit d'écran |
 | `docs/` | `decisions.md` (qui a décidé quoi, et où le vérifier), le schéma du scoring, l'architecture d'enrichissement |
 | `slack/` | le push de la hot list avec les preuves (aucun secret dans le dépôt : l'adresse d'envoi vit dans l'environnement) |
+| `filet/` | la réponse au volet 2b, « Le Filet » : des règles métier en config, trois réactions (compter, sonner, bloquer) — raisonnement et schéma dans `docs/2b-le-filet.md` |
 | `cleanup_report.md` | le rapport d'audit auto-généré à chaque exécution : 95 invariants + la traçabilité règle par règle |
 
 ## Tout se reconstruit depuis un clone nu
@@ -22,6 +23,7 @@ Ce dépôt contient l'énoncé du challenge (conservé plus bas, intact) et la m
 python3 cleanup/run_cleanup.py               # nettoie, fusionne, segmente -> data_clean/ + cleanup_report.md
 python3 scoring/run_scoring.py               # score, tiers, hot list -> dashboard_data/
 python3 dashboard/build/build_dashboard.py   # construit le dashboard -> dashboard/dist/
+python3 filet/run_filet.py                   # le filet (2b) : 6 règles métier -> filet/filet_report.md
 ```
 
 119 contrôles automatiques tournent à chaque exécution (95 sur le nettoyage, 24 sur le scoring). Un statut ne se déclare pas : il se constate sur le run, et un contrôle rouge fait échouer le pipeline. Après chaque déploiement, le site servi est comparé à l'octet au build du dépôt.
